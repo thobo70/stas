@@ -28,7 +28,7 @@ typedef struct {
     char *name;
     uint8_t size;  // Size in bytes
     uint8_t encoding;  // Architecture-specific encoding
-} register_t;
+} asm_register_t;
 
 // Addressing mode structure
 typedef struct {
@@ -40,8 +40,8 @@ typedef struct {
     } type;
     
     int64_t offset;
-    register_t base;
-    register_t index;
+    asm_register_t base;
+    asm_register_t index;
     uint8_t scale;  // 1, 2, 4, 8
     char *symbol;
 } addressing_mode_t;
@@ -50,7 +50,7 @@ typedef struct {
 typedef struct {
     operand_type_t type;
     union {
-        register_t reg;
+        asm_register_t reg;
         int64_t immediate;
         addressing_mode_t memory;
         char *symbol;
@@ -83,9 +83,9 @@ typedef struct arch_ops {
                             size_t *length);
     
     // Register handling
-    int (*parse_register)(const char *reg_name, register_t *reg);
-    bool (*is_valid_register)(register_t reg);
-    const char *(*get_register_name)(register_t reg);
+    int (*parse_register)(const char *reg_name, asm_register_t *reg);
+    bool (*is_valid_register)(asm_register_t reg);
+    const char *(*get_register_name)(asm_register_t reg);
     
     // Addressing modes
     int (*parse_addressing)(const char *addr_str, addressing_mode_t *mode);

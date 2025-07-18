@@ -23,7 +23,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 
 # Find all .c files in src directory (excluding architecture modules for now)
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/lexer.c
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/lexer.c $(SRC_DIR)/parser.c $(SRC_DIR)/symbols.c $(SRC_DIR)/utils.c
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 # Target executable
