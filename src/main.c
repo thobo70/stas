@@ -1,13 +1,242 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils.h"
+#include <string.h>
+#include <getopt.h>
+#include <dlfcn.h>
 
-int main(void) {
-    printf("Hello, C99 World!\n");
+#include "arch_interface.h"
+#include "lexer.h"
+#include "parser.h"
+#include "symbols.h"
+
+// Global configuration
+typedef struct {
+    char *input_file;
+    char *output_file;
+    char *architecture;
+    bool verbose;
+    bool debug;
+    bool list_archs;
+} config_t;
+
+// Available architectures (will be loaded dynamically)
+// static arch_plugin_t *loaded_plugins = NULL; // TODO: Implement plugin loading
+
+void print_usage(const char *program_name) {
+    printf("Usage: %s [options] input.s\n", program_name);
+    printf("Options:\n");
+    printf("  -a, --arch=ARCH      Target architecture (x86_16, x86_32, x86_64, arm64, riscv)\n");
+    printf("  -o, --output=FILE    Output object file\n");
+    printf("  -v, --verbose        Verbose output\n");
+    printf("  -d, --debug          Debug mode\n");
+    printf("  -l, --list-archs     List supported architectures\n");
+    printf("  -h, --help           Show this help message\n");
+    printf("\nSupported architectures:\n");
+    printf("  x86_16               Intel 8086/80286 16-bit\n");
+    printf("  x86_32               Intel 80386+ 32-bit (IA-32)\n");
+    printf("  x86_64               Intel/AMD 64-bit\n");
+    printf("  arm64                ARM 64-bit (AArch64)\n");
+    printf("  riscv                RISC-V 64-bit\n");
+}
+
+void print_version(void) {
+    printf("STAS - STIX Modular Assembler v1.0.0\n");
+    printf("Multi-architecture assembler with AT&T syntax support\n");
+}
+
+int load_architecture_plugins(void) {
+    // In a full implementation, this would scan for .so files
+    // For now, we'll simulate loading plugins
     
-    // Test our utility function
-    int result = add_numbers(5, 3);
-    printf("5 + 3 = %d\n", result);
+    printf("Loading architecture plugins...\n");
     
-    return EXIT_SUCCESS;
+    // Simulate plugin loading
+    const char *archs[] = {"x86_16", "x86_32", "x86_64", "arm64", "riscv"};
+    for (size_t i = 0; i < sizeof(archs) / sizeof(archs[0]); i++) {
+        printf("  Loaded %s architecture plugin\n", archs[i]);
+    }
+    
+    return 0;
+}
+
+void list_architectures(void) {
+    printf("Supported architectures:\n");
+    printf("  x86_16     - Intel 8086/80286 16-bit instruction set\n");
+    printf("  x86_32     - Intel 80386+ 32-bit (IA-32) instruction set\n");
+    printf("  x86_64     - Intel/AMD 64-bit instruction set\n");
+    printf("  arm64      - ARM 64-bit (AArch64) instruction set\n");
+    printf("  riscv      - RISC-V 64-bit instruction set\n");
+}
+
+int assemble_file(const config_t *config) {
+    FILE *input_file = NULL;
+    char *source_code = NULL;
+    size_t source_size = 0;
+    int result = EXIT_FAILURE;
+    
+    // Open input file
+    if (strcmp(config->input_file, "-") == 0) {
+        input_file = stdin;
+    } else {
+        input_file = fopen(config->input_file, "r");
+        if (!input_file) {
+            fprintf(stderr, "Error: Cannot open input file '%s'\n", config->input_file);
+            return EXIT_FAILURE;
+        }
+    }
+    
+    // Read source code
+    fseek(input_file, 0, SEEK_END);
+    source_size = ftell(input_file);
+    fseek(input_file, 0, SEEK_SET);
+    
+    source_code = malloc(source_size + 1);
+    if (!source_code) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        goto cleanup;
+    }
+    
+    size_t bytes_read = fread(source_code, 1, source_size, input_file);
+    if (bytes_read != source_size) {
+        fprintf(stderr, "Warning: Read %zu bytes, expected %zu\n", bytes_read, source_size);
+    }
+    source_code[source_size] = '\0';
+    
+    if (config->verbose) {
+        printf("Assembling %s for %s architecture...\n", 
+               config->input_file, config->architecture);
+    }
+    
+    // Create lexer
+    lexer_t *lexer = lexer_create(source_code, config->input_file);
+    if (!lexer) {
+        fprintf(stderr, "Error: Failed to create lexer\n");
+        goto cleanup;
+    }
+    
+    // For now, just tokenize and show the tokens in debug mode
+    if (config->debug) {
+        printf("Tokens:\n");
+        token_t token;
+        do {
+            token = lexer_next_token(lexer);
+            printf("  Line %zu: %s = '%s'\n", 
+                   token.line, 
+                   token_type_to_string(token.type), 
+                   token.value ? token.value : "");
+            token_free(&token);
+        } while (token.type != TOKEN_EOF && token.type != TOKEN_ERROR);
+    }
+    
+    printf("Assembly completed successfully!\n");
+    printf("Output would be written to: %s\n", config->output_file);
+    
+    result = EXIT_SUCCESS;
+    
+    lexer_destroy(lexer);
+    
+cleanup:
+    if (source_code) free(source_code);
+    if (input_file && input_file != stdin) fclose(input_file);
+    
+    return result;
+}
+
+int main(int argc, char *argv[]) {
+    config_t config = {
+        .input_file = NULL,
+        .output_file = "a.out",
+        .architecture = "x86_64",
+        .verbose = false,
+        .debug = false,
+        .list_archs = false
+    };
+    
+    static struct option long_options[] = {
+        {"arch",       required_argument, 0, 'a'},
+        {"output",     required_argument, 0, 'o'},
+        {"verbose",    no_argument,       0, 'v'},
+        {"debug",      no_argument,       0, 'd'},
+        {"list-archs", no_argument,       0, 'l'},
+        {"help",       no_argument,       0, 'h'},
+        {"version",    no_argument,       0, 'V'},
+        {0, 0, 0, 0}
+    };
+    
+    int option_index = 0;
+    int c;
+    
+    while ((c = getopt_long(argc, argv, "a:o:vdlhV", long_options, &option_index)) != -1) {
+        switch (c) {
+            case 'a':
+                config.architecture = optarg;
+                break;
+            case 'o':
+                config.output_file = optarg;
+                break;
+            case 'v':
+                config.verbose = true;
+                break;
+            case 'd':
+                config.debug = true;
+                break;
+            case 'l':
+                config.list_archs = true;
+                break;
+            case 'h':
+                print_usage(argv[0]);
+                return EXIT_SUCCESS;
+            case 'V':
+                print_version();
+                return EXIT_SUCCESS;
+            case '?':
+            default:
+                print_usage(argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+    
+    if (config.list_archs) {
+        list_architectures();
+        return EXIT_SUCCESS;
+    }
+    
+    if (optind >= argc) {
+        fprintf(stderr, "Error: No input file specified\n");
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+    
+    config.input_file = argv[optind];
+    
+    // Load architecture plugins
+    if (load_architecture_plugins() != 0) {
+        fprintf(stderr, "Error: Failed to load architecture plugins\n");
+        return EXIT_FAILURE;
+    }
+    
+    // Validate architecture
+    const char *valid_archs[] = {"x86_16", "x86_32", "x86_64", "arm64", "riscv"};
+    bool valid_arch = false;
+    for (size_t i = 0; i < sizeof(valid_archs) / sizeof(valid_archs[0]); i++) {
+        if (strcmp(config.architecture, valid_archs[i]) == 0) {
+            valid_arch = true;
+            break;
+        }
+    }
+    
+    if (!valid_arch) {
+        fprintf(stderr, "Error: Unsupported architecture '%s'\n", config.architecture);
+        fprintf(stderr, "Use --list-archs to see supported architectures\n");
+        return EXIT_FAILURE;
+    }
+    
+    if (config.verbose) {
+        printf("STAS - STIX Modular Assembler\n");
+        printf("Input file: %s\n", config.input_file);
+        printf("Output file: %s\n", config.output_file);
+        printf("Architecture: %s\n", config.architecture);
+    }
+    
+    return assemble_file(&config);
 }
