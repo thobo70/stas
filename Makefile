@@ -22,9 +22,28 @@ INCLUDE_DIR = include
 OBJ_DIR = obj
 BIN_DIR = bin
 
-# Find all .c files in src directory (excluding architecture modules for now)
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/lexer.c $(SRC_DIR)/parser.c $(SRC_DIR)/symbols.c $(SRC_DIR)/utils.c
-OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+# Core source files (moved to src/core)
+CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c
+CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o)
+
+# Utility source files
+UTIL_SOURCES = $(SRC_DIR)/utils/utils.c
+UTIL_OBJECTS = $(UTIL_SOURCES:$(SRC_DIR)/utils/%.c=$(OBJ_DIR)/utils/%.o)
+
+# Architecture module sources
+ARCH_X86_64_SOURCES = $(SRC_DIR)/arch/x86_64/x86_64.c $(SRC_DIR)/arch/x86_64/instructions.c $(SRC_DIR)/arch/x86_64/registers.c $(SRC_DIR)/arch/x86_64/addressing.c
+ARCH_X86_64_OBJECTS = $(ARCH_X86_64_SOURCES:$(SRC_DIR)/arch/x86_64/%.c=$(OBJ_DIR)/arch/x86_64/%.o)
+
+ARCH_X86_32_SOURCES = $(SRC_DIR)/arch/x86_32/x86_32.c
+ARCH_X86_32_OBJECTS = $(ARCH_X86_32_SOURCES:$(SRC_DIR)/arch/x86_32/%.c=$(OBJ_DIR)/arch/x86_32/%.o)
+
+# Main application source
+MAIN_SOURCE = $(SRC_DIR)/main.c
+MAIN_OBJECT = $(OBJ_DIR)/main.o
+
+# All sources and objects for dynamic build
+SOURCES = $(CORE_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(MAIN_SOURCE)
+OBJECTS = $(CORE_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(MAIN_OBJECT)
 
 # Target executable
 TARGET = $(BIN_DIR)/$(PROJECT_NAME)
@@ -37,7 +56,21 @@ STATIC_TARGET_ARM64 = $(BIN_DIR)/$(PROJECT_NAME)-arm64-static
 STATIC_TARGET_RISCV = $(BIN_DIR)/$(PROJECT_NAME)-riscv-static
 
 # Include directories
-INCLUDES = -I$(INCLUDE_DIR)
+INCLUDES = -I$(INCLUDE_DIR) -I$(SRC_DIR)/core -I$(SRC_DIR)/arch
+
+# Create necessary directories
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)/core
+	mkdir -p $(OBJ_DIR)/utils
+	mkdir -p $(OBJ_DIR)/arch/x86_64
+	mkdir -p $(OBJ_DIR)/arch/x86_32
+	mkdir -p $(OBJ_DIR)/arch/x86_16
+	mkdir -p $(OBJ_DIR)/arch/arm64
+	mkdir -p $(OBJ_DIR)/arch/riscv
+
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
 # Default target
 all: $(TARGET)
@@ -47,7 +80,26 @@ $(TARGET): $(OBJECTS) | $(BIN_DIR)
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	@echo "Build complete: $@"
 
-# Compile source files to object files
+# Main source compilation
+$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Core module compilation
+$(OBJ_DIR)/core/%.o: $(SRC_DIR)/core/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Utility module compilation
+$(OBJ_DIR)/utils/%.o: $(SRC_DIR)/utils/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Architecture module compilation
+$(OBJ_DIR)/arch/x86_64/%.o: $(SRC_DIR)/arch/x86_64/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OBJ_DIR)/arch/x86_32/%.o: $(SRC_DIR)/arch/x86_32/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Legacy compilation rule (for compatibility)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
@@ -90,13 +142,6 @@ $(STATIC_TARGET_RISCV): $(SOURCES) | $(BIN_DIR)
 	@echo "Building static RISC-V assembler..."
 	$(CC) $(STATIC_CFLAGS) $(ARCH_RISCV_CFLAGS) $(INCLUDES) $(SOURCES) $(STATIC_LDFLAGS) -o $@
 	@echo "Static RISC-V assembler built: $@"
-
-# Create directories if they don't exist
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
 
 # Test with sample assembly file
 test: $(TARGET)
@@ -179,7 +224,7 @@ test-all: test test-unity test-unicorn
 
 # Clean build artifacts
 clean:
-	rm -rf $(OBJ_DIR)/*.o $(TARGET) $(STATIC_TARGET_X86_16) $(STATIC_TARGET_X86_32) $(STATIC_TARGET_X86_64) $(STATIC_TARGET_ARM64) $(STATIC_TARGET_RISCV)
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
 	@echo "Cleaned build artifacts"
 
 # Clean everything including directories
@@ -223,7 +268,32 @@ help:
 	@echo "  run          - Build and show help message"
 	@echo "  install      - Install the program to /usr/local/bin"
 	@echo "  uninstall    - Remove the program from /usr/local/bin"
+	@echo "  structure    - Show the new modular project structure"
 	@echo "  help         - Show this help message"
+
+# Show project structure
+structure:
+	@echo "STAS Modular Architecture Structure:"
+	@echo "src/"
+	@echo "├── core/           # Core assembler functionality"
+	@echo "│   ├── lexer.c     # Lexical analysis"
+	@echo "│   ├── parser.c    # AT&T syntax parser"
+	@echo "│   ├── symbols.c   # Symbol table management"
+	@echo "│   ├── expressions.c # Expression evaluation"
+	@echo "│   └── output.c    # Object file generation"
+	@echo "├── arch/           # Architecture-specific modules"
+	@echo "│   ├── x86_64/     # x86-64 instruction set (IMPLEMENTED)"
+	@echo "│   │   ├── x86_64.c      # Main module"
+	@echo "│   │   ├── instructions.c # Instruction encoding"
+	@echo "│   │   ├── registers.c    # Register handling"
+	@echo "│   │   └── addressing.c   # Addressing modes"
+	@echo "│   ├── x86_32/     # x86-32 instruction set (placeholder)"
+	@echo "│   ├── x86_16/     # x86-16 instruction set (placeholder)"
+	@echo "│   ├── arm64/      # ARM64 instruction set (placeholder)"
+	@echo "│   └── riscv/      # RISC-V instruction set (placeholder)"
+	@echo "├── utils/          # Utility functions"
+	@echo "│   └── utils.c     # General utilities"
+	@echo "└── main.c          # Main entry point"
 
 # Declare phony targets
 .PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all clean distclean run install uninstall help
