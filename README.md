@@ -87,6 +87,28 @@ make
 make debug
 ```
 
+## Static Builds for Resource-Constrained Systems
+
+STAS supports building **static, architecture-specific assemblers** perfect for embedded systems and deployment scenarios with limited resources.
+
+### Quick Start
+```bash
+# Build static x86-64 assembler (829KB, self-contained)
+make static-x86_64
+
+# Use the static assembler
+./bin/stas-x86_64-static --help
+./bin/stas-x86_64-static -o program.o program.s
+```
+
+### Benefits
+- ✅ **Self-contained**: No external dependencies
+- ✅ **Single-architecture**: Only includes needed functionality  
+- ✅ **Portable**: Runs on any compatible system
+- ✅ **Embedded-friendly**: Perfect for resource-constrained environments
+
+See `STATIC_BUILDS.md` for complete documentation.
+
 ### Build and run:
 ```bash
 make run
@@ -99,6 +121,12 @@ make run
 - `make test-unicorn` - Run Unicorn Engine emulation tests
 - `make test-unicorn-build` - Build Unicorn test program
 - `make test-all` - Run all tests (syntax + emulation)
+- `make static-x86_16` - Build static x86-16 only assembler
+- `make static-x86_32` - Build static x86-32 only assembler
+- `make static-x86_64` - Build static x86-64 only assembler
+- `make static-arm64` - Build static ARM64 only assembler
+- `make static-riscv` - Build static RISC-V only assembler
+- `make static-all` - Build all static architecture variants
 - `make clean` - Remove object files and executable
 - `make distclean` - Remove all generated files and directories
 - `make run` - Build and run the program

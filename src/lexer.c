@@ -109,7 +109,9 @@ static char *lexer_read_string(lexer_t *lexer) {
     size_t length = lexer->position - start;
     char *string = malloc(length + 1);
     if (string) {
-        strncpy(string, &lexer->input[start], length);
+        if (length > 0) {
+            memcpy(string, &lexer->input[start], length);
+        }
         string[length] = '\0';
     }
     

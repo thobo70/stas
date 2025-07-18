@@ -2,12 +2,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#ifndef STATIC_BUILD
 #include <dlfcn.h>
+#endif
 
 #include "arch_interface.h"
 #include "lexer.h"
 #include "parser.h"
 #include "symbols.h"
+
+// Static build architecture detection
+#ifdef STATIC_BUILD
+#ifdef ARCH_X86_16_ONLY
+#define STATIC_ARCH "x86_16"
+#define STATIC_ARCH_NAME "Intel 8086/80286 16-bit"
+#elif defined(ARCH_X86_32_ONLY)
+#define STATIC_ARCH "x86_32"
+#define STATIC_ARCH_NAME "Intel 80386+ 32-bit (IA-32)"
+#elif defined(ARCH_X86_64_ONLY)
+#define STATIC_ARCH "x86_64"
+#define STATIC_ARCH_NAME "Intel/AMD 64-bit"
+#elif defined(ARCH_ARM64_ONLY)
+#define STATIC_ARCH "arm64"
+#define STATIC_ARCH_NAME "ARM 64-bit (AArch64)"
+#elif defined(ARCH_RISCV_ONLY)
+#define STATIC_ARCH "riscv"
+#define STATIC_ARCH_NAME "RISC-V 64-bit"
+#endif
+#endif
 
 // Global configuration
 typedef struct {
@@ -25,6 +47,14 @@ typedef struct {
 void print_usage(const char *program_name) {
     printf("Usage: %s [options] input.s\n", program_name);
     printf("Options:\n");
+#ifdef STATIC_BUILD
+    printf("  -o, --output=FILE    Output object file\n");
+    printf("  -v, --verbose        Verbose output\n");
+    printf("  -d, --debug          Debug mode\n");
+    printf("  -h, --help           Show this help message\n");
+    printf("\nThis is a static build for %s architecture only.\n", STATIC_ARCH_NAME);
+    printf("Target architecture: %s\n", STATIC_ARCH);
+#else
     printf("  -a, --arch=ARCH      Target architecture (x86_16, x86_32, x86_64, arm64, riscv)\n");
     printf("  -o, --output=FILE    Output object file\n");
     printf("  -v, --verbose        Verbose output\n");
@@ -37,11 +67,17 @@ void print_usage(const char *program_name) {
     printf("  x86_64               Intel/AMD 64-bit\n");
     printf("  arm64                ARM 64-bit (AArch64)\n");
     printf("  riscv                RISC-V 64-bit\n");
+#endif
 }
 
 void print_version(void) {
-    printf("STAS - STIX Modular Assembler v1.0.0\n");
+#ifdef STATIC_BUILD
+    printf("STAS - STIX Modular Assembler v0.0.1 (Static Build - %s)\n", STATIC_ARCH_NAME);
+    printf("Specialized assembler for %s architecture\n", STATIC_ARCH);
+#else
+    printf("STAS - STIX Modular Assembler v0.0.1\n");
     printf("Multi-architecture assembler with AT&T syntax support\n");
+#endif
 }
 
 int load_architecture_plugins(void) {
@@ -146,18 +182,26 @@ int main(int argc, char *argv[]) {
     config_t config = {
         .input_file = NULL,
         .output_file = "a.out",
+#ifdef STATIC_BUILD
+        .architecture = STATIC_ARCH,
+#else
         .architecture = "x86_64",
+#endif
         .verbose = false,
         .debug = false,
         .list_archs = false
     };
     
     static struct option long_options[] = {
+#ifndef STATIC_BUILD
         {"arch",       required_argument, 0, 'a'},
+#endif
         {"output",     required_argument, 0, 'o'},
         {"verbose",    no_argument,       0, 'v'},
         {"debug",      no_argument,       0, 'd'},
+#ifndef STATIC_BUILD
         {"list-archs", no_argument,       0, 'l'},
+#endif
         {"help",       no_argument,       0, 'h'},
         {"version",    no_argument,       0, 'V'},
         {0, 0, 0, 0}
@@ -166,11 +210,19 @@ int main(int argc, char *argv[]) {
     int option_index = 0;
     int c;
     
-    while ((c = getopt_long(argc, argv, "a:o:vdlhV", long_options, &option_index)) != -1) {
+#ifdef STATIC_BUILD
+    const char *optstring = "o:vdhV";
+#else
+    const char *optstring = "a:o:vdlhV";
+#endif
+    
+    while ((c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
         switch (c) {
+#ifndef STATIC_BUILD
             case 'a':
                 config.architecture = optarg;
                 break;
+#endif
             case 'o':
                 config.output_file = optarg;
                 break;
@@ -180,9 +232,11 @@ int main(int argc, char *argv[]) {
             case 'd':
                 config.debug = true;
                 break;
+#ifndef STATIC_BUILD
             case 'l':
                 config.list_archs = true;
                 break;
+#endif
             case 'h':
                 print_usage(argv[0]);
                 return EXIT_SUCCESS;
@@ -196,10 +250,12 @@ int main(int argc, char *argv[]) {
         }
     }
     
+#ifndef STATIC_BUILD
     if (config.list_archs) {
         list_architectures();
         return EXIT_SUCCESS;
     }
+#endif
     
     if (optind >= argc) {
         fprintf(stderr, "Error: No input file specified\n");
@@ -209,11 +265,13 @@ int main(int argc, char *argv[]) {
     
     config.input_file = argv[optind];
     
+#ifndef STATIC_BUILD
     // Load architecture plugins
     if (load_architecture_plugins() != 0) {
         fprintf(stderr, "Error: Failed to load architecture plugins\n");
         return EXIT_FAILURE;
     }
+#endif
     
     // Validate architecture
     const char *valid_archs[] = {"x86_16", "x86_32", "x86_64", "arm64", "riscv"};
