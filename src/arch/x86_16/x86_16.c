@@ -194,12 +194,43 @@ int x86_16_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         case OP_16_SUB_REG_REG:
         case OP_16_CMP_REG_REG: {
             // Arithmetic operations
-            encoding.opcode[0] = (uint8_t)opcode;
-            encoding.opcode_length = 1;
-            encoding.has_modrm = true;
+            operand_t *dst = &inst->operands[0];
+            operand_t *src = &inst->operands[1];
             
-            if (encode_modrm(&inst->operands[1], &inst->operands[0], &encoding.modrm) != 0) {
-                return -1;
+            // Check if it's register, immediate format
+            if (dst->type == OPERAND_REGISTER && src->type == OPERAND_IMMEDIATE) {
+                // Use 0x81 format with sub-opcode in ModR/M reg field
+                encoding.opcode[0] = 0x81; // Common immediate instruction format
+                encoding.opcode_length = 1;
+                encoding.has_modrm = true;
+                
+                // Set up ModR/M byte
+                encoding.modrm.mod = 3; // Register addressing
+                encoding.modrm.rm = get_register_encoding((x86_16_register_id_t)dst->value.reg.id);
+                
+                // Set reg field based on operation
+                if (opcode == OP_16_ADD_REG_REG) {
+                    encoding.modrm.reg = 0; // ADD
+                } else if (opcode == OP_16_SUB_REG_REG) {
+                    encoding.modrm.reg = 5; // SUB
+                } else if (opcode == OP_16_CMP_REG_REG) {
+                    encoding.modrm.reg = 7; // CMP
+                }
+                
+                if (encoding.modrm.rm < 0) return -1;
+                
+                // Set immediate value
+                encoding.immediate = (int16_t)src->value.immediate;
+                encoding.imm_size = 2;
+            } else {
+                // Register to register format
+                encoding.opcode[0] = (uint8_t)opcode;
+                encoding.opcode_length = 1;
+                encoding.has_modrm = true;
+                
+                if (encode_modrm(&inst->operands[1], &inst->operands[0], &encoding.modrm) != 0) {
+                    return -1;
+                }
             }
             break;
         }
@@ -608,10 +639,15 @@ static int encode_modrm(operand_t *src, operand_t *dst, x86_16_modrm_byte_t *mod
     // Simple ModR/M encoding for register-to-register operations
     if (src->type == OPERAND_REGISTER && dst->type == OPERAND_REGISTER) {
         modrm->mod = 3; // Register-to-register
-        modrm->reg = get_register_encoding((x86_16_register_id_t)src->value.reg.id);
-        modrm->rm = get_register_encoding((x86_16_register_id_t)dst->value.reg.id);
         
-        if (modrm->reg < 0 || modrm->rm < 0) return -1;
+        int src_reg = get_register_encoding((x86_16_register_id_t)src->value.reg.id);
+        int dst_reg = get_register_encoding((x86_16_register_id_t)dst->value.reg.id);
+        
+        if (src_reg < 0 || dst_reg < 0) return -1;
+        
+        modrm->reg = (uint8_t)src_reg;
+        modrm->rm = (uint8_t)dst_reg;
+        
         return 0;
     }
     

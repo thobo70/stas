@@ -301,5 +301,26 @@ structure:
 	@echo "│   └── utils.c     # General utilities"
 	@echo "└── main.c          # Main entry point"
 
+# Comprehensive x86_16 test with Unicorn Engine
+test-x86_16-comprehensive: bin/test_x86_16_comprehensive
+	@echo "==========================================="
+	@echo "Running Comprehensive x86_16 Test Suite"
+	@echo "==========================================="
+	./bin/test_x86_16_comprehensive
+
+bin/test_x86_16_comprehensive: tests/test_x86_16_comprehensive.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) | $(BIN_DIR)
+	@echo "Building comprehensive x86_16 test..."
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(UNITY_DIR) \
+		tests/test_x86_16_comprehensive.c \
+		$(ARCH_X86_16_OBJECTS) \
+		$(OBJ_DIR)/core/output_format.o \
+		`pkg-config --cflags --libs unicorn` \
+		-o $@
+	@echo "Comprehensive x86_16 test built: $@"
+
+# Test all variants
+test-comprehensive: test-x86_16-comprehensive
+	@echo "🎉 All comprehensive tests completed!"
+
 # Declare phony targets
-.PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all clean distclean run install uninstall help
+.PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean test-x86_16-comprehensive test-comprehensive static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all clean distclean run install uninstall help
