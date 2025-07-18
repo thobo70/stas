@@ -25,6 +25,11 @@ stas/
 - Make utility
 - POSIX-compliant system for dynamic loading (dlopen)
 
+### Optional (for testing):
+- QEMU (multi-architecture emulation)
+- Unicorn Engine (instruction-level testing)
+- Bochs (x86-specific testing)
+
 ## Features
 
 - **Multi-Architecture Support**: x86-16, x86-32, x86-64, ARM64, RISC-V with plugin architecture
@@ -92,7 +97,8 @@ make run
 ## Available Make Targets
 
 - `make` or `make all` - Build the project
-- `make debug` - Build with debug symbols and flags
+- `make test` - Build and test with sample assembly
+- `make test-emulation` - Run emulation tests (requires emulators)
 - `make clean` - Remove object files and executable
 - `make distclean` - Remove all generated files and directories
 - `make run` - Build and run the program
@@ -128,7 +134,7 @@ Currently planned architectures:
 - **ARM64**: AArch64 instruction set
 - **RISC-V**: RV64I base instruction set
 
-See `ARCHITECTURE.md` for detailed design documentation.
+See `ARCHITECTURE.md` for detailed design documentation and `EMULATOR_EVALUATION.md` for testing with CPU emulators.
 
 ## Development
 

@@ -64,6 +64,14 @@ test: $(TARGET)
 	./$(TARGET) --verbose --debug test.s
 	@rm -f test.s
 
+# Run emulation tests
+test-emulation: $(TARGET)
+	@echo "Running emulation tests..."
+	./tests/run_emulation_tests.sh
+
+# Run all tests
+test-all: test test-emulation
+
 # Clean build artifacts
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(TARGET)
@@ -91,15 +99,17 @@ uninstall:
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  all       - Build the project (default)"
-	@echo "  debug     - Build with debug symbols"
-	@echo "  test      - Build and test with sample assembly"
-	@echo "  clean     - Remove object files and executable"
-	@echo "  distclean - Remove all generated files and directories"
-	@echo "  run       - Build and show help message"
-	@echo "  install   - Install the program to /usr/local/bin"
-	@echo "  uninstall - Remove the program from /usr/local/bin"
-	@echo "  help      - Show this help message"
+	@echo "  all          - Build the project (default)"
+	@echo "  debug        - Build with debug symbols"
+	@echo "  test         - Build and test with sample assembly"
+	@echo "  test-emulation - Run emulation tests (requires emulators)"
+	@echo "  test-all     - Run all tests"
+	@echo "  clean        - Remove object files and executable"
+	@echo "  distclean    - Remove all generated files and directories"
+	@echo "  run          - Build and show help message"
+	@echo "  install      - Install the program to /usr/local/bin"
+	@echo "  uninstall    - Remove the program from /usr/local/bin"
+	@echo "  help         - Show this help message"
 
 # Declare phony targets
-.PHONY: all debug test clean distclean run install uninstall help
+.PHONY: all debug test test-emulation test-all clean distclean run install uninstall help
