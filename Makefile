@@ -261,6 +261,11 @@ help:
 	@echo "  test-unity   - Run unit tests (Unity framework)"
 	@echo "  test-unicorn - Run Unicorn Engine emulation tests"
 	@echo "  test-unicorn-build - Build Unicorn test program"
+	@echo "  test-phase2-parsing - Run Phase 2 advanced parsing tests"
+	@echo "  test-phase3-symbols - Run Phase 3 symbol enhancement tests"
+	@echo "  test-phase3-basic   - Run Phase 3 basic symbol tests"
+	@echo "  test-phase3-comprehensive - Run Phase 3 comprehensive symbol tests"
+	@echo "  test-all-phases     - Run all phase tests (Phase 2 + Phase 3)"
 	@echo "  test-all     - Run all tests (sample + unity + unicorn)"
 	@echo "  test-clean   - Clean test artifacts"
 	@echo "  static-x86_16 - Build static x86-16 only assembler"
@@ -334,6 +339,61 @@ bin/test_phase2_advanced_parsing: tests/test_phase2_advanced_parsing.c $(ARCH_X8
 		$(UTIL_OBJECTS) \
 		-o $@
 	@echo "Phase 2 advanced parsing test built: $@"
+
+# Phase 3: Symbol Table Enhancement Tests
+test-phase3-symbols: bin/test_phase3_final
+	@echo "==========================================="
+	@echo "Running Phase 3 Symbol Enhancement Tests"
+	@echo "==========================================="
+	./bin/test_phase3_final
+
+bin/test_phase3_final: tests/test_phase3_final.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 3 symbol enhancement test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase3_final.c \
+		$(ARCH_X86_16_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 3 symbol enhancement test built: $@"
+
+# Phase 3: Basic Symbol Test (simpler version)
+test-phase3-basic: bin/test_phase3_basic
+	@echo "==========================================="
+	@echo "Running Phase 3 Basic Symbol Tests"
+	@echo "==========================================="
+	./bin/test_phase3_basic
+
+bin/test_phase3_basic: tests/test_phase3_basic.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 3 basic symbol test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase3_basic.c \
+		$(ARCH_X86_16_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 3 basic symbol test built: $@"
+
+# Phase 3: Comprehensive Symbol Test
+test-phase3-comprehensive: bin/test_phase3_comprehensive
+	@echo "==========================================="
+	@echo "Running Phase 3 Comprehensive Symbol Tests"
+	@echo "==========================================="
+	./bin/test_phase3_comprehensive
+
+bin/test_phase3_comprehensive: tests/test_phase3_symbol_enhancement.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 3 comprehensive symbol test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase3_symbol_enhancement.c \
+		$(ARCH_X86_16_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 3 comprehensive symbol test built: $@"
+
+# Test all phases
+test-all-phases: test-phase2-parsing test-phase3-symbols test-phase3-basic test-phase3-comprehensive
+	@echo "🎉 All phase tests completed successfully!"
 
 # Test all variants
 test-comprehensive: test-x86_16-comprehensive

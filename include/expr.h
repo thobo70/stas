@@ -55,8 +55,25 @@ struct ast_node *create_unary_expression(struct parser *parser, struct ast_node 
 // Expression evaluation function for constant folding and symbol resolution
 int64_t evaluate_expression_ast(struct parser *parser, struct ast_node *node);
 
-// Symbol resolution function
+// Symbol resolution function (Phase 3 Enhanced)
 bool resolve_symbol_value(struct parser *parser, const char *symbol, int64_t *value);
+
+//=============================================================================
+// Phase 3 Enhancement: Advanced Expression Symbol Integration
+//=============================================================================
+
+// Evaluate expression with symbol address calculation
+int64_t evaluate_expression_with_address_calc(struct parser *parser, struct ast_node *node, 
+                                             uint64_t base_address);
+
+// Resolve all symbols in an expression and calculate final value
+int64_t resolve_expression_symbols(struct parser *parser, const char *expression_str);
+
+// Update symbol table with expression results
+int update_symbols_from_expressions(struct parser *parser);
+
+// Check if expression contains forward references
+bool expression_has_forward_refs(struct parser *parser, struct ast_node *node);
 
 //=============================================================================
 // Expression Utility Functions

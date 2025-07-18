@@ -102,8 +102,27 @@ forward_ref_t *forward_ref_create(const char *symbol_name, uint64_t location,
 void forward_ref_destroy(forward_ref_t *ref);
 int resolve_forward_references(symbol_table_t *table, forward_ref_t *refs);
 
-// Phase 2 Enhancement: Forward reference support  
+// Phase 3 Enhancement: Forward reference support with expression integration
 int symbol_add_forward_reference(symbol_table_t *table, const char *symbol_name, 
                                 uint64_t location);
+
+// Phase 3 Enhancement: Expression Symbol Integration
+int64_t symbol_resolve_value(symbol_table_t *table, const char *symbol_name);
+bool symbol_is_defined(symbol_table_t *table, const char *symbol_name);
+size_t symbol_get_forward_references(symbol_table_t *table, forward_ref_t **refs);
+int symbol_resolve_all_forward_references(symbol_table_t *table);
+
+// Phase 3 Enhancement: Address Calculation and Relocation
+uint64_t symbol_calculate_address(symbol_table_t *table, const char *symbol_name, 
+                                 int64_t offset);
+int symbol_table_add_with_address(symbol_table_t *table, const char *name, 
+                                 symbol_type_t type, uint64_t base_address, 
+                                 int64_t offset);
+int symbol_update_value_from_expression(symbol_table_t *table, const char *symbol_name, 
+                                       int64_t expression_result);
+
+// Phase 3 Enhancement: Enhanced Hash Table Implementation
+int symbol_table_add_hashed(symbol_table_t *table, symbol_t *symbol);
+symbol_t *symbol_table_lookup_hashed(symbol_table_t *table, const char *name);
 
 #endif // SYMBOLS_H
