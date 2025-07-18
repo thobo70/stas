@@ -26,9 +26,7 @@ stas/
 - POSIX-compliant system for dynamic loading (dlopen)
 
 ### Optional (for testing):
-- QEMU (multi-architecture emulation)
-- Unicorn Engine (instruction-level testing)
-- Bochs (x86-specific testing)
+- Unicorn Engine (multi-architecture instruction emulation)
 
 ## Features
 
@@ -98,7 +96,9 @@ make run
 
 - `make` or `make all` - Build the project
 - `make test` - Build and test with sample assembly
-- `make test-emulation` - Run emulation tests (requires emulators)
+- `make test-unicorn` - Run Unicorn Engine emulation tests
+- `make test-unicorn-build` - Build Unicorn test program
+- `make test-all` - Run all tests (syntax + emulation)
 - `make clean` - Remove object files and executable
 - `make distclean` - Remove all generated files and directories
 - `make run` - Build and run the program
@@ -134,7 +134,7 @@ Currently planned architectures:
 - **ARM64**: AArch64 instruction set
 - **RISC-V**: RV64I base instruction set
 
-See `ARCHITECTURE.md` for detailed design documentation and `EMULATOR_EVALUATION.md` for testing with CPU emulators.
+See `ARCHITECTURE.md` for detailed design documentation and `EMULATOR_RECOMMENDATION.md` for Unicorn Engine testing setup.
 
 ## Development
 

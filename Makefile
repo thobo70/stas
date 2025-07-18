@@ -64,13 +64,22 @@ test: $(TARGET)
 	./$(TARGET) --verbose --debug test.s
 	@rm -f test.s
 
-# Run emulation tests
-test-emulation: $(TARGET)
-	@echo "Running emulation tests..."
-	./tests/run_emulation_tests.sh
+# Run Unicorn Engine tests
+test-unicorn: $(TARGET)
+	@echo "Running Unicorn Engine tests..."
+	./tests/run_unicorn_tests.sh
+
+# Build Unicorn test program
+test-unicorn-build:
+	@echo "Building Unicorn test program..."
+	@if pkg-config --exists unicorn 2>/dev/null; then \
+		gcc `pkg-config --cflags unicorn` tests/test_unicorn_comprehensive.c `pkg-config --libs unicorn` -o tests/test_unicorn_comprehensive; \
+	else \
+		gcc tests/test_unicorn_comprehensive.c -lunicorn -o tests/test_unicorn_comprehensive; \
+	fi
 
 # Run all tests
-test-all: test test-emulation
+test-all: test test-unicorn
 
 # Clean build artifacts
 clean:
@@ -102,7 +111,8 @@ help:
 	@echo "  all          - Build the project (default)"
 	@echo "  debug        - Build with debug symbols"
 	@echo "  test         - Build and test with sample assembly"
-	@echo "  test-emulation - Run emulation tests (requires emulators)"
+	@echo "  test-unicorn - Run Unicorn Engine emulation tests"
+	@echo "  test-unicorn-build - Build Unicorn test program"
 	@echo "  test-all     - Run all tests"
 	@echo "  clean        - Remove object files and executable"
 	@echo "  distclean    - Remove all generated files and directories"
