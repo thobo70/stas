@@ -236,6 +236,14 @@ token_t lexer_next_token(lexer_t *lexer) {
         case '-':
         case '*':
         case '/':
+        case '&':
+        case '|':
+        case '^':
+        case '~':
+        case '!':
+        case '<':
+        case '>':
+        case '=':
             token.type = TOKEN_OPERATOR;
             token.value = malloc(2);
             token.value[0] = c;

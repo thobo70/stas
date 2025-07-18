@@ -5,29 +5,16 @@
 
 #define _GNU_SOURCE
 #include "parser.h"
+#include "expr.h"
 #include "utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 // Forward declarations
 static ast_node_t *parse_statement(parser_t *parser);
-static char *safe_strdup(const char *s);
-
-//=============================================================================
-// Utility Functions
-//=============================================================================
-
-static char *safe_strdup(const char *s) {
-    if (!s) return NULL;
-    size_t len = strlen(s) + 1;
-    char *dup = malloc(len);
-    if (dup) {
-        memcpy(dup, s, len);
-    }
-    return dup;
-}
 
 //=============================================================================
 // Parser Creation and Destruction
@@ -212,10 +199,6 @@ void ast_add_sibling(ast_node_t *node, ast_node_t *sibling) {
 }
 
 //=============================================================================
-// Parser Utility Functions  
-//=============================================================================
-
-//=============================================================================
 // Parser State Management
 //=============================================================================
 
@@ -312,7 +295,7 @@ ast_node_t *parser_parse(parser_t *parser) {
 }
 
 //=============================================================================
-// Statement Parsing (Simplified)
+// Statement Parsing
 //=============================================================================
 
 static ast_node_t *parse_statement(parser_t *parser) {
@@ -342,7 +325,7 @@ static ast_node_t *parse_statement(parser_t *parser) {
 }
 
 //=============================================================================
-// Specific Parsing Functions (Simplified Implementations)
+// Specific Parsing Functions
 //=============================================================================
 
 ast_node_t *parse_instruction(parser_t *parser) {
@@ -430,6 +413,12 @@ ast_node_t *parse_label(parser_t *parser) {
             label_text[len - 1] = '\0';
         }
         label->name = label_text;
+        
+        // Add symbol to symbol table
+        symbol_t *symbol = symbol_create(label_text, SYMBOL_LABEL);
+        if (symbol && parser->symbols) {
+            symbol_table_add(parser->symbols, symbol);
+        }
     }
     
     node->data = label;
@@ -497,11 +486,7 @@ ast_node_t *parse_directive(parser_t *parser) {
 }
 
 //=============================================================================
-// Stub Implementations for Remaining Functions
-//=============================================================================
-
-//=============================================================================
-// Complete Operand Parsing Implementation
+// Operand Parsing
 //=============================================================================
 
 bool parse_operand_full(parser_t *parser, operand_t *operand) {
@@ -557,42 +542,6 @@ ast_node_t *parse_operand(parser_t *parser) {
     }
 }
 
-ast_node_t *parse_expression(parser_t *parser) {
-    if (!parser) return NULL;
-    
-    ast_node_t *node = ast_node_create(AST_EXPRESSION, parser->current_token);
-    if (!node) {
-        parser_error(parser, "Failed to create expression node");
-        return NULL;
-    }
-    
-    ast_expression_t *expr = calloc(1, sizeof(ast_expression_t));
-    if (!expr) {
-        ast_node_destroy(node);
-        parser_error(parser, "Failed to allocate expression data");
-        return NULL;
-    }
-    
-    // Simple expression parsing - numbers and symbols for now
-    if (parser_match(parser, TOKEN_NUMBER)) {
-        expr->type = EXPR_NUMBER;
-        expr->value.number = strtoll(parser->current_token.value, NULL, 0);
-        parser_advance(parser);
-    } else if (parser_match(parser, TOKEN_SYMBOL)) {
-        expr->type = EXPR_SYMBOL;
-        expr->value.symbol = safe_strdup(parser->current_token.value);
-        parser_advance(parser);
-    } else {
-        free(expr);
-        ast_node_destroy(node);
-        parser_error(parser, "Expected number or symbol in expression");
-        return NULL;
-    }
-    
-    node->data = expr;
-    return node;
-}
-
 // Operand parsing implementations
 int parse_register_operand(parser_t *parser, operand_t *operand) {
     if (!parser || !operand || !parser_match(parser, TOKEN_REGISTER)) {
@@ -644,13 +593,87 @@ int parse_immediate_operand(parser_t *parser, operand_t *operand) {
         value_str++; // Skip the $ prefix
     }
     
-    // Parse as number (supports hex with 0x prefix)
-    char *endptr;
-    operand->value.immediate = strtoll(value_str, &endptr, 0);
-    
-    if (*endptr != '\0') {
-        parser_error(parser, "Invalid immediate value: %s", parser->current_token.value);
-        return -1;
+    // Phase 2 Enhancement: Support expressions in immediates
+    // Check if this is a simple number or a complex expression
+    if (strchr(value_str, '+') || strchr(value_str, '-') || strchr(value_str, '*') || 
+        strchr(value_str, '/') || strchr(value_str, '(') || strchr(value_str, ')')) {
+        
+        // Complex expression - need to parse it properly
+        // For now, fall back to expression parsing
+        
+        // Save current position
+        token_t saved_token = parser->current_token;
+        
+        // Temporarily modify token to remove $ prefix for expression parsing
+        token_t expr_token = parser->current_token;
+        expr_token.value = (char *)value_str; // Remove $ prefix
+        parser->current_token = expr_token;
+        
+        // Parse as expression
+        ast_node_t *expr_node = parse_expression(parser);
+        if (!expr_node) {
+            parser->current_token = saved_token;
+            parser_error(parser, "Failed to parse immediate expression: %s", saved_token.value);
+            return -1;
+        }
+        
+        // Evaluate the expression
+        int64_t result = evaluate_expression_ast(parser, expr_node);
+        operand->value.immediate = result;
+        
+        // Clean up expression node
+        ast_node_destroy(expr_node);
+        
+        // Restore token and advance
+        parser->current_token = saved_token;
+    } else {
+        // Check if this is a symbol (contains alphabetic characters)
+        bool is_symbol = false;
+        for (const char *p = value_str; *p; p++) {
+            if (isalpha(*p) || *p == '_') {
+                is_symbol = true;
+                break;
+            }
+        }
+        
+        if (is_symbol) {
+            // Parse as symbol reference using expression parser
+            // Save current position
+            token_t saved_token = parser->current_token;
+            
+            // Create a temporary symbol token for expression parsing
+            token_t symbol_token = parser->current_token;
+            symbol_token.type = TOKEN_SYMBOL;
+            symbol_token.value = (char *)value_str; // Remove $ prefix
+            parser->current_token = symbol_token;
+            
+            // Parse as expression
+            ast_node_t *expr_node = parse_expression(parser);
+            if (!expr_node) {
+                parser->current_token = saved_token;
+                parser_error(parser, "Failed to parse symbol immediate: %s", saved_token.value);
+                return -1;
+            }
+            
+            // Evaluate the expression
+            int64_t result = evaluate_expression_ast(parser, expr_node);
+            operand->value.immediate = result;
+            
+            // Clean up expression node
+            ast_node_destroy(expr_node);
+            
+            // Restore token
+            parser->current_token = saved_token;
+        } else {
+            // Simple number parsing
+            char *endptr;
+            operand->value.immediate = strtoll(value_str, &endptr, 0);
+            
+            if (*endptr != '\0') {
+                parser_error(parser, "Invalid immediate value: %s", parser->current_token.value);
+                return -1;
+            }
+        }
     }
     
     // Determine size based on value range

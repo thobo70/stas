@@ -102,4 +102,8 @@ forward_ref_t *forward_ref_create(const char *symbol_name, uint64_t location,
 void forward_ref_destroy(forward_ref_t *ref);
 int resolve_forward_references(symbol_table_t *table, forward_ref_t *refs);
 
+// Phase 2 Enhancement: Forward reference support  
+int symbol_add_forward_reference(symbol_table_t *table, const char *symbol_name, 
+                                uint64_t location);
+
 #endif // SYMBOLS_H

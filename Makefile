@@ -23,7 +23,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 
 # Core source files (moved to src/core)
-CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c
+CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/expr.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c
 CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o)
 
 # Utility source files
@@ -317,6 +317,23 @@ bin/test_x86_16_comprehensive: tests/test_x86_16_comprehensive.c $(ARCH_X86_16_O
 		`pkg-config --cflags --libs unicorn` \
 		-o $@
 	@echo "Comprehensive x86_16 test built: $@"
+
+# Phase 2: Advanced Parsing Test
+test-phase2-parsing: bin/test_phase2_advanced_parsing
+	@echo "==========================================="
+	@echo "Running Phase 2 Advanced Parsing Tests"
+	@echo "==========================================="
+	./bin/test_phase2_advanced_parsing
+
+bin/test_phase2_advanced_parsing: tests/test_phase2_advanced_parsing.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 2 advanced parsing test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase2_advanced_parsing.c \
+		$(ARCH_X86_16_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 2 advanced parsing test built: $@"
 
 # Test all variants
 test-comprehensive: test-x86_16-comprehensive
