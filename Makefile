@@ -116,6 +116,50 @@ test: $(TARGET)
 	./$(TARGET) --verbose --debug test.s
 	@rm -f test.s
 
+# Unity Testing Framework
+UNITY_DIR = tests
+UNITY_SRC = $(UNITY_DIR)/unity.c
+UNITY_HEADERS = $(UNITY_DIR)/unity.h $(UNITY_DIR)/unity_internals.h
+
+# Test source files
+TEST_SOURCES = $(wildcard tests/test_*.c)
+TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
+TEST_TARGETS = $(TEST_SOURCES:.c=)
+
+# Unity test compilation flags
+TEST_CFLAGS = $(CFLAGS) -I$(UNITY_DIR) -I$(INCLUDE_DIR)
+
+# Unity unit tests
+test-unity: $(TEST_TARGETS)
+	@echo "==========================================="
+	@echo "Running STAS Unit Tests"
+	@echo "==========================================="
+	@for test in $(TEST_TARGETS); do \
+		echo "Running $$test..."; \
+		if ./$$test; then \
+			echo "✅ $$test PASSED"; \
+		else \
+			echo "❌ $$test FAILED"; \
+			exit 1; \
+		fi; \
+		echo ""; \
+	done
+	@echo "🎉 All unit tests completed successfully!"
+
+# Individual test compilation
+tests/test_%: tests/test_%.c $(UNITY_SRC) $(UNITY_HEADERS) $(OBJECTS)
+	@echo "Compiling unit test: $@"
+	$(CC) $(TEST_CFLAGS) $< $(UNITY_SRC) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+
+# Test object files
+tests/%.o: tests/%.c $(UNITY_HEADERS)
+	$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+# Clean test artifacts
+test-clean:
+	@echo "Cleaning test artifacts..."
+	rm -f $(TEST_TARGETS) $(TEST_OBJECTS)
+
 # Run Unicorn Engine tests
 test-unicorn: $(TARGET)
 	@echo "Running Unicorn Engine tests..."
@@ -131,7 +175,7 @@ test-unicorn-build:
 	fi
 
 # Run all tests
-test-all: test test-unicorn
+test-all: test test-unity test-unicorn
 
 # Clean build artifacts
 clean:
@@ -163,9 +207,11 @@ help:
 	@echo "  all          - Build the project (default)"
 	@echo "  debug        - Build with debug symbols"
 	@echo "  test         - Build and test with sample assembly"
+	@echo "  test-unity   - Run unit tests (Unity framework)"
 	@echo "  test-unicorn - Run Unicorn Engine emulation tests"
 	@echo "  test-unicorn-build - Build Unicorn test program"
-	@echo "  test-all     - Run all tests"
+	@echo "  test-all     - Run all tests (sample + unity + unicorn)"
+	@echo "  test-clean   - Clean test artifacts"
 	@echo "  static-x86_16 - Build static x86-16 only assembler"
 	@echo "  static-x86_32 - Build static x86-32 only assembler"
 	@echo "  static-x86_64 - Build static x86-64 only assembler"
@@ -180,4 +226,4 @@ help:
 	@echo "  help         - Show this help message"
 
 # Declare phony targets
-.PHONY: all debug test test-unicorn test-unicorn-build test-all static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all clean distclean run install uninstall help
+.PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all clean distclean run install uninstall help
