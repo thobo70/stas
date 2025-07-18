@@ -95,7 +95,7 @@ Tests failed: 0
 
 ### **Quick Start**
 ```bash
-# Install Unicorn Engine
+# Install Unicorn Engine (see UNICORN_INSTALLATION.md for details)
 sudo apt-get install libunicorn-dev
 
 # Run tests

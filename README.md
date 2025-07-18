@@ -28,6 +28,13 @@ stas/
 ### Optional (for testing):
 - Unicorn Engine (multi-architecture instruction emulation)
 
+**Installation**: See `UNICORN_INSTALLATION.md` for detailed setup instructions.
+
+Quick install on Ubuntu/Debian:
+```bash
+sudo apt-get install libunicorn-dev
+```
+
 ## Features
 
 - **Multi-Architecture Support**: x86-16, x86-32, x86-64, ARM64, RISC-V with plugin architecture
