@@ -23,7 +23,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 
 # Core source files (moved to src/core)
-CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c
+CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c
 CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o)
 
 # Utility source files
@@ -37,13 +37,16 @@ ARCH_X86_64_OBJECTS = $(ARCH_X86_64_SOURCES:$(SRC_DIR)/arch/x86_64/%.c=$(OBJ_DIR
 ARCH_X86_32_SOURCES = $(SRC_DIR)/arch/x86_32/x86_32.c
 ARCH_X86_32_OBJECTS = $(ARCH_X86_32_SOURCES:$(SRC_DIR)/arch/x86_32/%.c=$(OBJ_DIR)/arch/x86_32/%.o)
 
+ARCH_X86_16_SOURCES = $(SRC_DIR)/arch/x86_16/x86_16.c
+ARCH_X86_16_OBJECTS = $(ARCH_X86_16_SOURCES:$(SRC_DIR)/arch/x86_16/%.c=$(OBJ_DIR)/arch/x86_16/%.o)
+
 # Main application source
 MAIN_SOURCE = $(SRC_DIR)/main.c
 MAIN_OBJECT = $(OBJ_DIR)/main.o
 
 # All sources and objects for dynamic build
-SOURCES = $(CORE_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(MAIN_SOURCE)
-OBJECTS = $(CORE_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(MAIN_OBJECT)
+SOURCES = $(CORE_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(MAIN_SOURCE)
+OBJECTS = $(CORE_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(MAIN_OBJECT)
 
 # Target executable
 TARGET = $(BIN_DIR)/$(PROJECT_NAME)
@@ -97,6 +100,9 @@ $(OBJ_DIR)/arch/x86_64/%.o: $(SRC_DIR)/arch/x86_64/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJ_DIR)/arch/x86_32/%.o: $(SRC_DIR)/arch/x86_32/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OBJ_DIR)/arch/x86_16/%.o: $(SRC_DIR)/arch/x86_16/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Legacy compilation rule (for compatibility)

@@ -10,6 +10,12 @@
 #include "lexer.h"
 #include "parser.h"
 #include "symbols.h"
+#include "core/output_format.h"
+
+// External architecture function declarations
+extern arch_ops_t *get_arch_ops_x86_16(void);
+extern arch_ops_t *get_arch_ops_x86_32(void);
+extern arch_ops_t *get_arch_ops_x86_64(void);
 
 // Static build architecture detection
 #ifdef STATIC_BUILD
@@ -36,6 +42,8 @@ typedef struct {
     char *input_file;
     char *output_file;
     char *architecture;
+    output_format_t output_format;
+    uint32_t base_address;
     bool verbose;
     bool debug;
     bool list_archs;
@@ -48,7 +56,9 @@ void print_usage(const char *program_name) {
     printf("Usage: %s [options] input.s\n", program_name);
     printf("Options:\n");
 #ifdef STATIC_BUILD
-    printf("  -o, --output=FILE    Output object file\n");
+    printf("  -o, --output=FILE    Output file\n");
+    printf("  -f, --format=FORMAT  Output format (bin, com, elf32, elf64)\n");
+    printf("  -b, --base=ADDR      Base address for binary output (hex)\n");
     printf("  -v, --verbose        Verbose output\n");
     printf("  -d, --debug          Debug mode\n");
     printf("  -h, --help           Show this help message\n");
@@ -56,7 +66,9 @@ void print_usage(const char *program_name) {
     printf("Target architecture: %s\n", STATIC_ARCH);
 #else
     printf("  -a, --arch=ARCH      Target architecture (x86_16, x86_32, x86_64, arm64, riscv)\n");
-    printf("  -o, --output=FILE    Output object file\n");
+    printf("  -o, --output=FILE    Output file\n");
+    printf("  -f, --format=FORMAT  Output format (bin, com, elf32, elf64)\n");
+    printf("  -b, --base=ADDR      Base address for binary output (hex)\n");
     printf("  -v, --verbose        Verbose output\n");
     printf("  -d, --debug          Debug mode\n");
     printf("  -l, --list-archs     List supported architectures\n");
@@ -67,6 +79,11 @@ void print_usage(const char *program_name) {
     printf("  x86_64               Intel/AMD 64-bit\n");
     printf("  arm64                ARM 64-bit (AArch64)\n");
     printf("  riscv                RISC-V 64-bit\n");
+    printf("\nOutput formats:\n");
+    printf("  bin                  Flat binary (no headers)\n");
+    printf("  com                  DOS .COM format (16-bit only)\n");
+    printf("  elf32                ELF 32-bit object file\n");
+    printf("  elf64                ELF 64-bit object file\n");
 #endif
 }
 
@@ -78,6 +95,21 @@ void print_version(void) {
     printf("STAS - STIX Modular Assembler v0.0.1\n");
     printf("Multi-architecture assembler with AT&T syntax support\n");
 #endif
+}
+
+// Get architecture operations by name
+arch_ops_t *get_architecture(const char *arch_name) {
+    if (!arch_name) return NULL;
+    
+    if (strcmp(arch_name, "x86_16") == 0) {
+        return get_arch_ops_x86_16();
+    } else if (strcmp(arch_name, "x86_32") == 0) {
+        return get_arch_ops_x86_32();
+    } else if (strcmp(arch_name, "x86_64") == 0) {
+        return get_arch_ops_x86_64();
+    }
+    
+    return NULL;
 }
 
 int load_architecture_plugins(void) {
@@ -150,25 +182,23 @@ int assemble_file(const config_t *config) {
         goto cleanup;
     }
     
-    // Create mock architecture interface (placeholder)
-    arch_ops_t mock_arch = {
-        .name = config->architecture,
-        .init = NULL,
-        .cleanup = NULL,
-        .parse_instruction = NULL,
-        .encode_instruction = NULL,
-        .parse_register = NULL,
-        .is_valid_register = NULL,
-        .get_register_name = NULL,
-        .parse_addressing = NULL,
-        .validate_addressing = NULL,
-        .handle_directive = NULL,
-        .get_instruction_size = NULL,
-        .get_alignment = NULL
-    };
+    // Get architecture operations
+    arch_ops_t *arch_ops = get_architecture(config->architecture);
+    if (!arch_ops) {
+        fprintf(stderr, "Error: Unsupported architecture '%s'\n", config->architecture);
+        lexer_destroy(lexer);
+        goto cleanup;
+    }
+    
+    // Initialize architecture
+    if (arch_ops->init && arch_ops->init() != 0) {
+        fprintf(stderr, "Error: Failed to initialize %s architecture\n", config->architecture);
+        lexer_destroy(lexer);
+        goto cleanup;
+    }
     
     // Create parser
-    parser_t *parser = parser_create(lexer, &mock_arch);
+    parser_t *parser = parser_create(lexer, arch_ops);
     if (!parser) {
         fprintf(stderr, "Error: Failed to create parser\n");
         lexer_destroy(lexer);
@@ -213,8 +243,48 @@ int assemble_file(const config_t *config) {
                ast->type == AST_DIRECTIVE ? "directive" : "unknown");
     }
 
-    printf("Assembly completed successfully!\n");
-    printf("Output would be written to: %s\n", config->output_file);
+    // Generate output file
+    output_context_t output_ctx = {
+        .format = config->output_format,
+        .filename = config->output_file,
+        .sections = NULL,
+        .section_count = 0,
+        .entry_point = 0,
+        .base_address = config->base_address,
+        .verbose = config->verbose
+    };
+    
+    // For demonstration, create a simple code section with basic x86_16 program
+    if (strcmp(config->architecture, "x86_16") == 0) {
+        // Simple x86_16 program: mov ax, 0x4c00; int 0x21 (DOS exit)
+        uint8_t demo_code[] = {
+            0xB8, 0x00, 0x4C,  // mov ax, 0x4c00
+            0xCD, 0x21         // int 0x21
+        };
+        
+        uint32_t code_address = (config->output_format == FORMAT_COM) ? 0x0100 : 
+                               (config->base_address != 0) ? config->base_address : 0x1000;
+        
+        output_format_ops_t *format_ops = get_output_format(config->output_format);
+        if (format_ops && format_ops->add_section) {
+            format_ops->add_section(&output_ctx, ".text", demo_code, sizeof(demo_code), code_address);
+        }
+    }
+    
+    // Write output file
+    if (write_output_file(&output_ctx) == 0) {
+        printf("Assembly completed successfully!\n");
+        printf("Output written to: %s\n", config->output_file);
+    } else {
+        fprintf(stderr, "Error: Failed to write output file\n");
+        result = EXIT_FAILURE;
+    }
+    
+    // Cleanup output context
+    output_format_ops_t *format_ops = get_output_format(config->output_format);
+    if (format_ops && format_ops->cleanup) {
+        format_ops->cleanup(&output_ctx);
+    }
     
     result = EXIT_SUCCESS;
     
@@ -236,6 +306,8 @@ int main(int argc, char *argv[]) {
 #else
         .architecture = "x86_64",
 #endif
+        .output_format = FORMAT_FLAT_BIN,
+        .base_address = 0,
         .verbose = false,
         .debug = false,
         .list_archs = false
@@ -246,6 +318,8 @@ int main(int argc, char *argv[]) {
         {"arch",       required_argument, 0, 'a'},
 #endif
         {"output",     required_argument, 0, 'o'},
+        {"format",     required_argument, 0, 'f'},
+        {"base",       required_argument, 0, 'b'},
         {"verbose",    no_argument,       0, 'v'},
         {"debug",      no_argument,       0, 'd'},
 #ifndef STATIC_BUILD
@@ -260,9 +334,9 @@ int main(int argc, char *argv[]) {
     int c;
     
 #ifdef STATIC_BUILD
-    const char *optstring = "o:vdhV";
+    const char *optstring = "o:f:b:vdhV";
 #else
-    const char *optstring = "a:o:vdlhV";
+    const char *optstring = "a:o:f:b:vdlhV";
 #endif
     
     while ((c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
@@ -274,6 +348,23 @@ int main(int argc, char *argv[]) {
 #endif
             case 'o':
                 config.output_file = optarg;
+                break;
+            case 'f':
+                if (strcmp(optarg, "bin") == 0) {
+                    config.output_format = FORMAT_FLAT_BIN;
+                } else if (strcmp(optarg, "com") == 0) {
+                    config.output_format = FORMAT_COM;
+                } else if (strcmp(optarg, "elf32") == 0) {
+                    config.output_format = FORMAT_ELF32;
+                } else if (strcmp(optarg, "elf64") == 0) {
+                    config.output_format = FORMAT_ELF64;
+                } else {
+                    fprintf(stderr, "Error: Unknown output format '%s'\n", optarg);
+                    return EXIT_FAILURE;
+                }
+                break;
+            case 'b':
+                config.base_address = (uint32_t)strtoul(optarg, NULL, 0);
                 break;
             case 'v':
                 config.verbose = true;
