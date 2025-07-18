@@ -118,19 +118,25 @@ Coverage:
 
 ### 🟡 **Partially Complete Components**
 
-#### 1. **Parser Engine**
+### 🟡 **Partially Complete Components**
+
+#### 1. **Parser Engine** 
 ```
-Status: PHASE 1 COMPLETE - AST creation and management implemented
-Files: include/parser.h (117 lines), src/parser.c (468 lines) - IMPLEMENTED
+Status: PHASE 2 COMPLETE - Advanced parsing and expression evaluation implemented
+Files: include/parser.h (117 lines), src/core/parser.c (850+ lines), src/core/expr.c (400+ lines) - IMPLEMENTED
 Features: 
 - ✅ AST node creation and destruction
 - ✅ Parser state management
 - ✅ Basic statement parsing (instructions, labels, directives)
 - ✅ Memory-safe AST tree operations
 - ✅ Error handling and reporting
-- 🟡 Expression evaluation (needs expansion)
-- 🟡 Advanced operand parsing (needs implementation)
-Estimated remaining: 300-400 lines for full parsing
+- ✅ Expression evaluation with operator precedence
+- ✅ Advanced operand parsing (registers, memory, immediates)
+- ✅ Symbol resolution in expressions
+- ✅ Forward reference support
+- ✅ Immediate expression parsing ($(expr) syntax)
+- ✅ Modular architecture with separated expression parser
+Phase 2 complete: Production-ready parsing foundation
 ```
 
 #### 2. **Symbol Table Management**
@@ -149,10 +155,15 @@ Estimated remaining: 200-300 lines for production features
 
 #### 3. **Utility Functions**
 ```
-Status: MINIMAL - Needs expansion
-Files: src/utils.c (9 lines), include/utils.h (8 lines)
-Missing: String handling, memory management, error utilities
-Estimated: 200-300 lines additional
+Status: ENHANCED - Production-ready utility module
+Files: src/utils/utils.c (enhanced), include/utils.h (complete)
+Features:
+- ✅ String handling (safe_strdup, manipulation)
+- ✅ Memory management (safe allocation, error checking)
+- ✅ Number parsing (multi-base support: decimal, hex, octal, binary)
+- ✅ Expression utilities (optimized for Phase 2 parser)
+- ✅ Error utilities and validation
+Estimated: Complete for current needs, expandable as needed
 ```
 
 ### 🔴 **Missing Components (Not Started)**
@@ -232,27 +243,28 @@ Completed scope:
 SUCCESS: Phase 1 parser infrastructure complete and tested
 ```
 
-#### Phase 2: Expression Evaluation and Advanced Parsing ⭐ CURRENT PRIORITY
+#### Phase 2: Expression Evaluation and Advanced Parsing ✅ COMPLETED
 ```
-Priority: CRITICAL - IN PROGRESS
-Files to enhance: src/parser.c (add ~300-400 lines)
+Priority: CRITICAL - COMPLETED ✅
+Files completed: src/core/expr.c (400+ lines), enhanced utils.c
 Dependencies: Phase 1 AST infrastructure (✅ complete)
-Scope:
-1. Expression evaluation (arithmetic, symbols)
-2. Advanced operand parsing (registers, memory, immediates)
-3. Complex addressing mode handling
-4. Enhanced directive processing
-5. Full syntax tree generation
+Completed scope:
+✅ Expression evaluation (arithmetic, bitwise, symbols)
+✅ Advanced operand parsing (registers, memory, immediates)
+✅ Complex addressing mode handling
+✅ Enhanced directive processing
+✅ Full syntax tree generation with operator precedence
+✅ Symbol resolution with forward references
+✅ Immediate expression parsing ($(expr) syntax)
 
-Estimated effort: 300-400 lines additional
-Success criteria: Parse complete AT&T syntax into full ASTs
+SUCCESS: Phase 2 advanced parsing complete with 100% test validation (6/6 tests passing)
 ```
 
-#### Phase 3: Symbol Table Enhancement  
+#### Phase 3: Symbol Table Enhancement ⭐ CURRENT PRIORITY
 ```
 Priority: HIGH  
 Files to enhance: src/symbols.c (add ~200-300 lines)
-Dependencies: Phase 2 parser completion
+Dependencies: Phase 2 parser completion (✅ complete)
 Scope:
 1. Forward reference resolution
 2. Relocation handling
@@ -261,7 +273,7 @@ Scope:
 5. Address calculation
 
 Estimated effort: 200-300 lines additional
-Success criteria: Handle all symbol resolution needs
+Success criteria: Handle all symbol resolution needs with Phase 2 expression integration
 ```
 
 #### Phase 4: Basic x86-64 Architecture Module

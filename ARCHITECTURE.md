@@ -97,9 +97,13 @@ typedef struct {
 ```
 
 #### Parser
-- AT&T syntax parser with architecture-agnostic design
-- Handles common assembly constructs (labels, directives, expressions)
-- Builds Abstract Syntax Tree (AST) for architecture modules
+- **Phase 1 Complete**: AT&T syntax parser with architecture-agnostic design
+- **Phase 2 Complete**: Advanced expression evaluation with operator precedence
+- **Features**: Handles common assembly constructs (labels, directives, expressions)
+- **Expression Engine**: Full arithmetic, bitwise, and symbol expression support
+- **Modular Design**: Separated into `parser.c` (AST management) and `expr.c` (expression parsing)
+- **Symbol Integration**: Forward references, immediate expressions, complex operands
+- **Builds Abstract Syntax Tree (AST)** for architecture modules
 
 #### Symbol Table
 ```c
@@ -120,9 +124,13 @@ typedef struct symbol {
 ```
 
 #### Expression Evaluator
-- Handles arithmetic expressions in operands
-- Supports forward references
-- Manages relocations for external symbols
+- **Complete Implementation**: Full operator precedence parser in `src/core/expr.c`
+- **Arithmetic Operations**: Addition, subtraction, multiplication, division
+- **Bitwise Operations**: AND (&), OR (|), XOR (^), shifts with proper precedence
+- **Symbol Support**: Handles arithmetic expressions in operands with symbols
+- **Forward References**: Manages symbol resolution and forward declarations
+- **Immediate Expressions**: Complex `$(expression)` syntax in operands
+- **Relocations**: Manages relocations for external symbols (ready for Phase 3)
 
 ### 3. Architecture Interface
 
@@ -415,19 +423,39 @@ message: .ascii "Hello, World!\n"
 src/
 ├── core/
 │   ├── lexer.c/.h         # Lexical analysis
-│   ├── parser.c/.h        # AT&T syntax parser
+│   ├── parser.c/.h        # AT&T syntax parser (Phase 1 & 2 complete)
+│   ├── expr.c/.h          # Expression evaluation (Phase 2 complete)
 │   ├── symbols.c/.h       # Symbol table management
-│   ├── expressions.c/.h   # Expression evaluation
+│   ├── expressions.c/.h   # Expression evaluation (legacy)
 │   └── output.c/.h        # Object file generation
 ├── arch/
 │   ├── arch_interface.h   # Architecture abstraction
 │   ├── x86_16/
-│   │   ├── x86_16.c/.h    # x86-16 implementation
+│   │   ├── x86_16.c/.h    # x86-16 implementation (complete)
 │   │   ├── instructions.c # Instruction encoding
 │   │   ├── registers.c    # Register handling
 │   │   └── addressing.c   # Addressing modes
 │   ├── x86_32/
-│   │   ├── x86_32.c/.h    # x86-32 implementation
+│   │   ├── x86_32.c/.h    # x86-32 implementation (planned)
+│   │   └── ...
+│   ├── x86_64/
+│   │   ├── x86_64.c/.h    # x86-64 implementation (ready for Phase 3)
+│   │   └── ...
+│   ├── arm64/
+│   │   └── ...
+│   └── riscv/
+│       └── ...
+├── formats/
+│   ├── elf.c/.h          # ELF object format
+│   ├── mach_o.c/.h       # Mach-O object format
+│   ├── pe.c/.h           # PE object format
+│   └── coff.c/.h         # COFF object format (16/32-bit)
+├── utils/
+│   ├── utils.c/.h        # Enhanced utilities (Phase 2 complete)
+│   ├── error.c/.h        # Error reporting
+│   ├── config.c/.h       # Configuration system
+│   └── memory.c/.h       # Memory management
+└── main.c                # Main entry point
 │   │   ├── instructions.c # IA-32 instruction set
 │   │   ├── registers.c    # 32-bit register handling
 │   │   └── addressing.c   # SIB addressing modes

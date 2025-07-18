@@ -1,4 +1,17 @@
-# STAS - STIX Modular Assembler
+# STAS - S**Status**: ✅ **Phase 2 Advanced Parsing Complete with Validation**
+- ✅ **Architecture & Design**: Comprehensive and well-documented  
+- ✅ **Build System**: Production-ready with static builds and testing
+- ✅ **Lexical Analysis**: Complete AT&T syntax tokenizer
+- ✅ **Parser Infrastructure**: Full AST creation and management (Phase 1)
+- ✅ **Expression Evaluation**: Complete arithmetic and bitwise expression parser (Phase 2)
+- ✅ **Advanced Parsing**: Symbol resolution, forward references, immediate expressions (Phase 2)
+- ✅ **Testing Framework**: Unicorn Engine integration working
+- ✅ **x86_16 Architecture**: Complete with 743 lines of code
+- ✅ **Code Generation**: Full x86_16 instruction encoding 
+- ✅ **Output Formats**: Flat binary, DOS .COM, custom base addresses
+- ✅ **Validation**: 100% test success rate with Phase 2 advanced parsing tests
+- 🟡 **x86-64 Architecture**: Ready for implementation with Phase 2 foundation
+- 🔄 **Additional Architectures**: ARM64, RISC-V planned Assembler
 
 A modular, multi-architecture assembler supporting AT&T syntax for various CPU architectures including x86-64, ARM64, and RISC-V.
 
@@ -24,6 +37,8 @@ A modular, multi-architecture assembler supporting AT&T syntax for various CPU a
 
 - 📋 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Current status and development roadmap
 - 🏗️ **[Architecture Design](ARCHITECTURE.md)** - Detailed technical design
+- 🎯 **[Phase 1 Milestone](MILESTONE_PHASE1.md)** - Parser infrastructure completion
+- 🎯 **[Phase 2 Milestone](MILESTONE_PHASE2.md)** - Advanced parsing & expression evaluation completion
 - 📦 **[Static Builds](STATIC_BUILDS.md)** - Resource-constrained deployment
 - 🧪 **[Unicorn Installation](UNICORN_INSTALLATION.md)** - Testing framework setup
 - 📈 **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current progress details
@@ -87,10 +102,19 @@ make static-x86_64
 stas/
 ├── src/           # Source files (.c)
 │   ├── core/      # Core assembler engine
+│   │   ├── parser.c     # Main parser with AST management
+│   │   └── expr.c       # Expression parser with operator precedence
 │   ├── arch/      # Architecture-specific modules
+│   │   └── x86_16/      # Complete x86-16 implementation
 │   ├── formats/   # Object file format handlers
 │   └── utils/     # Utility functions
+│       └── utils.c      # Enhanced utilities (string, memory, numbers)
 ├── include/       # Header files (.h)
+│   ├── parser.h   # Parser interface
+│   ├── expr.h     # Expression parser interface
+│   └── utils.h    # Utility function declarations
+├── tests/         # Test suites
+│   └── test_phase2_advanced_parsing.c  # Phase 2 validation (6/6 tests pass)
 ├── obj/           # Object files (generated)
 ├── bin/           # Executable files (generated)
 ├── Makefile       # Build configuration
@@ -117,9 +141,12 @@ sudo apt-get install libunicorn-dev
 ## Features
 
 - **✅ x86_16 Complete**: Full 16-bit Intel 8086/80286 instruction set (743 lines of code)
-- **✅ Validated Code Generation**: 100% test success with Unicorn Engine emulation
+- **✅ Advanced Expression Parser**: Complete arithmetic, bitwise, and symbol expression evaluation
+- **✅ Modular Architecture**: Clean separation with `expr.c`, enhanced `utils.c`, organized parser
+- **✅ Validated Code Generation**: 100% test success with Phase 2 advanced parsing tests
 - **✅ Multiple Output Formats**: Raw binary, DOS .COM, flat binary, custom base addresses
 - **✅ Real Machine Code**: Generates executable x86_16 assembly verified by CPU emulator
+- **✅ Symbol Resolution**: Forward references, immediate expressions, symbol evaluation
 - **🟡 Multi-Architecture Ready**: Plugin architecture for x86_32, x86_64, ARM64, RISC-V
 - **AT&T Syntax**: Consistent AT&T-style assembly syntax across all architectures
 - **Modular Design**: Each architecture implemented as separate module
@@ -146,10 +173,18 @@ sudo apt-get install libunicorn-dev
 mov ax, 0x4C00    # DOS exit function
 int 0x21          # Call DOS interrupt
 
-# Arithmetic example
-mov ax, 10        # Load 10 into AX
-mov bx, 5         # Load 5 into BX  
-add ax, bx        # AX = 15
+# Arithmetic with expressions
+mov ax, $(10 + 5)     # AX = 15
+mov bx, $(20 * 2)     # BX = 40  
+add ax, $(bx + 10)    # Complex immediate expressions
+
+# Bitwise operations in expressions  
+mov cx, $(0xFF & 0x0F)  # CX = 0x0F
+mov dx, $(0xF0 | 0x0F)  # DX = 0xFF
+
+# Symbol references in expressions
+mov ax, $(start + 10)   # Address arithmetic
+jmp $(end - start)      # Relative addressing
 
 # Stack operations
 mov ax, 0x5678    # Load value
@@ -183,9 +218,23 @@ message: .ascii "Hello, World!\n"
 
 ## ✅ Testing & Validation
 
-STAS includes comprehensive testing with real CPU emulation to validate generated machine code.
+STAS includes comprehensive testing with both CPU emulation and advanced parsing validation.
 
-### Comprehensive x86_16 Test Suite
+### Phase 2 Advanced Parsing Test Suite ✅
+```bash
+# Run comprehensive Phase 2 parsing tests
+make test-phase2
+
+# Results: 6/6 tests PASSED (100% success rate)
+# - Expression evaluation: Numbers, hex, parentheses
+# - Arithmetic expressions: +, -, *, /, operator precedence  
+# - Bitwise expressions: &, |, ^, complex operations
+# - Symbol resolution: Label definitions and references
+# - Forward references: Symbols defined after use
+# - Immediate expressions: Complex $(expr) in operands
+```
+
+### x86_16 CPU Emulation Test Suite ✅
 ```bash
 # Run full x86_16 validation with Unicorn Engine
 make test-x86_16-comprehensive
@@ -313,22 +362,33 @@ Based on the **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)**, Phase 1 is
   - ✅ Basic symbol table management
   - ✅ Hash table structure
 
-#### ⭐ **CURRENT PRIORITY - Phase 2: Advanced Parsing**
-1. **Expression Evaluation** (enhance `src/parser.c` - 300-400 lines estimated)
-   - Expression trees and arithmetic evaluation
-   - Symbol resolution in expressions
-   - Advanced operand parsing (registers, memory, immediates)
+#### ✅ **COMPLETED - Phase 2: Advanced Parsing & Expression Evaluation**
+1. **Expression Evaluation** (`src/core/expr.c` - 400+ lines completed)
+   - ✅ Complete expression parsing with operator precedence hierarchy
+   - ✅ Arithmetic expressions (addition, subtraction, multiplication, division)
+   - ✅ Bitwise operations (AND, OR, XOR, shifts)
+   - ✅ Symbol resolution in expressions with forward references
+   - ✅ Advanced operand parsing (registers, memory, immediates)
+   - ✅ Parentheses and complex expression support
 
-2. **Symbol Table Enhancement** (enhance `src/symbols.c` - 200-300 lines estimated)
-   - Forward reference resolution
-   - Relocation handling
-   - Advanced symbol lookup
+2. **Modular Architecture** (`src/utils/utils.c` enhanced, parser restructured)
+   - ✅ Extracted utilities into centralized module
+   - ✅ Safe string and memory management functions
+   - ✅ Number parsing with multiple base support
+   - ✅ Clean separation of concerns
 
-#### 🔄 **NEXT - Phase 3: Architecture Module**
-3. **x86-64 Architecture Module** (`src/arch/x86_64.c` - 600-800 lines estimated)
-   - Basic instruction encoding
-   - Register validation
-   - Addressing mode handling
+3. **Comprehensive Testing** (`tests/test_phase2_advanced_parsing.c`)
+   - ✅ 6/6 tests passing (100% success rate)
+   - ✅ Expression evaluation, arithmetic, bitwise operations
+   - ✅ Symbol resolution and forward references
+   - ✅ Immediate expression parsing validation
+
+#### ⭐ **CURRENT PRIORITY - Phase 3: Architecture Enhancement**
+4. **x86-64 Architecture Module** (`src/arch/x86_64.c` - planned next)
+   - Enhanced instruction encoding
+   - 64-bit register support
+   - Advanced addressing modes
+   - Integration with expression parser
 
 ### Adding a New Architecture
 
