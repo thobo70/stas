@@ -2,6 +2,48 @@
 
 A modular, multi-architecture assembler supporting AT&T syntax for various CPU architectures including x86-64, ARM64, and RISC-V.
 
+## Project Status
+
+**Current Version**: v0.0.1 (Foundation Complete)
+
+📊 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Comprehensive technical analysis and development roadmap
+
+**Status**: 🟡 **Foundation Complete - Ready for Core Implementation**
+- ✅ **Architecture & Design**: Comprehensive and well-documented  
+- ✅ **Build System**: Production-ready with static builds and testing
+- ✅ **Lexical Analysis**: Complete AT&T syntax tokenizer
+- ✅ **Testing Framework**: Unicorn Engine integration working
+- 🟡 **Parser**: Interface defined, implementation needed
+- 🔴 **Code Generation**: Not implemented
+- 🔴 **Architecture Modules**: Not implemented
+
+## Documentation
+
+- 📋 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Current status and development roadmap
+- 🏗️ **[Architecture Design](ARCHITECTURE.md)** - Detailed technical design
+- 📦 **[Static Builds](STATIC_BUILDS.md)** - Resource-constrained deployment
+- 🧪 **[Unicorn Installation](UNICORN_INSTALLATION.md)** - Testing framework setup
+- 📈 **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current progress details
+
+## Quick Start
+
+```bash
+# Clone and build
+git clone <repository-url>
+cd stas
+make
+
+# Test the assembler
+make test
+
+# Install Unicorn Engine for testing (optional)
+sudo apt-get install libunicorn-dev
+make test-unicorn
+
+# Create a static build for deployment
+make static-x86_64
+```
+
 ## Project Structure
 
 ```
@@ -114,7 +156,7 @@ make static-x86_64
 - ✅ **Portable**: Runs on any compatible system
 - ✅ **Embedded-friendly**: Perfect for resource-constrained environments
 
-See `STATIC_BUILDS.md` for complete documentation.
+See **[Static Builds Documentation](STATIC_BUILDS.md)** for complete setup and usage guide.
 
 ### Build and run:
 ```bash
@@ -169,9 +211,31 @@ Currently planned architectures:
 - **ARM64**: AArch64 instruction set
 - **RISC-V**: RV64I base instruction set
 
-See `ARCHITECTURE.md` for detailed design documentation and `EMULATOR_RECOMMENDATION.md` for Unicorn Engine testing setup.
+### Related Documentation
+- 📋 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Development priorities and roadmap
+- 🏗️ **[Architecture Design](ARCHITECTURE.md)** - Detailed technical specifications
+- 🧪 **[Unicorn Engine Setup](UNICORN_INSTALLATION.md)** - Testing framework installation
 
 ## Development
+
+### Next Steps (Phase 1)
+Based on the **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)**, the immediate priority is:
+
+1. **Parser Implementation** (`src/parser.c` - 800-1200 lines estimated)
+   - AST generation from tokens
+   - Expression evaluation
+   - Symbol resolution
+   - Error reporting integration
+
+2. **Symbol Table Implementation** (`src/symbols.c` - 400-600 lines estimated)
+   - Symbol definition and storage  
+   - Forward reference resolution
+   - Scope management
+
+3. **x86-64 Architecture Module** (`src/arch/x86_64.c` - 600-800 lines estimated)
+   - Basic instruction encoding
+   - Register validation
+   - Addressing mode handling
 
 ### Adding a New Architecture
 
