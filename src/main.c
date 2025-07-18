@@ -203,7 +203,11 @@ int assemble_file(const config_t *config) {
     }
     
     if (config->debug && ast) {
-        printf("AST created successfully with %s root node\n", 
+        printf("\n");
+        ast_print_tree(ast);
+        printf("\n");
+        ast_print_compact(ast);
+        printf("\nAST created successfully with %s root node\n", 
                ast->type == AST_INSTRUCTION ? "instruction" :
                ast->type == AST_LABEL ? "label" :
                ast->type == AST_DIRECTIVE ? "directive" : "unknown");

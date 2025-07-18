@@ -115,4 +115,10 @@ bool parser_match(parser_t *parser, token_type_t type);
 bool parser_expect(parser_t *parser, token_type_t type);
 void parser_error(parser_t *parser, const char *format, ...);
 
+// AST printing functions
+void ast_print(const ast_node_t *node, int indent);
+void ast_print_tree(const ast_node_t *root);
+void ast_print_compact(const ast_node_t *root);
+const char *ast_node_type_to_string(ast_node_type_t type);
+
 #endif // PARSER_H

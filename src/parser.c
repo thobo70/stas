@@ -723,3 +723,223 @@ int parse_symbol_operand(parser_t *parser, operand_t *operand) {
     parser_advance(parser);
     return 0;
 }
+
+//=============================================================================
+// AST Printing Functions
+//=============================================================================
+
+const char *ast_node_type_to_string(ast_node_type_t type) {
+    switch (type) {
+        case AST_INSTRUCTION: return "INSTRUCTION";
+        case AST_LABEL: return "LABEL";
+        case AST_DIRECTIVE: return "DIRECTIVE";
+        case AST_SECTION: return "SECTION";
+        case AST_EXPRESSION: return "EXPRESSION";
+        case AST_OPERAND: return "OPERAND";
+        default: return "UNKNOWN";
+    }
+}
+
+const char *operand_type_to_string(operand_type_t type) {
+    switch (type) {
+        case OPERAND_REGISTER: return "REGISTER";
+        case OPERAND_IMMEDIATE: return "IMMEDIATE";
+        case OPERAND_MEMORY: return "MEMORY";
+        case OPERAND_SYMBOL: return "SYMBOL";
+        default: return "UNKNOWN";
+    }
+}
+
+void print_indent(int indent) {
+    for (int i = 0; i < indent; i++) {
+        printf("  ");
+    }
+}
+
+void ast_print_operand(const operand_t *operand, int indent) {
+    if (!operand) return;
+    
+    print_indent(indent);
+    printf("- Operand [%s, size=%zu]: ", operand_type_to_string(operand->type), operand->size);
+    
+    switch (operand->type) {
+        case OPERAND_REGISTER:
+            printf("%%%s (id=%u)\n", 
+                   operand->value.reg.name ? operand->value.reg.name : "unknown",
+                   operand->value.reg.id);
+            break;
+        case OPERAND_IMMEDIATE:
+            printf("$%ld\n", operand->value.immediate);
+            break;
+        case OPERAND_SYMBOL:
+            printf("%s\n", operand->value.symbol ? operand->value.symbol : "NULL");
+            break;
+        case OPERAND_MEMORY:
+            printf("(memory operand)\n");
+            print_indent(indent + 1);
+            printf("  base: %s\n", operand->value.memory.base.name ? operand->value.memory.base.name : "none");
+            break;
+    }
+}
+
+void ast_print(const ast_node_t *node, int indent) {
+    if (!node) {
+        return;
+    }
+    
+    print_indent(indent);
+    printf("%s", ast_node_type_to_string(node->type));
+    
+    if (node->token.value) {
+        printf(" (\"%s\", line %zu)", node->token.value, node->token.line);
+    }
+    printf("\n");
+    
+    // Print node-specific data
+    switch (node->type) {
+        case AST_INSTRUCTION: {
+            ast_instruction_t *inst = (ast_instruction_t *)node->data;
+            if (inst) {
+                print_indent(indent + 1);
+                printf("mnemonic: %s\n", inst->mnemonic ? inst->mnemonic : "NULL");
+                print_indent(indent + 1);
+                printf("operands: %zu\n", inst->operand_count);
+                for (size_t i = 0; i < inst->operand_count; i++) {
+                    ast_print_operand(&inst->operands[i], indent + 2);
+                }
+            }
+            break;
+        }
+        case AST_LABEL: {
+            ast_label_t *label = (ast_label_t *)node->data;
+            if (label) {
+                print_indent(indent + 1);
+                printf("name: %s\n", label->name ? label->name : "NULL");
+            }
+            break;
+        }
+        case AST_DIRECTIVE: {
+            ast_directive_t *directive = (ast_directive_t *)node->data;
+            if (directive) {
+                print_indent(indent + 1);
+                printf("name: %s\n", directive->name ? directive->name : "NULL");
+                print_indent(indent + 1);
+                printf("args: %zu\n", directive->arg_count);
+                for (size_t i = 0; i < directive->arg_count; i++) {
+                    print_indent(indent + 2);
+                    printf("- \"%s\"\n", directive->args[i] ? directive->args[i] : "NULL");
+                }
+            }
+            break;
+        }
+        case AST_EXPRESSION: {
+            ast_expression_t *expr = (ast_expression_t *)node->data;
+            if (expr) {
+                print_indent(indent + 1);
+                switch (expr->type) {
+                    case EXPR_NUMBER:
+                        printf("number: %ld\n", expr->value.number);
+                        break;
+                    case EXPR_SYMBOL:
+                        printf("symbol: %s\n", expr->value.symbol ? expr->value.symbol : "NULL");
+                        break;
+                    case EXPR_BINARY_OP:
+                        printf("binary_op: '%c'\n", expr->value.binary.operator);
+                        break;
+                    case EXPR_UNARY_OP:
+                        printf("unary_op: '%c'\n", expr->value.unary.operator);
+                        break;
+                }
+            }
+            break;
+        }
+        case AST_OPERAND: {
+            operand_t *operand = (operand_t *)node->data;
+            if (operand) {
+                ast_print_operand(operand, indent + 1);
+            }
+            break;
+        }
+        case AST_SECTION:
+            print_indent(indent + 1);
+            printf("(section container)\n");
+            break;
+    }
+    
+    // Print children
+    if (node->child) {
+        print_indent(indent + 1);
+        printf("children:\n");
+        ast_print(node->child, indent + 2);
+    }
+    
+    // Print siblings
+    if (node->next) {
+        ast_print(node->next, indent);
+    }
+}
+
+void ast_print_tree(const ast_node_t *root) {
+    if (!root) {
+        printf("AST: (empty)\n");
+        return;
+    }
+    
+    printf("=== AST TREE ===\n");
+    ast_print(root, 0);
+    printf("=== END AST ===\n");
+}
+
+void ast_print_compact(const ast_node_t *root) {
+    if (!root) {
+        printf("AST: (empty)\n");
+        return;
+    }
+    
+    const ast_node_t *current = root;
+    int count = 0;
+    
+    printf("AST Summary:\n");
+    while (current) {
+        printf("  %d. %s", count + 1, ast_node_type_to_string(current->type));
+        
+        switch (current->type) {
+            case AST_INSTRUCTION: {
+                ast_instruction_t *inst = (ast_instruction_t *)current->data;
+                if (inst) {
+                    printf(" (%s, %zu operands)", 
+                           inst->mnemonic ? inst->mnemonic : "NULL",
+                           inst->operand_count);
+                }
+                break;
+            }
+            case AST_LABEL: {
+                ast_label_t *label = (ast_label_t *)current->data;
+                if (label) {
+                    printf(" (%s)", label->name ? label->name : "NULL");
+                }
+                break;
+            }
+            case AST_DIRECTIVE: {
+                ast_directive_t *directive = (ast_directive_t *)current->data;
+                if (directive) {
+                    printf(" (%s, %zu args)", 
+                           directive->name ? directive->name : "NULL",
+                           directive->arg_count);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        
+        if (current->token.line > 0) {
+            printf(" [line %zu]", current->token.line);
+        }
+        printf("\n");
+        
+        current = current->next;
+        count++;
+    }
+    printf("Total nodes: %d\n", count);
+}
