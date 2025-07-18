@@ -103,6 +103,7 @@ ast_node_t *parse_operand(parser_t *parser);
 ast_node_t *parse_expression(parser_t *parser);
 
 // Operand parsing
+bool parse_operand_full(parser_t *parser, operand_t *operand);
 int parse_register_operand(parser_t *parser, operand_t *operand);
 int parse_immediate_operand(parser_t *parser, operand_t *operand);
 int parse_memory_operand(parser_t *parser, operand_t *operand);

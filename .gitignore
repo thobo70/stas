@@ -48,6 +48,9 @@ dkms.conf
 # Project specific
 obj/
 bin/
+tests/test_*
+!tests/test_*.c
+!tests/test_*.sh
 
 # IDE files
 .vscode/

@@ -150,26 +150,71 @@ int assemble_file(const config_t *config) {
         goto cleanup;
     }
     
-    // For now, just tokenize and show the tokens in debug mode
+    // Create mock architecture interface (placeholder)
+    arch_ops_t mock_arch = {
+        .name = config->architecture,
+        .init = NULL,
+        .cleanup = NULL,
+        .parse_instruction = NULL,
+        .encode_instruction = NULL,
+        .parse_register = NULL,
+        .is_valid_register = NULL,
+        .get_register_name = NULL,
+        .parse_addressing = NULL,
+        .validate_addressing = NULL,
+        .handle_directive = NULL,
+        .get_instruction_size = NULL,
+        .get_alignment = NULL
+    };
+    
+    // Create parser
+    parser_t *parser = parser_create(lexer, &mock_arch);
+    if (!parser) {
+        fprintf(stderr, "Error: Failed to create parser\n");
+        lexer_destroy(lexer);
+        goto cleanup;
+    }
+
     if (config->debug) {
-        printf("Tokens:\n");
+        printf("=== LEXER TOKENS ===\n");
+        // Create a temporary lexer for token display
+        lexer_t *debug_lexer = lexer_create(source_code, config->input_file);
         token_t token;
         do {
-            token = lexer_next_token(lexer);
+            token = lexer_next_token(debug_lexer);
             printf("  Line %zu: %s = '%s'\n", 
                    token.line, 
                    token_type_to_string(token.type), 
                    token.value ? token.value : "");
             token_free(&token);
         } while (token.type != TOKEN_EOF && token.type != TOKEN_ERROR);
+        lexer_destroy(debug_lexer);
+        
+        printf("\n=== PARSER AST ===\n");
     }
     
+    // Parse the source code
+    ast_node_t *ast = parser_parse(parser);
+    
+    if (parser_has_error(parser)) {
+        fprintf(stderr, "Parse error: %s\n", parser_get_error(parser));
+        parser_destroy(parser);
+        goto cleanup;
+    }
+    
+    if (config->debug && ast) {
+        printf("AST created successfully with %s root node\n", 
+               ast->type == AST_INSTRUCTION ? "instruction" :
+               ast->type == AST_LABEL ? "label" :
+               ast->type == AST_DIRECTIVE ? "directive" : "unknown");
+    }
+
     printf("Assembly completed successfully!\n");
     printf("Output would be written to: %s\n", config->output_file);
     
     result = EXIT_SUCCESS;
     
-    lexer_destroy(lexer);
+    parser_destroy(parser);
     
 cleanup:
     if (source_code) free(source_code);
