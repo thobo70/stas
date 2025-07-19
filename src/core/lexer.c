@@ -384,6 +384,27 @@ bool is_instruction_token(const char *str) {
         "rol", "rolb", "rolw", "roll", "rolq",
         "ror", "rorb", "rorw", "rorl", "rorq",
         
+        // Phase 6.1: SSE/AVX floating-point instructions
+        // SSE scalar single-precision
+        "movss", "addss", "subss", "mulss", "divss",
+        // SSE scalar double-precision  
+        "movsd", "addsd", "subsd", "mulsd", "divsd",
+        // SSE packed single-precision
+        "movaps", "addps", "subps", "mulps", "divps",
+        // SSE packed double-precision
+        "movapd", "addpd", "subpd", "mulpd", "divpd",
+        // SSE integer operations
+        "paddd", "psubd", "pmulld",
+        
+        // AVX instructions (VEX-encoded)
+        "vmovaps", "vmovapd", "vaddps", "vaddpd", "vsubps", "vsubpd",
+        "vmulps", "vmulpd",
+        
+        // Advanced control flow
+        "cmove", "cmovne", "cmovl", "cmovge", "cmovle", "cmovg",
+        "sete", "setne", "setl", "setge", "setle", "setg",
+        "loop", "loope", "loopne",
+        
         NULL
     };
     

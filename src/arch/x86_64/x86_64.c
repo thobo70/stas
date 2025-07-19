@@ -4,6 +4,7 @@
  */
 
 #include "x86_64.h"
+#include "x86_64_advanced.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -464,6 +465,29 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         *length = pos;
         free(lower_mnemonic);
         return 0;
+    }
+    
+    // Phase 6.1: Try advanced instruction sets before fallback
+    
+    // Check for SSE instructions
+    if (is_sse_instruction(lower_mnemonic)) {
+        int result = encode_sse_instruction(inst, buffer, length);
+        free(lower_mnemonic);
+        return result;
+    }
+    
+    // Check for AVX instructions  
+    if (is_avx_instruction(lower_mnemonic)) {
+        int result = encode_avx_instruction(inst, buffer, length);
+        free(lower_mnemonic);
+        return result;
+    }
+    
+    // Check for advanced control flow instructions
+    if (is_advanced_control_instruction(lower_mnemonic)) {
+        int result = encode_advanced_control_instruction(inst, buffer, length);
+        free(lower_mnemonic);
+        return result;
     }
     
     // Fall back to basic encoding for unimplemented instructions

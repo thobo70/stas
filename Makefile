@@ -38,7 +38,7 @@ UTIL_SOURCES = $(SRC_DIR)/utils/utils.c
 UTIL_OBJECTS = $(UTIL_SOURCES:$(SRC_DIR)/utils/%.c=$(OBJ_DIR)/utils/%.o)
 
 # Architecture module sources
-ARCH_X86_64_SOURCES = $(SRC_DIR)/arch/x86_64/x86_64.c $(SRC_DIR)/arch/x86_64/instructions.c $(SRC_DIR)/arch/x86_64/registers.c $(SRC_DIR)/arch/x86_64/addressing.c
+ARCH_X86_64_SOURCES = $(SRC_DIR)/arch/x86_64/x86_64.c $(SRC_DIR)/arch/x86_64/instructions.c $(SRC_DIR)/arch/x86_64/registers.c $(SRC_DIR)/arch/x86_64/addressing.c $(SRC_DIR)/arch/x86_64/x86_64_advanced.c
 ARCH_X86_64_OBJECTS = $(ARCH_X86_64_SOURCES:$(SRC_DIR)/arch/x86_64/%.c=$(OBJ_DIR)/arch/x86_64/%.o)
 
 ARCH_X86_32_SOURCES = $(SRC_DIR)/arch/x86_32/x86_32.c
