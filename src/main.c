@@ -155,21 +155,50 @@ int assemble_file(const config_t *config) {
     }
     
     // Read source code
-    fseek(input_file, 0, SEEK_END);
-    source_size = ftell(input_file);
-    fseek(input_file, 0, SEEK_SET);
-    
-    source_code = malloc(source_size + 1);
-    if (!source_code) {
-        fprintf(stderr, "Error: Memory allocation failed\n");
-        goto cleanup;
+    if (input_file == stdin) {
+        // For stdin, read in chunks since it's not seekable
+        size_t capacity = 1024;
+        size_t used = 0;
+        source_code = malloc(capacity);
+        if (!source_code) {
+            fprintf(stderr, "Error: Memory allocation failed\n");
+            return EXIT_FAILURE;
+        }
+        
+        size_t bytes_read;
+        while ((bytes_read = fread(source_code + used, 1, capacity - used - 1, input_file)) > 0) {
+            used += bytes_read;
+            if (used + 1 >= capacity) {
+                capacity *= 2;
+                char *new_buffer = realloc(source_code, capacity);
+                if (!new_buffer) {
+                    free(source_code);
+                    fprintf(stderr, "Error: Memory allocation failed\n");
+                    return EXIT_FAILURE;
+                }
+                source_code = new_buffer;
+            }
+        }
+        source_code[used] = '\0';
+        source_size = used;
+    } else {
+        // For regular files, use fseek/ftell
+        fseek(input_file, 0, SEEK_END);
+        source_size = ftell(input_file);
+        fseek(input_file, 0, SEEK_SET);
+        
+        source_code = malloc(source_size + 1);
+        if (!source_code) {
+            fprintf(stderr, "Error: Memory allocation failed\n");
+            goto cleanup;
+        }
+        
+        size_t bytes_read = fread(source_code, 1, source_size, input_file);
+        if (bytes_read != source_size) {
+            fprintf(stderr, "Warning: Read %zu bytes, expected %zu\n", bytes_read, source_size);
+        }
+        source_code[source_size] = '\0';
     }
-    
-    size_t bytes_read = fread(source_code, 1, source_size, input_file);
-    if (bytes_read != source_size) {
-        fprintf(stderr, "Warning: Read %zu bytes, expected %zu\n", bytes_read, source_size);
-    }
-    source_code[source_size] = '\0';
     
     if (config->verbose) {
         printf("Assembling %s for %s architecture...\n", 

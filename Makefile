@@ -1,6 +1,9 @@
 # Project name
 PROJECT_NAME = stas
 
+# Default target (must be first)
+.DEFAULT_GOAL := all
+
 # Compiler and flags
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC
