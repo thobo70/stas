@@ -426,6 +426,32 @@ bool is_instruction_token(const char *str) {
         // System
         "svc", "hvc", "smc", "brk", "hlt", "isb", "dsb", "dmb",
         
+        // Phase 6.3: RISC-V instructions
+        // Arithmetic immediate instructions
+        "addi", "slti", "sltiu", "xori", "ori", "andi",
+        "slli", "srli", "srai",
+        
+        // Register arithmetic instructions  
+        "add", "sub", "sll", "slt", "sltu", "xor", "srl", "sra", "or", "and",
+        
+        // Load instructions
+        "lb", "lh", "lw", "ld", "lbu", "lhu", "lwu",
+        
+        // Store instructions
+        "sb", "sh", "sw", "sd",
+        
+        // Branch instructions
+        "beq", "bne", "blt", "bge", "bltu", "bgeu",
+        
+        // Jump instructions
+        "jal", "jalr",
+        
+        // Upper immediate instructions
+        "lui", "auipc",
+        
+        // System instructions
+        "ecall", "ebreak",
+        
         NULL
     };
     

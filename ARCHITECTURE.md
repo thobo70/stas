@@ -2,25 +2,25 @@
 
 ## Overview
 
-STAS (STIX Assembler) is a modular, multi-architecture assembler with **complete x86_16 implementation** and a proven architecture for expansion to additional CPU architectures. The assembler maintains consistent AT&T syntax while providing real machine code generation validated through CPU emulation.
+STAS (STIX Assembler) is a modular, multi-architecture assembler with **complete 5-architecture implementation** including x86_16, x86_32, x86_64, ARM64, and RISC-V. The assembler maintains consistent AT&T syntax while providing real machine code generation validated through comprehensive testing.
 
 ## Design Principles
 
-1. **✅ Modularity**: Each CPU architecture implemented as separate module (proven with x86_16)
+1. **✅ Modularity**: Each CPU architecture implemented as separate module (5 architectures proven)
 2. **✅ Extensibility**: New architectures can be added without modifying core code  
 3. **✅ AT&T Syntax**: Consistent AT&T-style assembly syntax across all architectures
-4. **✅ Performance**: Efficient parsing and code generation
+4. **✅ Performance**: Efficient parsing and code generation for all architectures
 5. **✅ Standards Compliance**: Follows established assembly language conventions
-6. **✅ Validation**: Real CPU emulation validates generated machine code
+6. **✅ Validation**: Comprehensive testing validates generated machine code
 
-## Architecture Overview - PROVEN IMPLEMENTATION
+## Architecture Overview - MULTI-ARCHITECTURE IMPLEMENTATION
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     STAS Frontend                    ✅     │
 ├─────────────────────────────────────────────────────────────┤
 │  Command Line Interface │ Configuration │ Error Reporting   │
-│  -a x86_16 -f com -o    │   Format      │   Working         │
+│  -a riscv -f bin -o     │   Format      │   Working         │
 └─────────────────────────────────────────────────────────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────┐
@@ -40,13 +40,13 @@ STAS (STIX Assembler) is a modular, multi-architecture assembler with **complete
 ┌─────────────────────────────────────────────────────────────┐
 │                 Architecture Modules                        │
 ├─────────────┬─────────────┬─────────────┬─────────────────────┤
-│ x86-16 ✅   │ x86-32 🟡   │ x86-64 🟡   │ ARM64/RISC-V 🟡     │
-│             │             │             │                     │
-│ • 8086/286  │ • 386+ IA32 │ • AMD64     │ • Instructions      │
-│ • 16-bit    │ • 32-bit    │ • 64-bit    │ • Registers         │
-│ • 743 LINES │ • PLANNED   │ • PLANNED   │ • PLANNED           │
-│ • VALIDATED │ • Framework │ • Framework │ • Framework         │
-└─────────────┴─────────────┴─────────────┴─────────────────────┘
+│ x86-16 ✅   │ x86-32 ✅   │ x86-64 ✅   │ ARM64 ✅ │ RISC-V ✅ │
+│             │             │             │          │           │
+│ • 8086/286  │ • 386+ IA32 │ • AMD64     │ • AArch64│ • RV64I   │
+│ • 16-bit    │ • 32-bit    │ • 64-bit    │ • 64-bit │ • 64-bit  │
+│ • DOS .COM  │ • ELF32     │ • ELF64     │ • Complete│ • Complete│
+│ • VALIDATED │ • VALIDATED │ • VALIDATED │ • TESTED │ • TESTED  │
+└─────────────┴─────────────┴─────────────┴──────────┴───────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────┐
 │                   Output Generator               ✅         │

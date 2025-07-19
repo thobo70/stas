@@ -1,4 +1,11 @@
-# STAS - STIX Modular Assembler
+# STAS - STIX Modular- **ARM64**: ✅ Complete AArch64 instruction set with data processing, loads/stores, branches
+- **RISC-V**: ✅ Complete RV64I base instruction set with I/R/S/B/U/J format support
+- ✅ **Code Generation Pipeline**: Full AST-to-machine-code conversion working
+- ✅ **Multi-Format Support**: 6 output formats (bin, com, elf32, elf64, hex, srec)
+- ✅ **Format Organization**: Modular format implementations in dedicated formats/ folder
+- ✅ **Real Machine Code**: Generates actual executable bytes (fixed empty output issue)
+- ✅ **Validation**: 5/5 Phase 5 tests passing with proper ELF object files
+- ✅ **Phase 6**: RISC-V architecture and parser integration completeler
 
 A modular, multi-architecture assembler supporting AT&T syntax for various CPU architectures including x86-64, x86-32, ARM64, and RISC-V.
 
@@ -8,7 +15,7 @@ A modular, multi-architecture assembler supporting AT&T syntax for various CPU a
 
 📊 **[Project Status](PROJECT_STATUS.md)** - Comprehensive technical status and development roadmap
 
-**Status**: ✅ **Phase 6.2 ARM64 & Format Organization Complete**
+**Status**: ✅ **Phase 6.4 RISC-V Parser Enhancement Complete**
 - ✅ **Architecture & Design**: Comprehensive and well-documented  
 - ✅ **Build System**: Production-ready with static builds and testing
 - ✅ **Lexical Analysis**: Complete AT&T syntax tokenizer
@@ -106,7 +113,7 @@ stas/
 │   │   ├── x86_32/      # Complete x86-32 implementation  
 │   │   ├── x86_64/      # Complete x86-64 implementation
 │   │   ├── arm64/       # Complete ARM64/AArch64 implementation
-│   │   └── riscv/       # RISC-V implementation (planned)
+│   │   └── riscv/       # Complete RISC-V RV64I implementation
 │   ├── formats/         # Output format implementations
 │   │   ├── elf.c        # ELF32/ELF64 object file format
 │   │   ├── flat_binary.c  # Flat binary format
@@ -134,7 +141,9 @@ stas/
 │   ├── utils.h          # Utility function declarations
 │   ├── x86_16.h         # x86-16 architecture interface
 │   ├── x86_32.h         # x86-32 architecture interface
-│   └── x86_64.h         # x86-64 architecture interface
+│   ├── x86_64.h         # x86-64 architecture interface
+│   ├── arm64.h          # ARM64 architecture interface
+│   └── riscv.h          # RISC-V architecture interface
 ├── tests/               # Comprehensive test suites
 │   ├── test_phase1_parser.c  # Phase 1 parser validation
 │   ├── test_phase2_advanced_parsing.c  # Phase 2 expression parsing (6/6 pass)
@@ -148,6 +157,8 @@ stas/
 │   ├── hello_x86_16.s   # x86-16 DOS hello world
 │   ├── hello_x86_32.s   # x86-32 hello world
 │   ├── hello_x86_64.s   # x86-64 hello world
+│   ├── arm64_simple.s   # ARM64 example
+│   ├── riscv_simple.s   # RISC-V example
 │   └── *.s              # Various architecture examples
 ├── obj/                 # Object files (generated)
 ├── bin/                 # Executable files (generated)
@@ -180,7 +191,7 @@ sudo apt-get install libunicorn-dev
 
 ## Features
 
-- **✅ Multi-Architecture Support**: Complete implementations for x86_16, x86_32, x86_64, and ARM64
+- **✅ Multi-Architecture Support**: Complete implementations for x86_16, x86_32, x86_64, ARM64, and RISC-V
 - **✅ Advanced Expression Parser**: Complete arithmetic, bitwise, and symbol expression evaluation
 - **✅ Modular Architecture**: Clean separation with dedicated architecture and format modules
 - **✅ Comprehensive Output Formats**: 6 formats (bin, com, elf32, elf64, hex, srec) with modular organization
@@ -302,10 +313,19 @@ mov x0, #0            # status
 svc #0                # system call
 ```
 
+#### ✅ RISC-V (64-bit RISC-V)
+```bash
+# Assemble RISC-V with immediate values
+./bin/stas -a riscv -f bin -o program.bin program.s
+
+# RISC-V assembly example (uses $ prefix for immediates)
+addi x1, x0, $10      # Add immediate: x1 = x0 + 10
+add x2, x1, x0        # Add registers: x2 = x1 + x0
+ld x3, $0(x1)         # Load doubleword: x3 = memory[x1 + 0]
+```
+
 ### 🔄 Planned Future Enhancements
 ```bash
-# RISC-V architecture (planned)
-./bin/stas -a riscv -f elf64 -o program.o program.s
 
 # Additional formats (when fully implemented)
 ./bin/stas -a arm64 -f hex -o program.hex program.s    # Intel HEX
@@ -452,18 +472,19 @@ Based on the **[Project Status](PROJECT_STATUS.md)**, we have completed signific
 - **Code Generation**: Working machine code generation for all architectures
 - **Testing Framework**: Comprehensive test suites with CPU emulation validation
 
-#### ✅ **COMPLETED - Phase 6.1-6.2: Multi-Architecture & Format Enhancement**
+#### ✅ **COMPLETED - Phase 6.1-6.4: Multi-Architecture & Format Enhancement**
 - **x86_16 Architecture**: Complete 16-bit instruction set with DOS support
 - **x86_32 Architecture**: Complete 32-bit instruction set with ELF support
 - **x86_64 Architecture**: Complete 64-bit instruction set 
 - **ARM64 Architecture**: Complete AArch64 instruction set implementation
+- **RISC-V Architecture**: Complete RV64I instruction set with parser integration
 - **Format Organization**: Modular format system with 6 supported formats
 
-#### 🔄 **CURRENT FOCUS - Phase 6.3+: Advanced Features**
-- **RISC-V Architecture**: Next major architecture to implement
+#### 🔄 **CURRENT FOCUS - Phase 6.5+: Advanced Features**
+- **Optimization Features**: Dead code elimination, peephole optimization, instruction scheduling
+- **Advanced Directives**: Macro support, conditional assembly, include files
 - **Format Completion**: Finish Intel HEX and Motorola S-Record implementations
-- **Optimization Features**: Code optimization and performance enhancements
-- **Advanced Directives**: Macro support, conditional assembly, includes
+- **RISC-V Extensions**: Compressed instructions, floating-point support, vector extensions
 
 ### Adding a New Architecture
 

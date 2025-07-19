@@ -254,12 +254,12 @@ int riscv_parse_instruction_impl(const char *mnemonic, operand_t *operands,
 
 int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *length) {
     if (!inst || !buffer || !length) {
-        return 0;
+        return -1;
     }
     
     const riscv_instruction_info_t *info = riscv_find_instruction(inst->mnemonic);
     if (!info) {
-        return 0;
+        return -1;
     }
     
     uint32_t instruction = 0;
@@ -285,12 +285,14 @@ int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *
         
         case RISCV_FORMAT_I: {
             // I-type: op rd, rs1, imm
-            if (operand_count != 3) return 0;
+            if (operand_count != 3) {
+                return -1;
+            }
             
             asm_register_t rd, rs1;
             if (!riscv_parse_register_impl(operands[0].value.symbol, &rd) ||
                 !riscv_parse_register_impl(operands[1].value.symbol, &rs1)) {
-                return 0;
+                return -1;
             }
             
             int32_t imm = (int32_t)operands[2].value.immediate;
@@ -313,7 +315,7 @@ int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *
         }
         
         default:
-            return 0;
+            return -1;
     }
     
     // Write instruction as little-endian
@@ -323,7 +325,7 @@ int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *
     buffer[3] = (instruction >> 24) & 0xFF;
     *length = 4;
     
-    return 1; // Success
+    return 0; // Success
 }
 
 // RISC-V architecture operations
