@@ -26,6 +26,10 @@ BIN_DIR = bin
 CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/expr.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c
 CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o)
 
+# Format source files
+FORMAT_SOURCES = $(SRC_DIR)/formats/elf.c
+FORMAT_OBJECTS = $(FORMAT_SOURCES:$(SRC_DIR)/formats/%.c=$(OBJ_DIR)/formats/%.o)
+
 # Utility source files
 UTIL_SOURCES = $(SRC_DIR)/utils/utils.c
 UTIL_OBJECTS = $(UTIL_SOURCES:$(SRC_DIR)/utils/%.c=$(OBJ_DIR)/utils/%.o)
@@ -45,8 +49,8 @@ MAIN_SOURCE = $(SRC_DIR)/main.c
 MAIN_OBJECT = $(OBJ_DIR)/main.o
 
 # All sources and objects for dynamic build
-SOURCES = $(CORE_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(MAIN_SOURCE)
-OBJECTS = $(CORE_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(MAIN_OBJECT)
+SOURCES = $(CORE_SOURCES) $(FORMAT_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(MAIN_SOURCE)
+OBJECTS = $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(MAIN_OBJECT)
 
 # Target executable
 TARGET = $(BIN_DIR)/$(PROJECT_NAME)
@@ -65,6 +69,7 @@ INCLUDES = -I$(INCLUDE_DIR) -I$(SRC_DIR)/core -I$(SRC_DIR)/arch
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(OBJ_DIR)/core
+	mkdir -p $(OBJ_DIR)/formats
 	mkdir -p $(OBJ_DIR)/utils
 	mkdir -p $(OBJ_DIR)/arch/x86_64
 	mkdir -p $(OBJ_DIR)/arch/x86_32
@@ -89,6 +94,10 @@ $(OBJ_DIR)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR)
 
 # Core module compilation
 $(OBJ_DIR)/core/%.o: $(SRC_DIR)/core/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Format module compilation
+$(OBJ_DIR)/formats/%.o: $(SRC_DIR)/formats/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Utility module compilation
@@ -449,6 +458,25 @@ bin/test_phase4_expanded: tests/test_phase4_expanded.c $(ARCH_X86_64_OBJECTS) $(
 		$(UTIL_OBJECTS) \
 		-o $@
 	@echo "Phase 4 expanded instruction test built: $@"
+
+# Phase 5 Testing: Advanced Output Formats
+test-phase5-elf: bin/test_phase5_elf bin/stas
+	@echo "==========================================="
+	@echo "Running Phase 5 ELF Format Tests"
+	@echo "==========================================="
+	./bin/test_phase5_elf
+
+bin/test_phase5_elf: tests/test_phase5_elf.c $(FORMAT_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 5 ELF format test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase5_elf.c \
+		$(FORMAT_OBJECTS) \
+		$(ARCH_X86_64_OBJECTS) \
+		$(ARCH_X86_32_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 5 ELF format test built: $@"
 
 # Test all variants
 test-comprehensive: test-x86_16-comprehensive

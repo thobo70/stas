@@ -5,6 +5,7 @@
  */
 
 #include "output_format.h"
+#include "formats/elf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -304,7 +305,9 @@ output_format_ops_t *get_output_format(output_format_t format) {
         case FORMAT_COM:
             return get_com_format();
         case FORMAT_ELF32:
+            return get_elf32_format();
         case FORMAT_ELF64:
+            return get_elf64_format();
         case FORMAT_HEX:
         case FORMAT_SREC:
         default:
