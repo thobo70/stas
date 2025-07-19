@@ -1,4 +1,14 @@
-# STAS - S**Status**: ✅ **Phase 2 Advanced Parsing Complete with Validation**
+# STAS - STIX Modular Assembler
+
+A modular, multi-architecture assembler supporting AT&T syntax for various CPU architectures including x86-64, x86-32, ARM64, and RISC-V.
+
+## Project Status
+
+**Current Version**: v0.5.0 (Phase 5 Complete - ELF Object File Generation)
+
+📊 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Comprehensive technical analysis and development roadmap
+
+**Status**: ✅ **Phase 5 ELF Format Implementation Complete**
 - ✅ **Architecture & Design**: Comprehensive and well-documented  
 - ✅ **Build System**: Production-ready with static builds and testing
 - ✅ **Lexical Analysis**: Complete AT&T syntax tokenizer
@@ -6,42 +16,24 @@
 - ✅ **Expression Evaluation**: Complete arithmetic and bitwise expression parser (Phase 2)
 - ✅ **Advanced Parsing**: Symbol resolution, forward references, immediate expressions (Phase 2)
 - ✅ **Testing Framework**: Unicorn Engine integration working
-- ✅ **x86_16 Architecture**: Complete with 743 lines of code
-- ✅ **Code Generation**: Full x86_16 instruction encoding 
-- ✅ **Output Formats**: Flat binary, DOS .COM, custom base addresses
-- ✅ **Validation**: 100% test success rate with Phase 2 advanced parsing tests
-- 🟡 **x86-64 Architecture**: Ready for implementation with Phase 2 foundation
-- 🔄 **Additional Architectures**: ARM64, RISC-V planned Assembler
-
-A modular, multi-architecture assembler supporting AT&T syntax for various CPU architectures including x86-64, ARM64, and RISC-V.
-
-## Project Status
-
-**Current Version**: v0.1.0 (x86_16 Complete)
-
-📊 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Comprehensive technical analysis and development roadmap
-
-**Status**: � **x86_16 Architecture Complete with Validation**
-- ✅ **Architecture & Design**: Comprehensive and well-documented  
-- ✅ **Build System**: Production-ready with static builds and testing
-- ✅ **Lexical Analysis**: Complete AT&T syntax tokenizer
-- ✅ **Testing Framework**: Unicorn Engine integration working
-- ✅ **x86_16 Architecture**: Complete with 743 lines of code
-- ✅ **Code Generation**: Full x86_16 instruction encoding 
-- ✅ **Output Formats**: Flat binary, DOS .COM, custom base addresses
-- ✅ **Validation**: 100% test success rate with Unicorn Engine emulation
-- 🟡 **Parser**: Interface defined, implementation needed for other architectures
-- � **Additional Architectures**: x86_64, ARM64, RISC-V planned
+- ✅ **x86_64 Architecture**: Complete instruction encoding with real machine code generation
+- ✅ **x86_32 Architecture**: Complete instruction encoding with ELF32 support
+- ✅ **Code Generation Pipeline**: Full AST-to-machine-code conversion working
+- ✅ **ELF Format Support**: Both ELF32 and ELF64 object file generation
+- ✅ **Real Machine Code**: Generates actual executable bytes (fixed empty output issue)
+- ✅ **Validation**: 5/5 Phase 5 tests passing with proper ELF object files
+- � **Phase 6**: Ready to begin advanced features and optimizations
 
 ## Documentation
 
 - 📋 **[Project State Analysis](PROJECT_STATE_ANALYSIS.md)** - Current status and development roadmap
 - 🏗️ **[Architecture Design](ARCHITECTURE.md)** - Detailed technical design
-- 🎯 **[Phase 1 Milestone](MILESTONE_PHASE1.md)** - Parser infrastructure completion
+- 📈 **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current progress details
+- 🎯 **[Phase 5 Milestone](MILESTONE_PHASE5.md)** - ELF format implementation completion
 - 🎯 **[Phase 2 Milestone](MILESTONE_PHASE2.md)** - Advanced parsing & expression evaluation completion
+- 🎯 **[Phase 1 Milestone](MILESTONE_PHASE1.md)** - Parser infrastructure completion
 - 📦 **[Static Builds](STATIC_BUILDS.md)** - Resource-constrained deployment
 - 🧪 **[Unicorn Installation](UNICORN_INSTALLATION.md)** - Testing framework setup
-- 📈 **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current progress details
 
 ## Quick Start
 

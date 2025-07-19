@@ -55,6 +55,13 @@ tmp/
 testbin/
 !testbin/README.md
 
+# Test output files
+*.o
+*.bin
+*.out
+test*.s
+demo*.s
+
 # IDE files
 .vscode/
 .idea/
