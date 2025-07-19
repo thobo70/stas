@@ -56,7 +56,8 @@ typedef struct {
 // static arch_plugin_t *loaded_plugins = NULL; // TODO: Implement plugin loading
 
 void print_usage(const char *program_name) {
-    printf("Usage: %s [options] input.s\n", program_name);
+    printf("Usage: %s [options] [input.s]\n", program_name);
+    printf("       echo 'assembly code' | %s [options]\n", program_name);
     printf("Options:\n");
 #ifdef STATIC_BUILD
     printf("  -o, --output=FILE    Output file\n");
@@ -439,13 +440,12 @@ int main(int argc, char *argv[]) {
     }
 #endif
     
+    // Set input file (default to stdin if no file specified)
     if (optind >= argc) {
-        fprintf(stderr, "Error: No input file specified\n");
-        print_usage(argv[0]);
-        return EXIT_FAILURE;
+        config.input_file = "-";  // Default to stdin for pipe input
+    } else {
+        config.input_file = argv[optind];
     }
-    
-    config.input_file = argv[optind];
     
 #ifndef STATIC_BUILD
     // Load architecture plugins

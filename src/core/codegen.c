@@ -134,6 +134,16 @@ static int codegen_process_instruction(codegen_ctx_t *ctx, ast_node_t *inst_node
     inst.operands = ast_inst->operands;
     inst.operand_count = ast_inst->operand_count;
     
+    // Parse instruction using architecture-specific parser to set up encoding
+    if (ctx->arch->parse_instruction) {
+        int result = ctx->arch->parse_instruction(inst.mnemonic, inst.operands, 
+                                                inst.operand_count, &inst);
+        if (result != 0) {
+            fprintf(stderr, "Error: Failed to parse instruction '%s'\n", inst.mnemonic);
+            return -1;
+        }
+    }
+    
     // Ensure we have enough buffer space
     size_t needed_space = ctx->code_size + 16; // Assume max 16 bytes per instruction
     if (needed_space > ctx->code_capacity) {

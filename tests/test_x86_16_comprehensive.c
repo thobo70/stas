@@ -130,19 +130,19 @@ static test_result_t test_simple_mov(void) {
     uint8_t code_buffer[16];
     size_t code_length = 0;
     
-    // Create MOV AX, 0x1234 instruction
+    // Create MOV AX, 0x1234 instruction (AT&T syntax: movw $0x1234, %ax)
     operand_t operands[2];
     
-    // Destination: AX register
-    operands[0].type = OPERAND_REGISTER;
-    operands[0].value.reg.id = AX_16;
-    operands[0].value.reg.name = "ax";
-    operands[0].value.reg.size = 2;
+    // Source: immediate value 0x1234 (first operand in AT&T)
+    operands[0].type = OPERAND_IMMEDIATE;
+    operands[0].value.immediate = 0x1234;
     operands[0].size = 2;
     
-    // Source: immediate value 0x1234
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 0x1234;
+    // Destination: AX register (second operand in AT&T)
+    operands[1].type = OPERAND_REGISTER;
+    operands[1].value.reg.id = AX_16;
+    operands[1].value.reg.name = "ax";
+    operands[1].value.reg.size = 2;
     operands[1].size = 2;
     
     if (!encode_instruction_helper("mov", operands, 2, code_buffer, &code_length)) {
@@ -189,15 +189,16 @@ static test_result_t test_arithmetic_operations(void) {
     
     printf("Test: %s\n", test_name);
     
-    // MOV AX, 10
+    // MOV AX, 10 (AT&T syntax: movw $10, %ax)
     operand_t mov_operands[2];
-    mov_operands[0].type = OPERAND_REGISTER;
-    mov_operands[0].value.reg.id = AX_16;
-    mov_operands[0].value.reg.name = "ax";
-    mov_operands[0].value.reg.size = 2;
+    mov_operands[0].type = OPERAND_IMMEDIATE;
+    mov_operands[0].value.immediate = 10;
     mov_operands[0].size = 2;
-    mov_operands[1].type = OPERAND_IMMEDIATE;
-    mov_operands[1].value.immediate = 10;
+    mov_operands[1].type = OPERAND_REGISTER;
+    mov_operands[1].value.reg.id = AX_16;
+    mov_operands[1].value.reg.name = "ax";
+    mov_operands[1].value.reg.size = 2;
+    mov_operands[1].size = 2;
     mov_operands[1].size = 2;
     
     size_t inst_length = 0;
@@ -206,15 +207,15 @@ static test_result_t test_arithmetic_operations(void) {
     }
     total_length += inst_length;
     
-    // MOV BX, 5
+    // MOV BX, 5 (AT&T syntax: movw $5, %bx)
     operand_t mov_bx_operands[2];
-    mov_bx_operands[0].type = OPERAND_REGISTER;
-    mov_bx_operands[0].value.reg.id = BX_16;
-    mov_bx_operands[0].value.reg.name = "bx";
-    mov_bx_operands[0].value.reg.size = 2;
+    mov_bx_operands[0].type = OPERAND_IMMEDIATE;
+    mov_bx_operands[0].value.immediate = 5;
     mov_bx_operands[0].size = 2;
-    mov_bx_operands[1].type = OPERAND_IMMEDIATE;
-    mov_bx_operands[1].value.immediate = 5;
+    mov_bx_operands[1].type = OPERAND_REGISTER;
+    mov_bx_operands[1].value.reg.id = BX_16;
+    mov_bx_operands[1].value.reg.name = "bx";
+    mov_bx_operands[1].value.reg.size = 2;
     mov_bx_operands[1].size = 2;
     
     if (!encode_instruction_helper("mov", mov_bx_operands, 2, code_buffer + total_length, &inst_length)) {
@@ -222,16 +223,16 @@ static test_result_t test_arithmetic_operations(void) {
     }
     total_length += inst_length;
     
-    // ADD AX, BX (10 + 5 = 15)
+    // ADD AX, BX (10 + 5 = 15) (AT&T syntax: addw %bx, %ax)
     operand_t add_operands[2];
     add_operands[0].type = OPERAND_REGISTER;
-    add_operands[0].value.reg.id = AX_16;
-    add_operands[0].value.reg.name = "ax";
+    add_operands[0].value.reg.id = BX_16;
+    add_operands[0].value.reg.name = "bx";
     add_operands[0].value.reg.size = 2;
     add_operands[0].size = 2;
     add_operands[1].type = OPERAND_REGISTER;
-    add_operands[1].value.reg.id = BX_16;
-    add_operands[1].value.reg.name = "bx";
+    add_operands[1].value.reg.id = AX_16;
+    add_operands[1].value.reg.name = "ax";
     add_operands[1].value.reg.size = 2;
     add_operands[1].size = 2;
     
@@ -271,15 +272,15 @@ static test_result_t test_stack_operations(void) {
     
     printf("Test: %s\n", test_name);
     
-    // MOV AX, 0x5678
+    // MOV AX, 0x5678 (AT&T syntax: movw $0x5678, %ax)
     operand_t mov_operands[2];
-    mov_operands[0].type = OPERAND_REGISTER;
-    mov_operands[0].value.reg.id = AX_16;
-    mov_operands[0].value.reg.name = "ax";
-    mov_operands[0].value.reg.size = 2;
+    mov_operands[0].type = OPERAND_IMMEDIATE;
+    mov_operands[0].value.immediate = 0x5678;
     mov_operands[0].size = 2;
-    mov_operands[1].type = OPERAND_IMMEDIATE;
-    mov_operands[1].value.immediate = 0x5678;
+    mov_operands[1].type = OPERAND_REGISTER;
+    mov_operands[1].value.reg.id = AX_16;
+    mov_operands[1].value.reg.name = "ax";
+    mov_operands[1].value.reg.size = 2;
     mov_operands[1].size = 2;
     
     size_t inst_length = 0;
@@ -352,15 +353,15 @@ static test_result_t test_conditional_jumps(void) {
     
     printf("Test: %s\n", test_name);
     
-    // MOV AX, 5
+    // MOV AX, 5 (AT&T syntax: movw $5, %ax)
     operand_t mov_operands[2];
-    mov_operands[0].type = OPERAND_REGISTER;
-    mov_operands[0].value.reg.id = AX_16;
-    mov_operands[0].value.reg.name = "ax";
-    mov_operands[0].value.reg.size = 2;
+    mov_operands[0].type = OPERAND_IMMEDIATE;
+    mov_operands[0].value.immediate = 5;
     mov_operands[0].size = 2;
-    mov_operands[1].type = OPERAND_IMMEDIATE;
-    mov_operands[1].value.immediate = 5;
+    mov_operands[1].type = OPERAND_REGISTER;
+    mov_operands[1].value.reg.id = AX_16;
+    mov_operands[1].value.reg.name = "ax";
+    mov_operands[1].value.reg.size = 2;
     mov_operands[1].size = 2;
     
     size_t inst_length = 0;
@@ -369,15 +370,15 @@ static test_result_t test_conditional_jumps(void) {
     }
     total_length += inst_length;
     
-    // CMP AX, 5
+    // CMP AX, 5 (AT&T syntax: cmpw $5, %ax)
     operand_t cmp_operands[2];
-    cmp_operands[0].type = OPERAND_REGISTER;
-    cmp_operands[0].value.reg.id = AX_16;
-    cmp_operands[0].value.reg.name = "ax";
-    cmp_operands[0].value.reg.size = 2;
+    cmp_operands[0].type = OPERAND_IMMEDIATE;
+    cmp_operands[0].value.immediate = 5;
     cmp_operands[0].size = 2;
-    cmp_operands[1].type = OPERAND_IMMEDIATE;
-    cmp_operands[1].value.immediate = 5;
+    cmp_operands[1].type = OPERAND_REGISTER;
+    cmp_operands[1].value.reg.id = AX_16;
+    cmp_operands[1].value.reg.name = "ax";
+    cmp_operands[1].value.reg.size = 2;
     cmp_operands[1].size = 2;
     
     if (!encode_instruction_helper("cmp", cmp_operands, 2, code_buffer + total_length, &inst_length)) {
@@ -443,15 +444,15 @@ static test_result_t test_dos_program(void) {
     
     printf("Test: %s\n", test_name);
     
-    // MOV AX, 0x4C00 (DOS exit function)
+    // MOV AX, 0x4C00 (DOS exit function) (AT&T syntax: movw $0x4C00, %ax)
     operand_t mov_operands[2];
-    mov_operands[0].type = OPERAND_REGISTER;
-    mov_operands[0].value.reg.id = AX_16;
-    mov_operands[0].value.reg.name = "ax";
-    mov_operands[0].value.reg.size = 2;
+    mov_operands[0].type = OPERAND_IMMEDIATE;
+    mov_operands[0].value.immediate = 0x4C00;
     mov_operands[0].size = 2;
-    mov_operands[1].type = OPERAND_IMMEDIATE;
-    mov_operands[1].value.immediate = 0x4C00;
+    mov_operands[1].type = OPERAND_REGISTER;
+    mov_operands[1].value.reg.id = AX_16;
+    mov_operands[1].value.reg.name = "ax";
+    mov_operands[1].value.reg.size = 2;
     mov_operands[1].size = 2;
     
     size_t inst_length = 0;

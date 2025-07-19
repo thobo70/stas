@@ -627,12 +627,16 @@ int parse_immediate_operand(parser_t *parser, operand_t *operand) {
         // Restore token and advance
         parser->current_token = saved_token;
     } else {
-        // Check if this is a symbol (contains alphabetic characters)
+        // Check if this is a symbol (contains alphabetic characters, but not hex numbers)
         bool is_symbol = false;
-        for (const char *p = value_str; *p; p++) {
-            if (isalpha(*p) || *p == '_') {
-                is_symbol = true;
-                break;
+        
+        // Skip hex numbers (0x... or 0X...)
+        if (!(strncmp(value_str, "0x", 2) == 0 || strncmp(value_str, "0X", 2) == 0)) {
+            for (const char *p = value_str; *p; p++) {
+                if (isalpha(*p) || *p == '_') {
+                    is_symbol = true;
+                    break;
+                }
             }
         }
         

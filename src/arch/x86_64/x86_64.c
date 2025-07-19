@@ -267,27 +267,27 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
     if (strcmp(lower_mnemonic, "movq") == 0) {
         if (inst->operand_count == 2) {
             if (inst->operands[0].type == OPERAND_REGISTER && inst->operands[1].type == OPERAND_REGISTER) {
-                // MOV reg, reg - need REX.W + 0x89 + ModR/M
+                // MOV reg, reg (AT&T: movq %src, %dst) - need REX.W + 0x89 + ModR/M
                 buffer[pos++] = 0x48; // REX.W prefix for 64-bit operation
                 buffer[pos++] = 0x89; // MOV r/m64, r64 opcode
                 
-                // Create ModR/M byte: mod=11 (register), reg=source, r/m=destination
-                uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
-                uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+                // AT&T syntax: operands[0]=source, operands[1]=destination
+                uint8_t src_reg = inst->operands[0].value.reg.encoding & 0x07;
+                uint8_t dst_reg = inst->operands[1].value.reg.encoding & 0x07;
                 buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // mod=11, reg=src, r/m=dst
                 
                 *length = pos;
                 free(lower_mnemonic);
                 return 0;
             }
-            if (inst->operands[0].type == OPERAND_REGISTER && inst->operands[1].type == OPERAND_IMMEDIATE) {
-                // MOV reg, imm64 - need REX.W + (0xB8+reg) + imm64
-                uint8_t reg_enc = inst->operands[0].value.reg.encoding & 0x07;
+            if (inst->operands[0].type == OPERAND_IMMEDIATE && inst->operands[1].type == OPERAND_REGISTER) {
+                // MOV imm, reg (AT&T: movq $imm, %reg) - need REX.W + (0xB8+reg) + imm64
+                uint8_t reg_enc = inst->operands[1].value.reg.encoding & 0x07;
                 buffer[pos++] = 0x48; // REX.W prefix
                 buffer[pos++] = 0xB8 + reg_enc; // MOV r64, imm64 opcode
                 
                 // Add 64-bit immediate (little-endian)
-                int64_t imm = inst->operands[1].value.immediate;
+                int64_t imm = inst->operands[0].value.immediate;
                 buffer[pos++] = imm & 0xFF;
                 buffer[pos++] = (imm >> 8) & 0xFF;
                 buffer[pos++] = (imm >> 16) & 0xFF;

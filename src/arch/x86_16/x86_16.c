@@ -5,6 +5,7 @@
 
 #include "x86_16.h"
 #include "../../core/expressions.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,9 +55,13 @@ static const struct {
     bool needs_modrm;
 } x86_16_instructions[] = {
     {"mov", OP_16_MOV_REG_REG, 2, true},
+    {"movw", OP_16_MOV_REG_REG, 2, true},  // AT&T word size suffix
     {"add", OP_16_ADD_REG_REG, 2, true},
+    {"addw", OP_16_ADD_REG_REG, 2, true},  // AT&T word size suffix
     {"sub", OP_16_SUB_REG_REG, 2, true},
+    {"subw", OP_16_SUB_REG_REG, 2, true},  // AT&T word size suffix
     {"cmp", OP_16_CMP_REG_REG, 2, true},
+    {"cmpw", OP_16_CMP_REG_REG, 2, true},  // AT&T word size suffix
     {"jmp", OP_16_JMP_REL, 1, false},
     {"call", OP_16_CALL_REL, 1, false},
     {"ret", OP_16_RET, 0, false},
@@ -162,13 +167,13 @@ int x86_16_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
     switch (opcode) {
         case OP_16_MOV_REG_REG: // Also handles OP_16_MOV_MEM_REG (same opcode)
         case OP_16_MOV_REG_MEM: {
-            // MOV instruction encoding
-            operand_t *dst = &inst->operands[0];
-            operand_t *src = &inst->operands[1];
+            // MOV instruction encoding (AT&T syntax: movw $src, %dst)
+            operand_t *src = &inst->operands[0];  // Source operand (first in AT&T)
+            operand_t *dst = &inst->operands[1];  // Destination operand (second in AT&T)
             
             // Determine MOV variant
-            if (dst->type == OPERAND_REGISTER && src->type == OPERAND_IMMEDIATE) {
-                // MOV r16, imm16 - uses 0xB8 + reg encoding
+            if (src->type == OPERAND_IMMEDIATE && dst->type == OPERAND_REGISTER) {
+                // MOV imm16, r16 - uses 0xB8 + reg encoding (AT&T: movw $imm, %reg)
                 x86_16_register_id_t reg_id = (x86_16_register_id_t)dst->value.reg.id;
                 int reg_enc = get_register_encoding(reg_id);
                 if (reg_enc < 0) return -1;
@@ -178,7 +183,7 @@ int x86_16_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
                 encoding.immediate = (int16_t)src->value.immediate;
                 encoding.imm_size = 2;
             } else {
-                // MOV with ModR/M
+                // MOV with ModR/M (AT&T: movw %src, %dst)
                 encoding.opcode[0] = OP_16_MOV_REG_REG;
                 encoding.opcode_length = 1;
                 encoding.has_modrm = true;
@@ -193,12 +198,12 @@ int x86_16_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         case OP_16_ADD_REG_REG:
         case OP_16_SUB_REG_REG:
         case OP_16_CMP_REG_REG: {
-            // Arithmetic operations
-            operand_t *dst = &inst->operands[0];
-            operand_t *src = &inst->operands[1];
+            // Arithmetic operations (AT&T syntax: addw $src, %dst)
+            operand_t *src = &inst->operands[0];  // Source operand (first in AT&T)
+            operand_t *dst = &inst->operands[1];  // Destination operand (second in AT&T)
             
-            // Check if it's register, immediate format
-            if (dst->type == OPERAND_REGISTER && src->type == OPERAND_IMMEDIATE) {
+            // Check if it's immediate, register format (AT&T: addw $imm, %reg)
+            if (src->type == OPERAND_IMMEDIATE && dst->type == OPERAND_REGISTER) {
                 // Use 0x81 format with sub-opcode in ModR/M reg field
                 encoding.opcode[0] = 0x81; // Common immediate instruction format
                 encoding.opcode_length = 1;
@@ -223,12 +228,13 @@ int x86_16_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
                 encoding.immediate = (int16_t)src->value.immediate;
                 encoding.imm_size = 2;
             } else {
-                // Register to register format
+                // Register to register format (AT&T: addw %src, %dst)
                 encoding.opcode[0] = (uint8_t)opcode;
                 encoding.opcode_length = 1;
                 encoding.has_modrm = true;
                 
-                if (encode_modrm(&inst->operands[1], &inst->operands[0], &encoding.modrm) != 0) {
+                // AT&T: src=operands[0], dst=operands[1]
+                if (encode_modrm(&inst->operands[0], &inst->operands[1], &encoding.modrm) != 0) {
                     return -1;
                 }
             }
@@ -386,6 +392,7 @@ int x86_16_parse_register(const char *reg_name, asm_register_t *reg) {
         if (strcmp(lower_name, x86_16_registers[i].name) == 0) {
             reg->id = x86_16_registers[i].id;
             reg->size = x86_16_registers[i].size;
+            reg->name = safe_strdup(x86_16_registers[i].name);
             return 0;
         }
     }
