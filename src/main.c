@@ -11,6 +11,7 @@
 #include "parser.h"
 #include "symbols.h"
 #include "core/output_format.h"
+#include "codegen.h"
 
 // External architecture function declarations
 extern arch_ops_t *get_arch_ops_x86_16(void);
@@ -254,22 +255,22 @@ int assemble_file(const config_t *config) {
         .verbose = config->verbose
     };
     
-    // For demonstration, create a simple code section with basic x86_16 program
-    if (strcmp(config->architecture, "x86_16") == 0) {
-        // Simple x86_16 program: mov ax, 0x4c00; int 0x21 (DOS exit)
-        uint8_t demo_code[] = {
-            0xB8, 0x00, 0x4C,  // mov ax, 0x4c00
-            0xCD, 0x21         // int 0x21
-        };
-        
-        uint32_t code_address = (config->output_format == FORMAT_COM) ? 0x0100 : 
-                               (config->base_address != 0) ? config->base_address : 0x1000;
-        
-        output_format_ops_t *format_ops = get_output_format(config->output_format);
-        if (format_ops && format_ops->add_section) {
-            format_ops->add_section(&output_ctx, ".text", demo_code, sizeof(demo_code), code_address);
-        }
+    // Generate machine code from AST
+    codegen_ctx_t *codegen = codegen_create(arch_ops, &output_ctx);
+    if (!codegen) {
+        fprintf(stderr, "Error: Failed to create code generator\n");
+        parser_destroy(parser);
+        goto cleanup;
     }
+    
+    if (codegen_generate(codegen, ast) != 0) {
+        fprintf(stderr, "Error: Code generation failed\n");
+        codegen_destroy(codegen);
+        parser_destroy(parser);
+        goto cleanup;
+    }
+    
+    codegen_destroy(codegen);
     
     // Write output file
     if (write_output_file(&output_ctx) == 0) {
