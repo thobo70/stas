@@ -27,7 +27,7 @@ BIN_DIR = bin
 
 # Core source files (moved to src/core)
 CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/expr.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c $(SRC_DIR)/core/codegen.c
-CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o)
+CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o) $(OBJ_DIR)/macro.o $(OBJ_DIR)/include.o
 
 # Format source files
 FORMAT_SOURCES = $(SRC_DIR)/formats/elf.c $(SRC_DIR)/formats/flat_binary.c $(SRC_DIR)/formats/com_format.c $(SRC_DIR)/formats/intel_hex.c $(SRC_DIR)/formats/motorola_srec.c
@@ -103,6 +103,14 @@ $(OBJ_DIR)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR)
 
 # Core module compilation
 $(OBJ_DIR)/core/%.o: $(SRC_DIR)/core/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Macro processor compilation
+$(OBJ_DIR)/macro.o: $(SRC_DIR)/macro.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Include processor compilation
+$(OBJ_DIR)/include.o: $(SRC_DIR)/include.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Format module compilation

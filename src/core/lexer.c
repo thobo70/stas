@@ -1,5 +1,6 @@
 #define _GNU_SOURCE  // For strdup
 #include "lexer.h"
+#include "macro.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -18,6 +19,7 @@ lexer_t *lexer_create(const char *input, const char *filename) {
     lexer->line = 1;
     lexer->column = 1;
     lexer->filename = filename ? strdup(filename) : strdup("<stdin>");
+    lexer->macros = NULL;
     lexer->error = false;
     lexer->error_message = NULL;
     
@@ -31,6 +33,13 @@ void lexer_destroy(lexer_t *lexer) {
     if (lexer->filename) free((char*)lexer->filename);
     if (lexer->error_message) free(lexer->error_message);
     free(lexer);
+}
+
+// Set macro processor for lexer
+void lexer_set_macro_processor(lexer_t *lexer, void *processor) {
+    if (lexer) {
+        lexer->macros = processor;
+    }
 }
 
 // Peek at current character without advancing
@@ -159,6 +168,59 @@ static void lexer_skip_comment(lexer_t *lexer) {
     }
 }
 
+// Handle '#' - could be comment or macro directive
+static token_t lexer_handle_hash(lexer_t *lexer) {
+    token_t token = {0};
+    token.line = lexer->line;
+    token.column = lexer->column;
+    
+    lexer_advance(lexer); // Skip '#'
+    
+    // Check if this is a macro directive
+    if (isalpha(lexer_peek(lexer))) {
+        char *directive = lexer_read_identifier(lexer);
+        if (!directive) {
+            token.type = TOKEN_ERROR;
+            return token;
+        }
+        
+        // Check for macro directives
+        if (strcmp(directive, "define") == 0) {
+            token.type = TOKEN_MACRO_DEFINE;
+            token.value = directive;
+        } else if (strcmp(directive, "ifdef") == 0) {
+            token.type = TOKEN_MACRO_IFDEF;
+            token.value = directive;
+        } else if (strcmp(directive, "ifndef") == 0) {
+            token.type = TOKEN_MACRO_IFNDEF;
+            token.value = directive;
+        } else if (strcmp(directive, "else") == 0) {
+            token.type = TOKEN_MACRO_ELSE;
+            token.value = directive;
+        } else if (strcmp(directive, "endif") == 0) {
+            token.type = TOKEN_MACRO_ENDIF;
+            token.value = directive;
+        } else if (strcmp(directive, "include") == 0) {
+            token.type = TOKEN_MACRO_INCLUDE;
+            token.value = directive;
+        } else if (strcmp(directive, "undef") == 0) {
+            token.type = TOKEN_MACRO_UNDEF;
+            token.value = directive;
+        } else {
+            // Not a recognized macro directive, treat as comment
+            free(directive);
+            lexer_skip_comment(lexer);
+            token.type = TOKEN_COMMENT;
+        }
+    } else {
+        // Regular comment
+        lexer_skip_comment(lexer);
+        token.type = TOKEN_COMMENT;
+    }
+    
+    return token;
+}
+
 // Get next token
 token_t lexer_next_token(lexer_t *lexer) {
     token_t token = {0};
@@ -189,9 +251,7 @@ token_t lexer_next_token(lexer_t *lexer) {
             break;
             
         case '#':
-            lexer_skip_comment(lexer);
-            token.type = TOKEN_COMMENT;
-            break;
+            return lexer_handle_hash(lexer);
             
         case '%':
             lexer_advance(lexer);
@@ -205,6 +265,23 @@ token_t lexer_next_token(lexer_t *lexer) {
                 token.value = lexer_read_number(lexer);
             } else {
                 token.value = lexer_read_identifier(lexer);
+                
+                // Check for macro expansion in immediate values
+                if (token.value && lexer->macros) {
+                    macro_processor_t *processor = (macro_processor_t*)lexer->macros;
+                    macro_t *macro = macro_processor_lookup(processor, token.value);
+                    if (macro && macro->parameter_count == 0) {
+                        // Simple macro without parameters - expand inline
+                        free(token.value);
+                        token.value = strdup(macro->body);
+                        if (!token.value) {
+                            token.type = TOKEN_ERROR;
+                            lexer->error = true;
+                            lexer->error_message = strdup("Memory allocation failed for macro expansion");
+                            break;
+                        }
+                    }
+                }
             }
             token.type = TOKEN_IMMEDIATE;
             break;
@@ -270,6 +347,20 @@ token_t lexer_next_token(lexer_t *lexer) {
                     if (lexer_peek(lexer) == ':') {
                         token.type = TOKEN_LABEL;
                         lexer_advance(lexer); // Skip the colon
+                    } else if (lexer->macros) {
+                        // Check for macro expansion
+                        macro_processor_t *processor = (macro_processor_t*)lexer->macros;
+                        macro_t *macro = macro_processor_lookup(processor, token.value);
+                        if (macro && macro->parameter_count == 0) {
+                            // Simple macro without parameters - expand inline
+                            free(token.value);
+                            token.value = strdup(macro->body);
+                            if (!token.value) {
+                                token.type = TOKEN_ERROR;
+                                lexer->error = true;
+                                lexer->error_message = strdup("Memory allocation failed for macro expansion");
+                            }
+                        }
                     }
                 }
             } else {
@@ -325,6 +416,13 @@ const char *token_type_to_string(token_type_t type) {
         case TOKEN_RPAREN:      return "RPAREN";
         case TOKEN_NEWLINE:     return "NEWLINE";
         case TOKEN_COMMENT:     return "COMMENT";
+        case TOKEN_MACRO_DEFINE:  return "MACRO_DEFINE";
+        case TOKEN_MACRO_IFDEF:   return "MACRO_IFDEF";
+        case TOKEN_MACRO_IFNDEF:  return "MACRO_IFNDEF";
+        case TOKEN_MACRO_ELSE:    return "MACRO_ELSE";
+        case TOKEN_MACRO_ENDIF:   return "MACRO_ENDIF";
+        case TOKEN_MACRO_INCLUDE: return "MACRO_INCLUDE";
+        case TOKEN_MACRO_UNDEF:   return "MACRO_UNDEF";
         case TOKEN_EOF:         return "EOF";
         case TOKEN_ERROR:       return "ERROR";
         default:                return "UNKNOWN";

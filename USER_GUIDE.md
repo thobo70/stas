@@ -2,19 +2,20 @@
 
 **STAS (STIX Modular Assembler)** - Comprehensive User Guide
 
-Version: 0.6.0 (Phase 6.4 Complete)
+Version: 0.7.0 (Phase 7 Complete - Advanced Language Features)
 
 ---
 
 ## Table of Contents
 
 1. [Command Line Interface](#command-line-interface)
-2. [Architecture Support](#architecture-support)
-3. [Mnemonic Reference](#mnemonic-reference)
-4. [Output Format Details](#output-format-details)
-5. [Syntax Examples](#syntax-examples)
-6. [Advanced Usage](#advanced-usage)
-7. [Error Handling](#error-handling)
+2. [Advanced Language Features](#advanced-language-features) **NEW**
+3. [Architecture Support](#architecture-support)
+4. [Mnemonic Reference](#mnemonic-reference)
+5. [Output Format Details](#output-format-details)
+6. [Syntax Examples](#syntax-examples)
+7. [Advanced Usage](#advanced-usage)
+8. [Error Handling](#error-handling)
 
 ---
 
@@ -58,6 +59,183 @@ stas [options] input.s
 | **ELF64** | `elf64` | 64-bit ELF object file | x86_64, arm64 |
 | **Intel HEX** | `hex` | Embedded programming format | All |
 | **Motorola S-Record** | `srec` | Microcontroller programming | All |
+
+---
+
+## Advanced Language Features
+
+STAS Phase 7 introduces comprehensive advanced language features including macro processing, file inclusion, conditional assembly, and complex expression evaluation.
+
+### Macro Processing
+
+Define and use C-style macros with `#define`:
+
+```assembly
+# Simple value macros
+#define BUFFER_SIZE 1024
+#define MAX_USERS 100
+#define SUCCESS 0
+
+# Use macros in code
+movq $BUFFER_SIZE, %rax     # Expands to: movq $1024, %rax
+movq $MAX_USERS, %rbx       # Expands to: movq $100, %rbx
+movq $SUCCESS, %rcx         # Expands to: movq $0, %rcx
+
+# Macros in data sections
+.section .data
+buffer_size: .quad BUFFER_SIZE    # Expands to: .quad 1024
+```
+
+#### Macro Features:
+- **Numeric Values**: Decimal and hexadecimal constants
+- **String Replacement**: Exact text substitution
+- **Redefinition**: Later definitions override earlier ones
+- **Case Sensitive**: Macro names are case-sensitive
+
+### Include Directives
+
+Include external files using `.include`:
+
+```assembly
+# Include common definitions
+.include "constants.inc"
+.include "macros.inc"
+
+# Use included content
+movq $COMMON_BUFFER_SIZE, %rax    # From constants.inc
+```
+
+#### Include Features:
+- **Path Resolution**: Supports relative paths
+- **Recursive Inclusion**: Included files can include other files
+- **Error Prevention**: Circular inclusion detection
+- **Content Integration**: Macros and labels from included files are available
+
+### Conditional Assembly
+
+Use preprocessor conditionals to include/exclude code:
+
+```assembly
+#define DEBUG_BUILD
+#define OPTIMIZATION_LEVEL 2
+
+# Basic conditional inclusion
+#ifdef DEBUG_BUILD
+    movq $1, %rax           # Only included if DEBUG_BUILD is defined
+    call debug_function
+#endif
+
+# Conditional with alternative
+#ifdef RELEASE_BUILD
+    movq $0, %rbx           # Release build code
+#else
+    movq $1, %rbx           # Debug build code
+#endif
+
+# Negative conditional
+#ifndef PRODUCTION
+    call development_init    # Only in non-production builds
+#endif
+
+# Nested conditionals
+#ifdef DEBUG_BUILD
+    #ifdef ARM_TARGET
+        call arm_debug_init
+    #endif
+#endif
+```
+
+#### Conditional Features:
+- **`#ifdef MACRO`**: Include if macro is defined
+- **`#ifndef MACRO`**: Include if macro is NOT defined  
+- **`#else`**: Alternative code path
+- **`#endif`**: End conditional block
+- **Nesting Support**: Conditionals can be nested arbitrarily deep
+
+### Advanced Expressions
+
+Complex expressions in immediate values and operands:
+
+```assembly
+#define BASE_ADDR 0x1000
+#define OFFSET 0x100
+#define MULTIPLIER 4
+
+# Arithmetic expressions
+movq $(BASE_ADDR + OFFSET), %rax        # 0x1000 + 0x100 = 0x1100
+movq $(BASE_ADDR - OFFSET), %rbx        # 0x1000 - 0x100 = 0xF00
+movq $(OFFSET * MULTIPLIER), %rcx       # 0x100 * 4 = 0x400
+
+# Complex expressions with precedence
+movq $(BASE_ADDR + OFFSET * MULTIPLIER), %rdx   # 0x1000 + (0x100 * 4) = 0x1400
+
+# Parentheses for precedence override
+movq $((BASE_ADDR + OFFSET) * 2), %rsi          # (0x1000 + 0x100) * 2 = 0x2200
+
+# Bitwise operations
+movq $(BASE_ADDR | OFFSET), %rdi        # Bitwise OR
+movq $(BASE_ADDR & 0xF000), %r8         # Bitwise AND
+
+# Expressions in data declarations
+.section .data
+calculated_value: .quad (BASE_ADDR + OFFSET * MULTIPLIER)
+```
+
+#### Expression Features:
+- **Arithmetic**: `+`, `-`, `*`, `/`
+- **Bitwise**: `|` (OR), `&` (AND), `^` (XOR)
+- **Shift**: `<<` (left), `>>` (right)
+- **Precedence**: Standard operator precedence
+- **Parentheses**: Explicit precedence control
+- **Mixed Values**: Combine macros, constants, and expressions
+
+### Combined Example
+
+Complete example using all Phase 7 features:
+
+```assembly
+# Include common definitions
+.include "system_config.inc"
+
+# Build configuration
+#define FEATURE_DEBUGGING
+#define BUFFER_COUNT 8
+
+# Advanced macro with expression
+#define TOTAL_BUFFER_SIZE (BUFFER_SIZE * BUFFER_COUNT)
+
+.section .text
+.global _start
+
+_start:
+    # Use included constants with expressions
+    movq $(SYSTEM_BASE + CONFIG_OFFSET), %rax
+    
+    # Conditional compilation
+    #ifdef FEATURE_DEBUGGING
+        movq $DEBUG_MODE, %rbx
+        call debug_init
+    #else
+        movq $RELEASE_MODE, %rbx
+    #endif
+    
+    # Complex expression using multiple macros
+    movq $TOTAL_BUFFER_SIZE, %rcx
+    
+    # Conditional data based on architecture
+    #ifdef X86_64_TARGET
+        movq $64, %rdx          # 64-bit specific value
+    #endif
+    
+    ret
+
+.section .data
+    #ifdef FEATURE_DEBUGGING
+    debug_buffer: .space TOTAL_BUFFER_SIZE
+    #endif
+    
+    system_config: .quad (SYSTEM_BASE | CONFIG_FLAGS)
+```
 
 ---
 

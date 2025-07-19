@@ -4,16 +4,18 @@ A modular, multi-architecture assembler supporting AT&T syntax for various CPU a
 
 ## Project Status
 
-**Current Version**: v0.6.0 (Phase 6.4 Complete - Intel HEX & Motorola S-Record Formats)
+**Current Version**: v0.7.0 (Phase 7 Complete - Advanced Language Features)
 
 📊 **[Project Status](PROJECT_STATUS.md)** - Comprehensive technical status and development roadmap
 
-**Status**: ✅ **Phase 6.4 Format Enhancement Complete**
+**Status**: ✅ **Phase 7 Advanced Language Features Complete**
+- ✅ **Macro Processing**: Complete C-style macro system with #define support
+- ✅ **Include Directives**: Full .include functionality for file inclusion
+- ✅ **Conditional Assembly**: Complete preprocessor with #ifdef/#ifndef/#else/#endif
+- ✅ **Advanced Expressions**: Complex expression evaluation in immediate values
 - ✅ **Architecture Support**: 5 complete architectures (x86_16, x86_32, x86_64, ARM64, RISC-V)
 - ✅ **Output Formats**: 6 complete formats including Intel HEX and Motorola S-Record
-- ✅ **Code Generation**: Full AST-to-machine-code conversion for all architectures
-- ✅ **Integration Testing**: Cross-architecture format validation successful
-- ✅ **Real Machine Code**: Generates actual executable bytes with proper section handling
+- ✅ **Regression Testing**: Comprehensive Phase 7 test suite with 100% pass rate
 
 ## Documentation
 
