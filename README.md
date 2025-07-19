@@ -17,7 +17,9 @@ A modular, multi-architecture assembler supporting AT&T syntax for various CPU a
 
 ## Documentation
 
-- � **[Project Status](PROJECT_STATUS.md)** - Comprehensive technical status and implementation details
+- 📖 **[User Guide](USER_GUIDE.md)** - Comprehensive user manual with command-line options, mnemonics, and format details
+- ⚡ **[Quick Reference](QUICK_REFERENCE.md)** - Command-line quick reference and examples
+- 📊 **[Project Status](PROJECT_STATUS.md)** - Comprehensive technical status and implementation details
 - 🏗️ **[Architecture Design](ARCHITECTURE.md)** - Detailed technical design
 - 🎯 **[Phase Milestones](PROJECT_STATUS.md#milestones)** - All phase completion records
 - 📦 **[Static Builds](STATIC_BUILDS.md)** - Resource-constrained deployment
