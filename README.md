@@ -77,8 +77,8 @@ make static-x86_64
 - **DOS .COM** (`-f com`): MS-DOS executable format (x86_16 only)
 - **ELF32** (`-f elf32`): 32-bit ELF object files (x86_32, arm64)
 - **ELF64** (`-f elf64`): 64-bit ELF object files (x86_64, arm64)
-- **Intel HEX** (`-f hex`): Embedded programming format (planned)
-- **Motorola S-Record** (`-f srec`): Microcontroller programming format (planned)
+- **Intel HEX** (`-f hex`): Embedded programming format with checksum validation
+- **Motorola S-Record** (`-f srec`): Microcontroller programming format with multiple address sizes
 
 ### ✅ Validation & Testing
 - **CPU Emulation**: Unicorn Engine validates generated machine code for all architectures
@@ -118,8 +118,8 @@ stas/
 │   │   ├── elf.c        # ELF32/ELF64 object file format
 │   │   ├── flat_binary.c  # Flat binary format
 │   │   ├── com_format.c   # DOS .COM format
-│   │   ├── intel_hex.c    # Intel HEX format (placeholder)
-│   │   └── motorola_srec.c  # Motorola S-Record format (placeholder)
+│   │   ├── intel_hex.c    # Intel HEX format - complete implementation
+│   │   └── motorola_srec.c  # Motorola S-Record format - complete implementation
 │   ├── utils/           # Utility functions
 │   │   └── utils.c      # Enhanced utilities (string, memory, numbers)
 │   ├── lexer.c          # Lexical analysis and tokenization
