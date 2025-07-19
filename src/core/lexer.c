@@ -405,6 +405,27 @@ bool is_instruction_token(const char *str) {
         "sete", "setne", "setl", "setge", "setle", "setg",
         "loop", "loope", "loopne",
         
+        // Phase 6.2: ARM64 (AArch64) instructions
+        // Data processing
+        "add", "sub", "and", "orr", "eor", "mov", "mvn",
+        "adc", "sbc", "bic", "orn", "lsl", "lsr", "asr", "ror",
+        "mul", "div", "udiv", "sdiv", "madd", "msub",
+        
+        // Load/store
+        "ldr", "str", "ldrb", "strb", "ldrh", "strh",
+        "ldp", "stp", "ldur", "stur",
+        
+        // Branch and control
+        "b", "bl", "br", "blr", "ret", "eret",
+        "cbz", "cbnz", "tbz", "tbnz",
+        
+        // Floating-point and SIMD
+        "fadd", "fsub", "fmul", "fdiv", "fabs", "fneg",
+        "fmov", "fcmp", "fcvt",
+        
+        // System
+        "svc", "hvc", "smc", "brk", "hlt", "isb", "dsb", "dmb",
+        
         NULL
     };
     

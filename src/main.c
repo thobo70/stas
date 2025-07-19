@@ -17,6 +17,7 @@
 extern arch_ops_t *get_arch_ops_x86_16(void);
 extern arch_ops_t *get_arch_ops_x86_32(void);
 extern arch_ops_t *get_arch_ops_x86_64(void);
+extern arch_ops_t *arm64_get_arch_ops(void);
 
 // Static build architecture detection
 #ifdef STATIC_BUILD
@@ -108,6 +109,8 @@ arch_ops_t *get_architecture(const char *arch_name) {
         return get_arch_ops_x86_32();
     } else if (strcmp(arch_name, "x86_64") == 0) {
         return get_arch_ops_x86_64();
+    } else if (strcmp(arch_name, "arm64") == 0) {
+        return arm64_get_arch_ops();
     }
     
     return NULL;
