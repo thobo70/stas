@@ -265,6 +265,9 @@ help:
 	@echo "  test-phase3-symbols - Run Phase 3 symbol enhancement tests"
 	@echo "  test-phase3-basic   - Run Phase 3 basic symbol tests"
 	@echo "  test-phase3-comprehensive - Run Phase 3 comprehensive symbol tests"
+	@echo "  test-phase4-x86-64  - Run Phase 4 x86-64 architecture tests"
+	@echo "  test-phase4-comprehensive - Run Phase 4 comprehensive encoding tests"
+	@echo "  test-phase4-expanded - Run Phase 4 expanded instruction set tests"
 	@echo "  test-all-phases     - Run all phase tests (Phase 2 + Phase 3)"
 	@echo "  test-all     - Run all tests (sample + unity + unicorn)"
 	@echo "  test-clean   - Clean test artifacts"
@@ -392,8 +395,60 @@ bin/test_phase3_comprehensive: tests/test_phase3_symbol_enhancement.c $(ARCH_X86
 	@echo "Phase 3 comprehensive symbol test built: $@"
 
 # Test all phases
-test-all-phases: test-phase2-parsing test-phase3-symbols test-phase3-basic test-phase3-comprehensive
+test-all-phases: test-phase2-parsing test-phase3-symbols test-phase3-basic test-phase3-comprehensive test-phase4-x86-64 test-phase4-comprehensive test-phase4-expanded
 	@echo "🎉 All phase tests completed successfully!"
+
+# Phase 4: x86-64 Architecture Module Tests
+test-phase4-x86-64: bin/test_phase4_x86_64
+	@echo "=========================================="
+	@echo "Running Phase 4 x86-64 Architecture Tests"
+	@echo "=========================================="
+	./bin/test_phase4_x86_64
+
+bin/test_phase4_x86_64: tests/test_phase4_x86_64.c $(ARCH_X86_64_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 4 x86-64 test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase4_x86_64.c \
+		tests/unity.c \
+		$(ARCH_X86_64_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 4 x86-64 test built: $@"
+
+test-phase4-comprehensive: bin/test_phase4_comprehensive
+	@echo "============================================="
+	@echo "Running Phase 4 Comprehensive Encoding Tests"
+	@echo "============================================="
+	./bin/test_phase4_comprehensive
+
+bin/test_phase4_comprehensive: tests/test_phase4_comprehensive.c $(ARCH_X86_64_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 4 comprehensive test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase4_comprehensive.c \
+		tests/unity.c \
+		$(ARCH_X86_64_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 4 comprehensive test built: $@"
+
+test-phase4-expanded: bin/test_phase4_expanded
+	@echo "============================================"
+	@echo "Running Phase 4 Expanded Instruction Tests"
+	@echo "============================================"
+	./bin/test_phase4_expanded
+
+bin/test_phase4_expanded: tests/test_phase4_expanded.c $(ARCH_X86_64_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(BIN_DIR)
+	@echo "Building Phase 4 expanded instruction test..."
+	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
+		tests/test_phase4_expanded.c \
+		tests/unity.c \
+		$(ARCH_X86_64_OBJECTS) \
+		$(CORE_OBJECTS) \
+		$(UTIL_OBJECTS) \
+		-o $@
+	@echo "Phase 4 expanded instruction test built: $@"
 
 # Test all variants
 test-comprehensive: test-x86_16-comprehensive

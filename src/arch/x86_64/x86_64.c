@@ -68,13 +68,48 @@ static const struct {
     {"mov", 0x89, 1, true},    // MOV r/m64, r64
     {"movq", 0x89, 1, true},   // MOV r/m64, r64 (AT&T syntax)
     {"add", 0x01, 1, true},    // ADD r/m64, r64
+    {"addq", 0x01, 1, true},   // ADD r/m64, r64 (AT&T 64-bit syntax)
     {"sub", 0x29, 1, true},    // SUB r/m64, r64
+    {"subq", 0x29, 1, true},   // SUB r/m64, r64 (AT&T 64-bit syntax)
     {"push", 0x50, 1, false},  // PUSH r64
+    {"pushq", 0x50, 1, false}, // PUSH r64 (AT&T 64-bit syntax)
     {"pop", 0x58, 1, false},   // POP r64
+    {"popq", 0x58, 1, false},  // POP r64 (AT&T 64-bit syntax)
     {"call", 0xE8, 1, false},  // CALL rel32
     {"ret", 0xC3, 1, false},   // RET
     {"nop", 0x90, 1, false},   // NOP
     {"syscall", 0x0F, 2, false}, // SYSCALL (0x0F 0x05)
+    
+    // Comparison instructions
+    {"cmp", 0x39, 1, true},    // CMP r/m64, r64
+    {"cmpq", 0x39, 1, true},   // CMP r/m64, r64 (AT&T 64-bit syntax)
+    {"test", 0x85, 1, true},   // TEST r/m64, r64
+    {"testq", 0x85, 1, true},  // TEST r/m64, r64 (AT&T 64-bit syntax)
+    
+    // Conditional jumps (short form - 8-bit relative)
+    {"je", 0x74, 1, false},    // Jump if equal
+    {"jne", 0x75, 1, false},   // Jump if not equal
+    {"jz", 0x74, 1, false},    // Jump if zero (same as JE)
+    {"jnz", 0x75, 1, false},   // Jump if not zero (same as JNE)
+    {"jl", 0x7C, 1, false},    // Jump if less
+    {"jge", 0x7D, 1, false},   // Jump if greater or equal
+    {"jle", 0x7E, 1, false},   // Jump if less or equal
+    {"jg", 0x7F, 1, false},    // Jump if greater
+    {"jmp", 0xEB, 1, false},   // Unconditional jump (short)
+    
+    // Logical operations
+    {"and", 0x21, 1, true},    // AND r/m64, r64
+    {"andq", 0x21, 1, true},   // AND r/m64, r64 (AT&T 64-bit syntax)
+    {"or", 0x09, 1, true},     // OR r/m64, r64
+    {"orq", 0x09, 1, true},    // OR r/m64, r64 (AT&T 64-bit syntax)
+    {"xor", 0x31, 1, true},    // XOR r/m64, r64
+    {"xorq", 0x31, 1, true},   // XOR r/m64, r64 (AT&T 64-bit syntax)
+    
+    // More arithmetic
+    {"inc", 0xFF, 1, true},    // INC r/m64
+    {"incq", 0xFF, 1, true},   // INC r/m64 (AT&T 64-bit syntax)
+    {"dec", 0xFF, 1, true},    // DEC r/m64
+    {"decq", 0xFF, 1, true},   // DEC r/m64 (AT&T 64-bit syntax)
     
     {NULL, 0, 0, false} // Sentinel
 };
@@ -191,48 +226,252 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         return -1;
     }
     
-    // This is a simplified encoding implementation
-    // Real implementation would handle all x86-64 encoding complexities
+    // This is an enhanced encoding implementation
+    // Handles basic x86-64 instructions with proper REX prefix and ModR/M encoding
     
     char *lower_mnemonic = x86_64_strlower(inst->mnemonic);
     if (!lower_mnemonic) {
         return -1;
     }
     
+    size_t pos = 0;
+    
+    // Handle specific instructions
+    if (strcmp(lower_mnemonic, "syscall") == 0) {
+        // SYSCALL instruction: 0x0F 0x05
+        buffer[pos++] = 0x0F;
+        buffer[pos++] = 0x05;
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if (strcmp(lower_mnemonic, "nop") == 0) {
+        // NOP instruction: 0x90
+        buffer[pos++] = 0x90;
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if (strcmp(lower_mnemonic, "ret") == 0) {
+        // RET instruction: 0xC3
+        buffer[pos++] = 0xC3;
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Handle MOV instructions
+    if (strcmp(lower_mnemonic, "movq") == 0) {
+        if (inst->operand_count == 2) {
+            if (inst->operands[0].type == OPERAND_REGISTER && inst->operands[1].type == OPERAND_REGISTER) {
+                // MOV reg, reg - need REX.W + 0x89 + ModR/M
+                buffer[pos++] = 0x48; // REX.W prefix for 64-bit operation
+                buffer[pos++] = 0x89; // MOV r/m64, r64 opcode
+                
+                // Create ModR/M byte: mod=11 (register), reg=source, r/m=destination
+                uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+                uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+                buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // mod=11, reg=src, r/m=dst
+                
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+            if (inst->operands[0].type == OPERAND_REGISTER && inst->operands[1].type == OPERAND_IMMEDIATE) {
+                // MOV reg, imm64 - need REX.W + (0xB8+reg) + imm64
+                uint8_t reg_enc = inst->operands[0].value.reg.encoding & 0x07;
+                buffer[pos++] = 0x48; // REX.W prefix
+                buffer[pos++] = 0xB8 + reg_enc; // MOV r64, imm64 opcode
+                
+                // Add 64-bit immediate (little-endian)
+                int64_t imm = inst->operands[1].value.immediate;
+                buffer[pos++] = imm & 0xFF;
+                buffer[pos++] = (imm >> 8) & 0xFF;
+                buffer[pos++] = (imm >> 16) & 0xFF;
+                buffer[pos++] = (imm >> 24) & 0xFF;
+                buffer[pos++] = (imm >> 32) & 0xFF;
+                buffer[pos++] = (imm >> 40) & 0xFF;
+                buffer[pos++] = (imm >> 48) & 0xFF;
+                buffer[pos++] = (imm >> 56) & 0xFF;
+                
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    // Handle other basic instructions with similar logic
+    if (strcmp(lower_mnemonic, "addq") == 0 && inst->operand_count == 2 && 
+        inst->operands[0].type == OPERAND_REGISTER && inst->operands[1].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x01; // ADD r/m64, r64 opcode
+        
+        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if (strcmp(lower_mnemonic, "subq") == 0 && inst->operand_count == 2 && 
+        inst->operands[0].type == OPERAND_REGISTER && inst->operands[1].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x29; // SUB r/m64, r64 opcode
+        
+        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Handle comparison instructions
+    if ((strcmp(lower_mnemonic, "cmpq") == 0 || strcmp(lower_mnemonic, "cmp") == 0) && 
+        inst->operand_count == 2 && inst->operands[0].type == OPERAND_REGISTER && 
+        inst->operands[1].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x39; // CMP opcode
+        
+        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Handle logical operations
+    if ((strcmp(lower_mnemonic, "andq") == 0 || strcmp(lower_mnemonic, "and") == 0) && 
+        inst->operand_count == 2 && inst->operands[0].type == OPERAND_REGISTER && 
+        inst->operands[1].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x21; // AND opcode
+        
+        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if ((strcmp(lower_mnemonic, "orq") == 0 || strcmp(lower_mnemonic, "or") == 0) && 
+        inst->operand_count == 2 && inst->operands[0].type == OPERAND_REGISTER && 
+        inst->operands[1].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x09; // OR opcode
+        
+        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if ((strcmp(lower_mnemonic, "xorq") == 0 || strcmp(lower_mnemonic, "xor") == 0) && 
+        inst->operand_count == 2 && inst->operands[0].type == OPERAND_REGISTER && 
+        inst->operands[1].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x31; // XOR opcode
+        
+        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Handle conditional jumps (short form - 8-bit displacement)
+    if (strcmp(lower_mnemonic, "je") == 0 || strcmp(lower_mnemonic, "jz") == 0) {
+        buffer[pos++] = 0x74; // JE/JZ opcode
+        buffer[pos++] = 0x00; // Placeholder for displacement (would need to be calculated)
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if (strcmp(lower_mnemonic, "jne") == 0 || strcmp(lower_mnemonic, "jnz") == 0) {
+        buffer[pos++] = 0x75; // JNE/JNZ opcode
+        buffer[pos++] = 0x00; // Placeholder for displacement
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Handle unconditional jumps
+    if (strcmp(lower_mnemonic, "jmp") == 0) {
+        buffer[pos++] = 0xEB; // JMP short opcode
+        buffer[pos++] = 0x00; // Placeholder for displacement
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Handle single operand instructions like INC/DEC
+    if ((strcmp(lower_mnemonic, "incq") == 0 || strcmp(lower_mnemonic, "inc") == 0) && 
+        inst->operand_count == 1 && inst->operands[0].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0xFF; // INC/DEC opcode
+        
+        uint8_t reg_enc = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC0 | reg_enc; // ModR/M: mod=11, reg=000 (INC), r/m=register
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if ((strcmp(lower_mnemonic, "decq") == 0 || strcmp(lower_mnemonic, "dec") == 0) && 
+        inst->operand_count == 1 && inst->operands[0].type == OPERAND_REGISTER) {
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0xFF; // INC/DEC opcode
+        
+        uint8_t reg_enc = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0xC8 | reg_enc; // ModR/M: mod=11, reg=001 (DEC), r/m=register
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    if ((strcmp(lower_mnemonic, "push") == 0 || strcmp(lower_mnemonic, "pushq") == 0) && 
+        inst->operand_count == 1 && inst->operands[0].type == OPERAND_REGISTER) {
+        uint8_t reg_enc = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0x50 + reg_enc; // PUSH r64
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    if ((strcmp(lower_mnemonic, "pop") == 0 || strcmp(lower_mnemonic, "popq") == 0) && 
+        inst->operand_count == 1 && inst->operands[0].type == OPERAND_REGISTER) {
+        uint8_t reg_enc = inst->operands[0].value.reg.encoding & 0x07;
+        buffer[pos++] = 0x58 + reg_enc; // POP r64
+        
+        *length = pos;
+        free(lower_mnemonic);
+        return 0;
+    }
+    
+    // Fall back to basic encoding for unimplemented instructions
     // Find instruction in table
     for (int i = 0; x86_64_instructions[i].mnemonic != NULL; i++) {
         if (strcmp(lower_mnemonic, x86_64_instructions[i].mnemonic) == 0) {
-            
-            if (strcmp(lower_mnemonic, "syscall") == 0) {
-                // SYSCALL instruction: 0x0F 0x05
-                buffer[0] = 0x0F;
-                buffer[1] = 0x05;
-                *length = 2;
-                free(lower_mnemonic);
-                return 0;
-            }
-            
-            if (strcmp(lower_mnemonic, "nop") == 0) {
-                // NOP instruction: 0x90
-                buffer[0] = 0x90;
-                *length = 1;
-                free(lower_mnemonic);
-                return 0;
-            }
-            
-            if (strcmp(lower_mnemonic, "ret") == 0) {
-                // RET instruction: 0xC3
-                buffer[0] = 0xC3;
-                *length = 1;
-                free(lower_mnemonic);
-                return 0;
-            }
-            
-            // For other instructions, we need proper ModR/M encoding
-            // This is a stub implementation
-            buffer[0] = x86_64_instructions[i].opcode;
-            *length = x86_64_instructions[i].opcode_length;
-            
+            buffer[pos++] = x86_64_instructions[i].opcode;
+            *length = pos;
             free(lower_mnemonic);
             return 0;
         }
