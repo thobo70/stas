@@ -57,5 +57,7 @@ output_format_ops_t *get_flat_binary_format(void);
 output_format_ops_t *get_com_format(void);
 output_format_ops_t *get_elf32_format(void);
 output_format_ops_t *get_elf64_format(void);
+output_format_ops_t *get_intel_hex_format(void);
+output_format_ops_t *get_motorola_srec_format(void);
 
 #endif // OUTPUT_FORMAT_H
