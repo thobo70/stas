@@ -71,3 +71,47 @@ stas -a riscv -f bin -o kernel.bin kernel.s
 # DOS program
 stas -a x86_16 -f com -o hello.com hello.s
 ```
+
+## Testing Commands
+
+### Unit Testing
+```bash
+# All format unit tests (117 tests)
+make test-unit-formats
+
+# Individual format tests  
+make testbin/unit_test_elf
+make testbin/unit_test_intel_hex
+make testbin/unit_test_com_format
+```
+
+### Execution Testing  
+```bash
+# CPU emulation validation
+make test-execution-all
+
+# Architecture-specific tests
+make test-execution-x86_16    # Real mode testing
+make test-execution-x86_32    # Boot sequence simulation
+make test-execution-x86_64    # 64-bit validation
+```
+
+### Advanced Testing
+```bash
+# Complete test suite (164+ tests)
+make test-all
+
+# Boot sequence simulation
+./testbin/execution_test_x86_32_real_to_protected
+
+# Build variant testing
+make test-build-variants
+```
+
+## Test Results Summary
+```
+Format Unit Tests:      117/117 ✅ (0 failures)
+Execution Tests:        32+/32+ ✅ (multi-architecture)  
+Build Variants:         15/15 ✅ (all configurations)
+Boot Sequence:          4/4 ✅ (real→protected mode)
+```

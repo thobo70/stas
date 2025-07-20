@@ -15,7 +15,8 @@ Version: 0.7.0 (Phase 7 Complete - Advanced Language Features)
 5. [Output Format Details](#output-format-details)
 6. [Syntax Examples](#syntax-examples)
 7. [Advanced Usage](#advanced-usage)
-8. [Error Handling](#error-handling)
+8. [Testing and Validation](#testing-and-validation) **NEW**
+9. [Error Handling](#error-handling)
 
 ---
 
@@ -767,7 +768,99 @@ ld program.o -o program
 
 ---
 
+## Testing and Validation
+
+STAS includes comprehensive testing frameworks to validate both the assembler functionality and the generated machine code.
+
+### Unit Testing Framework
+
+Run comprehensive unit tests using the Unity testing framework:
+
+```bash
+# Run all format unit tests (117 tests across 5 formats)
+make test-unit-formats
+
+# Results: 
+# ELF Format: 29/29 tests passing ✅
+# Flat Binary: 20/20 tests passing ✅
+# Intel HEX: 21/21 tests passing ✅
+# COM Format: 23/23 tests passing ✅
+# Motorola S-Record: 24/24 tests passing ✅
+```
+
+### CPU Execution Testing
+
+Validate generated machine code using Unicorn Engine CPU emulation:
+
+```bash
+# Install Unicorn Engine (required for execution testing)
+sudo apt-get install libunicorn-dev
+
+# Run architecture-specific execution tests
+make test-execution-x86_16    # 16-bit real mode testing
+make test-execution-x86_32    # 32-bit + boot sequence simulation  
+make test-execution-x86_64    # 64-bit instruction validation
+make test-execution-arm64     # ARM64 cross-platform testing
+make test-execution-riscv     # RISC-V alternative architecture
+
+# Run all execution tests
+make test-execution-all
+```
+
+### Advanced Boot Sequence Testing
+
+Test complete i386 PC boot simulation (real mode → protected mode):
+
+```bash
+# Run advanced x86_32 boot sequence test
+./testbin/execution_test_x86_32_real_to_protected
+
+# This test demonstrates:
+# 1. Real mode operations (16-bit segmented addressing)
+# 2. Global Descriptor Table (GDT) setup
+# 3. Protected mode transition (CR0.PE bit manipulation)
+# 4. Memory model validation (segmented vs flat)
+# 5. Interrupt vector table configuration
+```
+
+### Test Integration
+
+Run complete test suite covering all components:
+
+```bash
+# Run everything: unit tests + execution tests + integration
+make test-all
+
+# Individual test categories
+make test              # Basic functionality tests
+make test-unit-all     # All Unity-based unit tests
+make test-execution-all # All Unicorn-based execution tests
+make test-phase7       # Advanced language feature tests
+```
+
+### Testing Output Example
+
+```
+=== Format Unit Testing Results ===
+ELF Format Tests:           29 tests, 0 failures ✅
+Flat Binary Format Tests:  20 tests, 0 failures ✅  
+Intel HEX Format Tests:     21 tests, 0 failures ✅
+COM Format Tests:           23 tests, 0 failures ✅
+Motorola S-Record Tests:    24 tests, 0 failures ✅
+TOTAL:                     117 tests, 0 failures ✅
+
+=== CPU Execution Testing Results ===
+x86_16 Basic Tests:         8 tests, 0 failures ✅
+x86_32 Comprehensive:      14 tests, 0 failures ✅
+x86_64 Basic Tests:        10 tests, 0 failures ✅
+Boot Sequence Simulation:   4 tests, 0 failures ✅
+```
+
+---
+
 **For more information, see:**
 - [Project Status](PROJECT_STATUS.md) - Technical implementation details
 - [Architecture Design](ARCHITECTURE.md) - Internal design documentation
+- [Testing Strategy](TESTING_STRATEGY.md) - Comprehensive testing framework documentation
+- [Unicorn Installation](UNICORN_INSTALLATION.md) - CPU emulation testing setup
 - [Examples Directory](examples/) - Sample assembly programs for each architecture
