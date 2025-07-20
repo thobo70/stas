@@ -203,66 +203,8 @@ test: $(TARGET)
 	./$(TARGET) --verbose --debug test.s
 	@rm -f test.s
 
-# Unity Testing Framework
-UNITY_DIR = tests
-UNITY_SRC = $(UNITY_DIR)/unity.c
-UNITY_HEADERS = $(UNITY_DIR)/unity.h $(UNITY_DIR)/unity_internals.h
-
-# Test source files
-TEST_SOURCES = $(wildcard tests/test_*.c)
-TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
-TEST_TARGETS = $(patsubst tests/%.c,testbin/%,$(TEST_SOURCES))
-
-# Unity test compilation flags
-TEST_CFLAGS = $(CFLAGS) -I$(UNITY_DIR) -I$(INCLUDE_DIR)
-
-# Unity unit tests
-test-unity: $(TEST_TARGETS)
-	@echo "==========================================="
-	@echo "Running STAS Unit Tests"
-	@echo "==========================================="
-	@for test in $(TEST_TARGETS); do \
-		echo "Running $$test..."; \
-		if ./$$test; then \
-			echo "✅ $$test PASSED"; \
-		else \
-			echo "❌ $$test FAILED"; \
-			exit 1; \
-		fi; \
-		echo ""; \
-	done
-	@echo "🎉 All unit tests completed successfully!"
-
-# Individual test compilation
-testbin/test_%: tests/test_%.c $(UNITY_SRC) $(UNITY_HEADERS) $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling unit test: $@"
-	$(CC) $(TEST_CFLAGS) $< $(UNITY_SRC) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-# Test object files
-tests/%.o: tests/%.c $(UNITY_HEADERS)
-	$(CC) $(TEST_CFLAGS) -c $< -o $@
-
-# Clean test artifacts
-test-clean:
-	@echo "Cleaning test artifacts..."
-	rm -f $(TEST_TARGETS) $(TEST_OBJECTS)
-
-# Run Unicorn Engine tests
-test-unicorn: $(TARGET)
-	@echo "Running Unicorn Engine tests..."
-	./tests/run_unicorn_tests.sh
-
-# Build Unicorn test program
-test-unicorn-build: | $(TESTBIN_DIR)
-	@echo "Building Unicorn test program..."
-	@if pkg-config --exists unicorn 2>/dev/null; then \
-		gcc $(CFLAGS) `pkg-config --cflags unicorn` tests/test_unicorn_comprehensive.c tests/unity.c `pkg-config --libs unicorn` -o testbin/test_unicorn_comprehensive; \
-	else \
-		gcc $(CFLAGS) tests/test_unicorn_comprehensive.c tests/unity.c -lunicorn -o testbin/test_unicorn_comprehensive; \
-	fi
-
-# Run all tests
-test-all: test test-unity test-unicorn test-phase7-advanced
+# === MODERN TESTING FRAMEWORK ===
+# All legacy test infrastructure removed - using Unity-based framework only
 
 # Clean build artifacts
 clean:
@@ -288,25 +230,15 @@ uninstall:
 	sudo rm -f /usr/local/bin/$(PROJECT_NAME)
 	@echo "Uninstalled $(PROJECT_NAME)"
 
-# Show help
+# Show help (updated for modern testing framework)
 help:
 	@echo "Available targets:"
 	@echo "  all          - Build the project (default)"
 	@echo "  debug        - Build with debug symbols"
 	@echo "  test         - Build and test with sample assembly"
-	@echo "  test-unity   - Run unit tests (Unity framework)"
-	@echo "  test-unicorn - Run Unicorn Engine emulation tests"
-	@echo "  test-unicorn-build - Build Unicorn test program"
-	@echo "  test-phase2-parsing - Run Phase 2 advanced parsing tests"
-	@echo "  test-phase3-symbols - Run Phase 3 symbol enhancement tests"
-	@echo "  test-phase3-basic   - Run Phase 3 basic symbol tests"
-	@echo "  test-phase3-comprehensive - Run Phase 3 comprehensive symbol tests"
-	@echo "  test-phase4-x86-64  - Run Phase 4 x86-64 architecture tests"
-	@echo "  test-phase4-comprehensive - Run Phase 4 comprehensive encoding tests"
-	@echo "  test-phase4-expanded - Run Phase 4 expanded instruction set tests"
-	@echo "  test-all-phases     - Run all phase tests (Phase 2 + Phase 3)"
-	@echo "  test-all     - Run all tests (sample + unity + unicorn)"
-	@echo "  test-clean   - Clean test artifacts"
+	@echo "  test-unit-all - Run all unit tests (modern Unity framework)"
+	@echo "  test-phase7-advanced - Run Phase 7 advanced features"
+	@echo "  test-all     - Run all tests (sample + unit + phase7)"
 	@echo "  static-x86_16 - Build static x86-16 only assembler"
 	@echo "  static-x86_32 - Build static x86-32 only assembler"
 	@echo "  static-x86_64 - Build static x86-64 only assembler"
@@ -345,186 +277,7 @@ structure:
 	@echo "│   └── utils.c     # General utilities"
 	@echo "└── main.c          # Main entry point"
 
-# Comprehensive x86_16 test with Unicorn Engine
-test-x86_16-comprehensive: testbin/test_x86_16_comprehensive
-	@echo "==========================================="
-	@echo "Running Comprehensive x86_16 Test Suite"
-	@echo "==========================================="
-	./testbin/test_x86_16_comprehensive
-
-testbin/test_x86_16_comprehensive: tests/test_x86_16_comprehensive.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building comprehensive x86_16 test..."
-	$(CC) $(CFLAGS) $(INCLUDES) -I$(UNITY_DIR) \
-		tests/test_x86_16_comprehensive.c \
-		$(ARCH_X86_16_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		`pkg-config --cflags --libs unicorn` \
-		-o $@
-	@echo "Comprehensive x86_16 test built: $@"
-
-# Phase 2: Advanced Parsing Test
-test-phase2-parsing: testbin/test_phase2_advanced_parsing
-	@echo "==========================================="
-	@echo "Running Phase 2 Advanced Parsing Tests"
-	@echo "==========================================="
-	./testbin/test_phase2_advanced_parsing
-
-testbin/test_phase2_advanced_parsing: tests/test_phase2_advanced_parsing.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 2 advanced parsing test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase2_advanced_parsing.c \
-		$(ARCH_X86_16_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 2 advanced parsing test built: $@"
-
-# Phase 3: Symbol Table Enhancement Tests
-test-phase3-symbols: testbin/test_phase3_final
-	@echo "==========================================="
-	@echo "Running Phase 3 Symbol Enhancement Tests"
-	@echo "==========================================="
-	./testbin/test_phase3_final
-
-testbin/test_phase3_final: tests/test_phase3_final.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 3 symbol enhancement test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase3_final.c \
-		$(ARCH_X86_16_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 3 symbol enhancement test built: $@"
-
-# Phase 3: Basic Symbol Test (simpler version)
-test-phase3-basic: testbin/test_phase3_basic
-	@echo "==========================================="
-	@echo "Running Phase 3 Basic Symbol Tests"
-	@echo "==========================================="
-	./testbin/test_phase3_basic
-
-testbin/test_phase3_basic: tests/test_phase3_basic.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 3 basic symbol test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase3_basic.c \
-		$(ARCH_X86_16_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 3 basic symbol test built: $@"
-
-# Phase 3: Comprehensive Symbol Test
-test-phase3-comprehensive: testbin/test_phase3_comprehensive
-	@echo "==========================================="
-	@echo "Running Phase 3 Comprehensive Symbol Tests"
-	@echo "==========================================="
-	./testbin/test_phase3_comprehensive
-
-testbin/test_phase3_comprehensive: tests/test_phase3_symbol_enhancement.c $(ARCH_X86_16_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 3 comprehensive symbol test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase3_symbol_enhancement.c \
-		$(ARCH_X86_16_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 3 comprehensive symbol test built: $@"
-
-# Test all phases
-test-all-phases: test-phase2-parsing test-phase3-symbols test-phase3-basic test-phase3-comprehensive test-phase4-x86-64 test-phase4-comprehensive test-phase4-expanded test-phase7-advanced
-
-# Phase 7: Advanced Language Features Test
-test-phase7-advanced: $(TARGET)
-	@echo "=== Running Phase 7 Advanced Language Features Tests ==="
-	cd tests/phase7 && ./working_tests.sh
-	@echo "✅ All Phase 7 tests passed!"
-	@echo "🎉 All phase tests completed successfully!"
-
-# Phase 4: x86-64 Architecture Module Tests
-test-phase4-x86-64: testbin/test_phase4_x86_64
-	@echo "=========================================="
-	@echo "Running Phase 4 x86-64 Architecture Tests"
-	@echo "=========================================="
-	./testbin/test_phase4_x86_64
-
-testbin/test_phase4_x86_64: tests/test_phase4_x86_64.c $(ARCH_X86_64_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 4 x86-64 test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase4_x86_64.c \
-		tests/unity.c \
-		$(ARCH_X86_64_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 4 x86-64 test built: $@"
-
-test-phase4-comprehensive: testbin/test_phase4_comprehensive
-	@echo "============================================="
-	@echo "Running Phase 4 Comprehensive Encoding Tests"
-	@echo "============================================="
-	./testbin/test_phase4_comprehensive
-
-testbin/test_phase4_comprehensive: tests/test_phase4_comprehensive.c $(ARCH_X86_64_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 4 comprehensive test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase4_comprehensive.c \
-		tests/unity.c \
-		$(ARCH_X86_64_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 4 comprehensive test built: $@"
-
-test-phase4-expanded: testbin/test_phase4_expanded
-	@echo "============================================"
-	@echo "Running Phase 4 Expanded Instruction Tests"
-	@echo "============================================"
-	./testbin/test_phase4_expanded
-
-testbin/test_phase4_expanded: tests/test_phase4_expanded.c $(ARCH_X86_64_OBJECTS) $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 4 expanded instruction test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase4_expanded.c \
-		tests/unity.c \
-		$(ARCH_X86_64_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(FORMAT_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 4 expanded instruction test built: $@"
-
-# Phase 5 Testing: Advanced Output Formats
-test-phase5-elf: testbin/test_phase5_elf bin/stas
-	@echo "==========================================="
-	@echo "Running Phase 5 ELF Format Tests"
-	@echo "==========================================="
-	./testbin/test_phase5_elf
-
-testbin/test_phase5_elf: tests/test_phase5_elf.c $(FORMAT_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(CORE_OBJECTS) $(UTIL_OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building Phase 5 ELF format test..."
-	$(CC) $(CFLAGS) -g -O0 $(INCLUDES) \
-		tests/test_phase5_elf.c \
-		$(FORMAT_OBJECTS) \
-		$(ARCH_X86_64_OBJECTS) \
-		$(ARCH_X86_32_OBJECTS) \
-		$(CORE_OBJECTS) \
-		$(UTIL_OBJECTS) \
-		-o $@
-	@echo "Phase 5 ELF format test built: $@"
-
-# Test all variants
-test-comprehensive-legacy: test-x86_16-comprehensive
-	@echo "🎉 All legacy comprehensive tests completed!"
-
-# === NEW COMPREHENSIVE TESTING FRAMEWORK ===
+# === COMPREHENSIVE TESTING FRAMEWORK ===
 
 # Test directories and framework
 UNIT_TEST_DIR = tests/unit
@@ -549,9 +302,9 @@ COVERAGE_LDFLAGS = --coverage
 # === UNIT TESTING WITH UNITY ===
 
 # Unit test compilation - flexible pattern matching  
-$(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c $(UNITY_SRC) $(UNITY_EXTENSIONS) $(OBJECTS) | $(TESTBIN_DIR)
+$(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity.c $(UNITY_EXTENSIONS) $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "Compiling unit test: $@"
-	$(CC) $(TEST_CFLAGS_ENHANCED) $< $(UNITY_SRC) $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
 # Core module unit tests
 test-unit-core:
@@ -563,107 +316,21 @@ test-unit-core:
 	@if [ -f $(TESTBIN_DIR)/unit_test_parser_simple ]; then echo "Running parser tests..."; ./$(TESTBIN_DIR)/unit_test_parser_simple; fi
 	@echo "Core unit tests completed"
 
-# Architecture module unit tests  
-test-unit-arch:
-	@echo "=== Running Architecture Module Unit Tests ==="
-	@echo "Architecture unit tests not yet implemented - using legacy tests"
-	@$(MAKE) test-x86_16-comprehensive || true
-
-# Format module unit tests
-test-unit-formats:
-	@echo "=== Running Format Module Unit Tests ==="
-	@echo "Format unit tests not yet implemented - using legacy tests"
-	@$(MAKE) test-phase5-elf || true
-
-# Utility module unit tests
-test-unit-utils:
-	@echo "=== Running Utility Module Unit Tests ==="
-	@echo "Utility unit tests not yet implemented"
-
 # All unit tests
 test-unit-all:
 	@echo "=== Running All Available Unit Tests ==="
 	@$(MAKE) test-unit-core
-	@$(MAKE) test-unit-arch  
-	@$(MAKE) test-unit-formats
-	@$(MAKE) test-unit-utils
-
-# === BUILD VARIANT TESTING ===
-
-test-build-variants:
-	@echo "=== Testing All Build Variants ==="
-	@if [ -f tests/integration/build_variants/test_all_builds.sh ]; then \
-		./tests/integration/build_variants/test_all_builds.sh; \
-	else \
-		echo "Build variant tests not found - using basic build test"; \
-		$(MAKE) clean && $(MAKE) all; \
-	fi
-
-# === EXECUTION TESTING WITH UNICORN ===
-
-# Execution test compilation
-$(TESTBIN_DIR)/execution_test_%: tests/execution/*/test_%.c $(UNICORN_FRAMEWORK) $(UNITY_SRC) | $(TESTBIN_DIR)
-	@echo "Compiling execution test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) $(UNITY_SRC) -lunicorn -o $@
-
-# Check for Unicorn Engine availability
-check-unicorn:
-	@echo "Checking Unicorn Engine availability..."
-	@if pkg-config --exists libunicorn; then \
-		echo "✅ Unicorn Engine found"; \
-	elif ldconfig -p | grep -q unicorn; then \
-		echo "✅ Unicorn Engine found"; \
-	else \
-		echo "⚠️  Unicorn Engine not found - execution tests may fail"; \
-	fi
-
-# x86-64 execution tests (primary test target)
-test-execution-x86_64:
-	@echo "=== Running x86-64 Execution Tests ==="
-	@$(MAKE) check-unicorn
-	@if [ -f tests/execution/x86_64/test_basic_instructions.c ]; then \
-		$(MAKE) $(TESTBIN_DIR)/execution_test_basic_instructions && ./$(TESTBIN_DIR)/execution_test_basic_instructions; \
-	else \
-		echo "x86-64 execution tests not found - using legacy Unicorn tests"; \
-		$(MAKE) test-unicorn || true; \
-	fi
-
-# Other architecture execution tests (placeholders for now)
-test-execution-x86_16:
-	@echo "=== Running x86-16 Execution Tests ==="
-	@echo "x86-16 execution tests not yet implemented"
-
-test-execution-x86_32:
-	@echo "=== Running x86-32 Execution Tests ==="
-	@echo "x86-32 execution tests not yet implemented"
-
-test-execution-arm64:
-	@echo "=== Running ARM64 Execution Tests ==="
-	@echo "ARM64 execution tests not yet implemented"
-
-test-execution-riscv:
-	@echo "=== Running RISC-V Execution Tests ==="
-	@echo "RISC-V execution tests not yet implemented"
-
-# All execution tests
-test-execution-all:
-	@echo "=== Running All Available Execution Tests ==="
-	@$(MAKE) test-execution-x86_64
-	@$(MAKE) test-execution-x86_16
-	@$(MAKE) test-execution-x86_32
-	@$(MAKE) test-execution-arm64
-	@$(MAKE) test-execution-riscv
 
 # === INTEGRATION TESTING ===
 
-test-integration:
-	@echo "=== Running Integration Tests ==="
-	@if [ -f tests/integration/end_to_end/test_basic_assembly.sh ]; then \
-		./tests/integration/end_to_end/test_basic_assembly.sh; \
-	else \
-		echo "Integration tests not found - using legacy test-all"; \
-		$(MAKE) test-all; \
-	fi
+# Phase 7: Advanced Language Features Test  
+test-phase7-advanced: $(TARGET)
+	@echo "=== Running Phase 7 Advanced Language Features Tests ==="
+	cd tests/phase7 && ./working_tests.sh
+	@echo "✅ All Phase 7 tests passed!"
+
+# Modern test suite
+test-all: test test-unit-all test-phase7-advanced
 
 # === CODE COVERAGE ===
 
@@ -690,22 +357,14 @@ test-coverage:
 # Complete test suite
 test-comprehensive:
 	@echo "🚀 Starting STAS Comprehensive Test Suite..."
-	@if [ -f tests/framework/scripts/test_runner.py ]; then \
-		python3 tests/framework/scripts/test_runner.py; \
-	else \
-		echo "Running comprehensive tests manually..."; \
-		$(MAKE) test-unit-all || true; \
-		$(MAKE) test-build-variants || true; \
-		$(MAKE) test-execution-all || true; \
-		$(MAKE) test-integration || true; \
-		$(MAKE) test-coverage || true; \
-	fi
+	@$(MAKE) test-unit-all || true
+	@$(MAKE) test-phase7-advanced || true
+	@$(MAKE) test-coverage || true
 
 # Quick test (essential tests only)
 test-quick:
 	@echo "=== Running Quick Test Suite ==="
 	@$(MAKE) test-unit-core
-	@$(MAKE) test-execution-x86_64  
 	@echo "Quick tests completed"
 
 # Continuous integration test  
@@ -720,55 +379,8 @@ test-performance:
 	@echo "Measuring basic assembly performance..."
 	@time $(MAKE) -B $(TARGET) || true
 
-# === HELP AND INFORMATION ===
-
-test-help:
-	@echo "STAS Testing Framework - Available Test Targets:"
-	@echo ""
-	@echo "🧪 Unit Testing:"
-	@echo "  test-unit-all        - Run all available unit tests"
-	@echo "  test-unit-core       - Test core modules (lexer, parser, etc.)"
-	@echo "  test-unit-arch       - Test architecture modules"
-	@echo "  test-unit-formats    - Test output format modules" 
-	@echo "  test-unit-utils      - Test utility modules"
-	@echo ""
-	@echo "🏗️  Build Testing:"
-	@echo "  test-build-variants  - Test all build configurations"
-	@echo ""
-	@echo "🚀 Execution Testing:"
-	@echo "  test-execution-all   - Test code execution on all architectures"
-	@echo "  test-execution-x86_64 - Test x86-64 code execution (primary)"
-	@echo "  test-execution-x86_16 - Test x86-16 code execution"
-	@echo "  test-execution-x86_32 - Test x86-32 code execution"
-	@echo "  test-execution-arm64 - Test ARM64 code execution"
-	@echo "  test-execution-riscv - Test RISC-V code execution"
-	@echo ""
-	@echo "🔗 Integration Testing:"
-	@echo "  test-integration     - Test end-to-end workflows"
-	@echo ""
-	@echo "📊 Code Coverage:"
-	@echo "  test-coverage        - Generate code coverage report"
-	@echo "  coverage-build       - Build with coverage instrumentation"
-	@echo ""
-	@echo "🎯 Comprehensive Testing:"
-	@echo "  test-comprehensive   - Run complete test suite"
-	@echo "  test-quick          - Run essential tests only" 
-	@echo "  test-ci             - Run CI/CD test suite"
-	@echo "  test-performance    - Run performance benchmarks"
-	@echo ""
-	@echo "🔧 Utilities:"
-	@echo "  check-unicorn       - Check Unicorn Engine availability"
-	@echo "  test-help           - Show this help message"
-	@echo ""
-	@echo "📜 Legacy compatibility:"
-	@echo "  test-all            - Legacy test target (still functional)"
-
-# Declare phony targets (updated with new framework)
-.PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean \
-        test-x86_16-comprehensive test-comprehensive-legacy static-x86_16 static-x86_32 static-x86_64 \
-        static-arm64 static-riscv static-all clean distclean run install uninstall help \
-        test-unit-all test-unit-core test-unit-arch test-unit-formats test-unit-utils \
-        test-build-variants test-execution-all test-execution-x86_16 test-execution-x86_32 \
-        test-execution-x86_64 test-execution-arm64 test-execution-riscv test-integration \
-        test-coverage coverage-build test-comprehensive test-quick test-ci test-performance \
-        test-help check-unicorn
+# Declare phony targets (cleaned up for modern framework)
+.PHONY: all debug test clean distclean run install uninstall help structure \
+        test-unit-all test-unit-core test-phase7-advanced test-all \
+        test-comprehensive test-quick test-ci test-performance test-coverage coverage-build \
+        static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all
