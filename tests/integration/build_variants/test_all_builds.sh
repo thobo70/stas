@@ -3,6 +3,10 @@
 # STAS Build Variant Testing Script
 # Tests all build configurations to ensure they work correctly
 
+# Setup logs directory
+LOGS_DIR="logs"
+mkdir -p "$LOGS_DIR"
+
 BUILD_VARIANTS=(
     "dynamic:all"
     "static:x86_16"
@@ -59,17 +63,17 @@ test_build_variant() {
     local build_success=false
     case $variant in
         "dynamic")
-            if make all > "build_${variant}_${arch}.log" 2>&1; then
+            if make all > "$LOGS_DIR/build_${variant}_${arch}.log" 2>&1; then
                 build_success=true
             fi
             ;;
         "static")
-            if make static-$arch > "build_${variant}_${arch}.log" 2>&1; then
+            if make static-$arch > "$LOGS_DIR/build_${variant}_${arch}.log" 2>&1; then
                 build_success=true
             fi
             ;;
         "debug")
-            if make debug > "build_${variant}_${arch}.log" 2>&1; then
+            if make debug > "$LOGS_DIR/build_${variant}_${arch}.log" 2>&1; then
                 build_success=true
             fi
             ;;
@@ -169,8 +173,8 @@ main() {
         fi
     done
     
-    # Clean up
-    rm -f build_*.log 2>/dev/null
+    # Clean up build logs (they're now in logs/ directory and will be managed by git ignore)
+    # rm -f $LOGS_DIR/build_*.log 2>/dev/null
     
     echo "========================================"
     echo "Build Variant Test Results"

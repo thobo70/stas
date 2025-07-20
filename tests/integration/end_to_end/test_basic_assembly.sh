@@ -5,6 +5,10 @@
 
 set -e
 
+# Setup logs directory
+LOGS_DIR="logs"
+mkdir -p "$LOGS_DIR"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -43,7 +47,7 @@ test_assembly_workflow() {
     
     # Assemble the file
     local output_file="test_${arch}_${test_name}.out"
-    if timeout 30s ./bin/stas "$test_file" -o "$output_file" > "assembly_${arch}_${test_name}.log" 2>&1; then
+    if timeout 30s ./bin/stas "$test_file" -o "$output_file" > "$LOGS_DIR/assembly_${arch}_${test_name}.log" 2>&1; then
         # Check output file
         if [ -f "$output_file" ] && [ -s "$output_file" ]; then
             local file_size=$(stat -c%s "$output_file")
@@ -52,7 +56,7 @@ test_assembly_workflow() {
                 ((PASSED_TESTS++))
                 
                 # Cleanup
-                rm -f "$test_file" "$output_file" "assembly_${arch}_${test_name}.log"
+                rm -f "$test_file" "$output_file" "$LOGS_DIR/assembly_${arch}_${test_name}.log"
                 return 0
             else
                 log_error "$arch $test_name: Output too small (${file_size} bytes)"
@@ -62,11 +66,11 @@ test_assembly_workflow() {
         fi
     else
         log_error "$arch $test_name: Assembly failed"
-        cat "assembly_${arch}_${test_name}.log"
+        cat "$LOGS_DIR/assembly_${arch}_${test_name}.log"
     fi
     
     # Cleanup on failure
-    rm -f "$test_file" "$output_file" "assembly_${arch}_${test_name}.log"
+    rm -f "$test_file" "$output_file" "$LOGS_DIR/assembly_${arch}_${test_name}.log"
     return 1
 }
 
@@ -273,26 +277,26 @@ log_info "=== Error Handling Tests ==="
 # Test invalid instruction (should fail gracefully)
 log_info "Testing error handling for invalid instruction"
 echo "invalid_instruction eax, ebx" > test_error.s
-if ./bin/stas test_error.s -o test_error.out > error_test.log 2>&1; then
+if ./bin/stas test_error.s -o test_error.out > "$LOGS_DIR/error_test.log" 2>&1; then
     log_error "Error test: Should have failed for invalid instruction"
 else
     log_success "Error test: Correctly rejected invalid instruction"
     ((PASSED_TESTS++))
 fi
 ((TOTAL_TESTS++))
-rm -f test_error.s test_error.out error_test.log
+rm -f test_error.s test_error.out "$LOGS_DIR/error_test.log"
 
 # Test empty file
 log_info "Testing empty file handling"
 touch test_empty.s
-if ./bin/stas test_empty.s -o test_empty.out > empty_test.log 2>&1; then
+if ./bin/stas test_empty.s -o test_empty.out > "$LOGS_DIR/empty_test.log" 2>&1; then
     log_success "Error test: Empty file handled correctly"
     ((PASSED_TESTS++))
 else
     log_error "Error test: Failed to handle empty file"
 fi
 ((TOTAL_TESTS++))
-rm -f test_empty.s test_empty.out empty_test.log
+rm -f test_empty.s test_empty.out "$LOGS_DIR/empty_test.log"
 
 # Results
 echo ""
