@@ -232,7 +232,7 @@ test-unity: $(TEST_TARGETS)
 # Individual test compilation
 tests/test_%: tests/test_%.c $(UNITY_SRC) $(UNITY_HEADERS) $(OBJECTS)
 	@echo "Compiling unit test: $@"
-	$(CC) $(TEST_CFLAGS) $< $(UNITY_SRC) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+	$(CC) $(TEST_CFLAGS) $< $(UNITY_SRC) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
 
 # Test object files
 tests/%.o: tests/%.c $(UNITY_HEADERS)
@@ -258,7 +258,7 @@ test-unicorn-build:
 	fi
 
 # Run all tests
-test-all: test test-unity test-unicorn
+test-all: test test-unity test-unicorn test-phase7-advanced
 
 # Clean build artifacts
 clean:
@@ -427,7 +427,13 @@ bin/test_phase3_comprehensive: tests/test_phase3_symbol_enhancement.c $(ARCH_X86
 	@echo "Phase 3 comprehensive symbol test built: $@"
 
 # Test all phases
-test-all-phases: test-phase2-parsing test-phase3-symbols test-phase3-basic test-phase3-comprehensive test-phase4-x86-64 test-phase4-comprehensive test-phase4-expanded
+test-all-phases: test-phase2-parsing test-phase3-symbols test-phase3-basic test-phase3-comprehensive test-phase4-x86-64 test-phase4-comprehensive test-phase4-expanded test-phase7-advanced
+
+# Phase 7: Advanced Language Features Test
+test-phase7-advanced: $(TARGET)
+	@echo "=== Running Phase 7 Advanced Language Features Tests ==="
+	cd tests/phase7 && ./working_tests.sh
+	@echo "✅ All Phase 7 tests passed!"
 	@echo "🎉 All phase tests completed successfully!"
 
 # Phase 4: x86-64 Architecture Module Tests

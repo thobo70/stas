@@ -12,6 +12,8 @@
 #include "symbols.h"
 #include "core/output_format.h"
 #include "codegen.h"
+#include "macro.h"
+#include "include.h"
 
 // External architecture function declarations
 extern arch_ops_t *get_arch_ops_x86_16(void);
@@ -221,6 +223,26 @@ int assemble_file(const config_t *config) {
         goto cleanup;
     }
     
+    // Initialize Phase 7 features: Macro processor
+    macro_processor_t *macro_processor = macro_processor_create();
+    if (!macro_processor) {
+        fprintf(stderr, "Error: Failed to create macro processor\n");
+        lexer_destroy(lexer);
+        goto cleanup;
+    }
+    
+    // Initialize include processor
+    include_processor_t *include_processor = include_processor_create();
+    if (!include_processor) {
+        fprintf(stderr, "Error: Failed to create include processor\n");
+        macro_processor_destroy(macro_processor);
+        lexer_destroy(lexer);
+        goto cleanup;
+    }
+    
+    // Set macro processor in lexer
+    lexer_set_macro_processor(lexer, macro_processor);
+    
     // Get architecture operations
     arch_ops_t *arch_ops = get_architecture(config->architecture);
     if (!arch_ops) {
@@ -232,6 +254,8 @@ int assemble_file(const config_t *config) {
     // Initialize architecture
     if (arch_ops->init && arch_ops->init() != 0) {
         fprintf(stderr, "Error: Failed to initialize %s architecture\n", config->architecture);
+        include_processor_destroy(include_processor);
+        macro_processor_destroy(macro_processor);
         lexer_destroy(lexer);
         goto cleanup;
     }
@@ -240,6 +264,8 @@ int assemble_file(const config_t *config) {
     parser_t *parser = parser_create(lexer, arch_ops);
     if (!parser) {
         fprintf(stderr, "Error: Failed to create parser\n");
+        include_processor_destroy(include_processor);
+        macro_processor_destroy(macro_processor);
         lexer_destroy(lexer);
         goto cleanup;
     }
@@ -267,6 +293,8 @@ int assemble_file(const config_t *config) {
     
     if (parser_has_error(parser)) {
         fprintf(stderr, "Parse error: %s\n", parser_get_error(parser));
+        include_processor_destroy(include_processor);
+        macro_processor_destroy(macro_processor);
         parser_destroy(parser);
         goto cleanup;
     }
@@ -292,6 +320,14 @@ int assemble_file(const config_t *config) {
         .base_address = config->base_address,
         .verbose = config->verbose
     };
+    
+    // Set default base address for COM format if not specified
+    if (config->output_format == FORMAT_COM && config->base_address == 0) {
+        output_ctx.base_address = 0x100;  // DOS COM programs start at 0x100
+        if (config->verbose) {
+            printf("Setting COM base address to 0x100\n");
+        }
+    }
     
     // Generate machine code from AST
     codegen_ctx_t *codegen = codegen_create(arch_ops, &output_ctx);
@@ -327,6 +363,9 @@ int assemble_file(const config_t *config) {
     
     result = EXIT_SUCCESS;
     
+    // Clean up Phase 7 processors
+    include_processor_destroy(include_processor);
+    macro_processor_destroy(macro_processor);
     parser_destroy(parser);
     
 cleanup:

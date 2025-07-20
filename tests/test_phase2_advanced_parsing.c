@@ -40,6 +40,15 @@ static void print_test_result(const test_result_t *result);
 static test_result_t create_test_result(const char *name, bool passed, const char *error);
 static int64_t parse_and_evaluate_expression(const char *input);
 
+// Unity framework required functions
+void setUp(void) {
+    // Setup before each test
+}
+
+void tearDown(void) {
+    // Cleanup after each test
+}
+
 int main(void) {
     printf("=== STAS Phase 2: Advanced Parsing Test Suite ===\n\n");
     

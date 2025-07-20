@@ -233,13 +233,13 @@ const char *riscv_get_register_name(asm_register_t reg) {
 int riscv_parse_instruction_impl(const char *mnemonic, operand_t *operands, 
                                 size_t operand_count, instruction_t *inst) {
     if (!mnemonic || !inst) {
-        return 0;
+        return -1;
     }
     
     // Find instruction info
     const riscv_instruction_info_t *info = riscv_find_instruction(mnemonic);
     if (!info) {
-        return 0;
+        return -1;
     }
     
     // Fill instruction structure
@@ -249,34 +249,36 @@ int riscv_parse_instruction_impl(const char *mnemonic, operand_t *operands,
     inst->encoding = NULL;
     inst->encoding_length = 0;
     
-    return 1; // Success
+    return 0; // Success
 }
 
 int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *length) {
     if (!inst || !buffer || !length) {
         return -1;
     }
-    
+
     const riscv_instruction_info_t *info = riscv_find_instruction(inst->mnemonic);
     if (!info) {
         return -1;
     }
-    
+
     uint32_t instruction = 0;
     operand_t *operands = inst->operands;
-    size_t operand_count = inst->operand_count;
-    
-    switch (info->format) {
+    size_t operand_count = inst->operand_count;    switch (info->format) {
         case RISCV_FORMAT_R: {
             // R-type: op rd, rs1, rs2
-            if (operand_count != 3) return 0;
+            if (operand_count != 3) return -1;
             
-            asm_register_t rd, rs1, rs2;
-            if (!riscv_parse_register_impl(operands[0].value.symbol, &rd) ||
-                !riscv_parse_register_impl(operands[1].value.symbol, &rs1) ||
-                !riscv_parse_register_impl(operands[2].value.symbol, &rs2)) {
-                return 0;
+            // Check that all operands are registers
+            if (operands[0].type != OPERAND_REGISTER ||
+                operands[1].type != OPERAND_REGISTER ||
+                operands[2].type != OPERAND_REGISTER) {
+                return -1;
             }
+            
+            asm_register_t rd = operands[0].value.reg;
+            asm_register_t rs1 = operands[1].value.reg;
+            asm_register_t rs2 = operands[2].value.reg;
             
             instruction = riscv_encode_r_type(info->opcode, info->funct3, info->funct7, 
                                              rd.id, rs1.id, rs2.id);
@@ -289,27 +291,34 @@ int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *
                 return -1;
             }
             
-            asm_register_t rd, rs1;
-            if (!riscv_parse_register_impl(operands[0].value.symbol, &rd) ||
-                !riscv_parse_register_impl(operands[1].value.symbol, &rs1)) {
+            // Check operand types
+            if (operands[0].type != OPERAND_REGISTER ||
+                operands[1].type != OPERAND_REGISTER ||
+                operands[2].type != OPERAND_IMMEDIATE) {
                 return -1;
             }
             
+            asm_register_t rd = operands[0].value.reg;
+            asm_register_t rs1 = operands[1].value.reg;
             int32_t imm = (int32_t)operands[2].value.immediate;
+            
             instruction = riscv_encode_i_type(info->opcode, info->funct3, rd.id, rs1.id, imm);
             break;
         }
         
         case RISCV_FORMAT_U: {
             // U-type: op rd, imm
-            if (operand_count != 2) return 0;
+            if (operand_count != 2) return -1;
             
-            asm_register_t rd;
-            if (!riscv_parse_register_impl(operands[0].value.symbol, &rd)) {
-                return 0;
+            // Check operand types
+            if (operands[0].type != OPERAND_REGISTER ||
+                operands[1].type != OPERAND_IMMEDIATE) {
+                return -1;
             }
             
+            asm_register_t rd = operands[0].value.reg;
             int32_t imm = (int32_t)operands[1].value.immediate;
+            
             instruction = riscv_encode_u_type(info->opcode, rd.id, imm);
             break;
         }

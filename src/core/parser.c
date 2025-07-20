@@ -621,6 +621,10 @@ bool parse_operand_full(parser_t *parser, operand_t *operand) {
         case TOKEN_IMMEDIATE:
             return parse_immediate_operand(parser, operand) == 0;
             
+        case TOKEN_NUMBER:
+            // For architectures like RISC-V that use bare numbers as immediates
+            return parse_immediate_operand(parser, operand) == 0;
+            
         case TOKEN_SYMBOL:
             return parse_symbol_operand(parser, operand) == 0;
             
@@ -699,17 +703,23 @@ int parse_register_operand(parser_t *parser, operand_t *operand) {
 }
 
 int parse_immediate_operand(parser_t *parser, operand_t *operand) {
-    if (!parser || !operand || !parser_match(parser, TOKEN_IMMEDIATE)) {
+    if (!parser || !operand) {
+        return -1;
+    }
+    
+    // Accept both TOKEN_IMMEDIATE (AT&T style with $) and TOKEN_NUMBER (RISC-V style)
+    if (!parser_match(parser, TOKEN_IMMEDIATE) && !parser_match(parser, TOKEN_NUMBER)) {
         return -1;
     }
     
     operand->type = OPERAND_IMMEDIATE;
     
-    // Parse the immediate value (remove $ prefix)
+    // Parse the immediate value
     const char *value_str = parser->current_token.value;
-    if (value_str[0] == '$') {
-        value_str++; // Skip the $ prefix
+    if (parser->current_token.type == TOKEN_IMMEDIATE && value_str[0] == '$') {
+        value_str++; // Skip the $ prefix for AT&T syntax
     }
+    // For TOKEN_NUMBER, use the value as-is (RISC-V style)
     
     // Phase 2 Enhancement: Support expressions in immediates
     // Check if this is a simple number or a complex expression
@@ -861,6 +871,20 @@ int parse_symbol_operand(parser_t *parser, operand_t *operand) {
         return -1;
     }
     
+    // Check if the symbol is actually a register for the current architecture
+    if (parser->arch && parser->arch->parse_register) {
+        asm_register_t reg = {0};
+        if (parser->arch->parse_register(parser->current_token.value, &reg) == 1) {
+            // This symbol is a register, treat it as such
+            operand->type = OPERAND_REGISTER;
+            operand->value.reg = reg;
+            operand->size = reg.size;
+            parser_advance(parser);
+            return 0;
+        }
+    }
+    
+    // Not a register, treat as symbol
     operand->type = OPERAND_SYMBOL;
     operand->value.symbol = safe_strdup(parser->current_token.value);
     operand->size = 8; // Default symbol size

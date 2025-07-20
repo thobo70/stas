@@ -221,6 +221,15 @@ static void print_test_result(const test_result_t *result) {
     printf("----------------------------------------\n");
 }
 
+// Unity framework required functions
+void setUp(void) {
+    // Setup before each test
+}
+
+void tearDown(void) {
+    // Cleanup after each test
+}
+
 int main(void) {
     printf("=== Phase 3: Symbol Table Enhancement - Comprehensive Symbol Tests ===\n\n");
     

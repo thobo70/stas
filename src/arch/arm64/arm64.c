@@ -300,9 +300,16 @@ int arm64_parse_instruction(const char *mnemonic, operand_t *operands,
     // Copy operands
     inst->operand_count = operand_count;
     if (operand_count > 0 && operands) {
-        for (size_t i = 0; i < operand_count && i < MAX_OPERANDS; i++) {
+        inst->operands = malloc(operand_count * sizeof(operand_t));
+        if (!inst->operands) {
+            free(inst->mnemonic);
+            return -1;
+        }
+        for (size_t i = 0; i < operand_count; i++) {
             inst->operands[i] = operands[i];
         }
+    } else {
+        inst->operands = NULL;
     }
     
     return 0;

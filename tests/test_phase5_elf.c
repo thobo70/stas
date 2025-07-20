@@ -177,6 +177,15 @@ static int test_objdump_analysis(void) {
     return 1;
 }
 
+// Unity framework required functions
+void setUp(void) {
+    // Setup before each test
+}
+
+void tearDown(void) {
+    // Cleanup after each test
+}
+
 int main(void) {
     printf("=== Phase 5 Testing: Advanced Output Formats ===\n\n");
     
@@ -184,7 +193,9 @@ int main(void) {
     int tests_total = 5;
     
     // Make sure directories exist
-    system("mkdir -p tmp testbin");
+    if (system("mkdir -p tmp testbin") != 0) {
+        printf("Warning: Failed to create test directories\n");
+    }
     
     tests_passed += test_elf32_output();
     tests_passed += test_elf64_output();

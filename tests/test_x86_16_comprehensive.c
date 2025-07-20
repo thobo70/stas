@@ -74,6 +74,15 @@ static bool encode_instruction_helper(const char *mnemonic, operand_t *operands,
     return true;
 }
 
+// Unity framework required functions
+void setUp(void) {
+    // Setup before each test
+}
+
+void tearDown(void) {
+    // Cleanup after each test
+}
+
 int main(void) {
     printf("=== STAS x86_16 Comprehensive Test Suite ===\n\n");
     
