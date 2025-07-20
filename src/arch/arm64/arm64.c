@@ -61,6 +61,7 @@ static const struct {
     {"sp", 31, 8},    // Stack Pointer
     {"lr", 30, 8},    // Link Register (same as X30)
     {"fp", 29, 8},    // Frame Pointer (same as X29)
+    {"pc", 32, 8},    // Program Counter
     {NULL, 0, 0}
 };
 
@@ -270,9 +271,10 @@ int arm64_parse_register(const char *reg_name, asm_register_t *reg) {
 
 bool is_arm64_register_impl(asm_register_t reg) {
     // Check if register ID is in valid ranges
-    if (reg.id <= 31) return true;     // X registers
-    if (reg.id >= 100 && reg.id <= 131) return true;  // W registers  
-    if (reg.id >= 200 && reg.id <= 231) return true;  // V registers
+    if (reg.id <= 31) return true;     // X registers (0-31)
+    if (reg.id >= 100 && reg.id <= 131) return true;  // W registers (100-131)
+    if (reg.id >= 200 && reg.id <= 231) return true;  // V registers (200-231)
+    if (reg.id >= 300 && reg.id <= 303) return true;  // Special registers (300+)
     return false;
 }
 

@@ -54,6 +54,7 @@ tmp/
 !tmp/README.md
 testbin/
 !testbin/README.md
+tests/coverage/
 
 # Logs and reports (generated files)
 logs/

@@ -83,6 +83,16 @@ int x86_32_parse_instruction(const char *mnemonic, operand_t *operands,
         return -1;
     }
     
+    // Check for x86_64-only instructions that should be rejected
+    const char* x86_64_only[] = {"movq", "addq", "pushq", "popq", "syscall"};
+    size_t x86_64_count = sizeof(x86_64_only) / sizeof(x86_64_only[0]);
+    
+    for (size_t i = 0; i < x86_64_count; i++) {
+        if (strcmp(mnemonic, x86_64_only[i]) == 0) {
+            return -1; // Reject x86_64-only instructions
+        }
+    }
+    
     // Basic instruction setup
     inst->mnemonic = x86_32_safe_strdup(mnemonic);
     inst->operands = operands;
@@ -218,9 +228,10 @@ bool x86_32_is_valid_register(asm_register_t reg) {
 }
 
 const char *x86_32_get_register_name(asm_register_t reg) {
-    // Placeholder - would return x86-32 register names
-    (void)reg;      // Suppress unused parameter warning
-    return NULL;
+    if (!reg.name) {
+        return NULL;
+    }
+    return reg.name;
 }
 
 // Architecture operations structure

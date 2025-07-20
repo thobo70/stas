@@ -322,22 +322,34 @@ $(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity.c $(UNITY_EXTENSIO
 test-unit-core:
 	@echo "=== Running Core Module Unit Tests ==="
 	@echo "Checking for core unit tests..."
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_lexer || $(MAKE) $(TESTBIN_DIR)/unit_test_lexer || true
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_parser_simple || $(MAKE) $(TESTBIN_DIR)/unit_test_parser_simple || true
-	@if [ -f $(TESTBIN_DIR)/unit_test_lexer ]; then echo "Running lexer tests..."; ./$(TESTBIN_DIR)/unit_test_lexer; fi
-	@if [ -f $(TESTBIN_DIR)/unit_test_parser_simple ]; then echo "Running parser tests..."; ./$(TESTBIN_DIR)/unit_test_parser_simple; fi
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_lexer_comprehensive || $(MAKE) $(TESTBIN_DIR)/unit_test_lexer_comprehensive || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_parser_comprehensive || $(MAKE) $(TESTBIN_DIR)/unit_test_parser_comprehensive || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_symbols_comprehensive || $(MAKE) $(TESTBIN_DIR)/unit_test_symbols_comprehensive || true
+	@if [ -f $(TESTBIN_DIR)/unit_test_lexer_comprehensive ]; then echo "Running comprehensive lexer tests..."; ./$(TESTBIN_DIR)/unit_test_lexer_comprehensive; fi
+	@if [ -f $(TESTBIN_DIR)/unit_test_parser_comprehensive ]; then echo "Running comprehensive parser tests..."; ./$(TESTBIN_DIR)/unit_test_parser_comprehensive; fi
+	@if [ -f $(TESTBIN_DIR)/unit_test_symbols_comprehensive ]; then echo "Running comprehensive symbols tests..."; ./$(TESTBIN_DIR)/unit_test_symbols_comprehensive; fi
 	@echo "Core unit tests completed"
 
 # Architecture module unit tests
 test-unit-arch:
 	@echo "=== Running Architecture Module Unit Tests ==="
 	@echo "Checking for architecture unit tests..."
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_64 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_64 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_32 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_32 || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_16 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_16 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_arm64 || $(MAKE) $(TESTBIN_DIR)/unit_test_arm64 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_riscv || $(MAKE) $(TESTBIN_DIR)/unit_test_riscv || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_compatibility || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_compatibility || true
+	@for test in unit_test_x86_64 unit_test_x86_32 unit_test_x86_16 unit_test_arm64 unit_test_riscv unit_test_x86_compatibility; do \
+		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
+	done
+	@echo "Architecture unit tests completed"
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_32 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_32 || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_64 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_64 || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_arm64 || $(MAKE) $(TESTBIN_DIR)/unit_test_arm64 || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_riscv || $(MAKE) $(TESTBIN_DIR)/unit_test_riscv || true
-	@for test in unit_test_x86_16 unit_test_x86_32 unit_test_x86_64 unit_test_arm64 unit_test_riscv; do \
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_compatibility || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_compatibility || true
+	@for test in unit_test_x86_16 unit_test_x86_32 unit_test_x86_64 unit_test_arm64 unit_test_riscv unit_test_x86_compatibility; do \
 		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
 	done
 	@echo "Architecture unit tests completed"

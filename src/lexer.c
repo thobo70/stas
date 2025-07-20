@@ -162,6 +162,12 @@ static char *lexer_read_number(lexer_t *lexer) {
 }
 
 // Skip comment until end of line
+static void lexer_skip_comment(lexer_t *lexer) {
+    while (lexer->position < lexer->length && lexer_peek(lexer) != '\n') {
+        lexer_advance(lexer);
+    }
+}
+
 // Handle '#' - could be comment or macro directive
 static token_t lexer_handle_hash(lexer_t *lexer) {
     token_t token = {0};
@@ -213,12 +219,6 @@ static token_t lexer_handle_hash(lexer_t *lexer) {
     }
     
     return token;
-}
-
-static void lexer_skip_comment(lexer_t *lexer) {
-    while (lexer->position < lexer->length && lexer_peek(lexer) != '\n') {
-        lexer_advance(lexer);
-    }
 }
 
 // Get next token

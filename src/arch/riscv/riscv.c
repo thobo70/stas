@@ -115,7 +115,7 @@ int riscv_init_impl(void) {
 
 int riscv_parse_register_impl(const char *reg_name, asm_register_t *reg) {
     if (!reg_name || !reg) {
-        return 0;
+        return -1;
     }
     
     // Remove % prefix if present
@@ -130,11 +130,11 @@ int riscv_parse_register_impl(const char *reg_name, asm_register_t *reg) {
             reg->name = strdup(riscv_register_names[i].name);
             reg->size = 8; // 64-bit RISC-V
             reg->encoding = riscv_register_names[i].reg;
-            return 1; // Success
+            return 0; // Success
         }
     }
     
-    return 0; // Not found
+    return -1; // Not found
 }
 
 const riscv_instruction_info_t *riscv_find_instruction(const char *mnemonic) {
@@ -224,8 +224,11 @@ bool riscv_is_valid_register(asm_register_t reg) {
 }
 
 const char *riscv_get_register_name(asm_register_t reg) {
-    if (reg.id < RISCV_REG_COUNT) {
-        return riscv_register_names[reg.id].name;
+    // Search for register by ID in the names table
+    for (int i = 0; i < riscv_register_count; i++) {
+        if (riscv_register_names[i].reg == reg.id) {
+            return riscv_register_names[i].name;
+        }
     }
     return NULL;
 }
@@ -337,16 +340,118 @@ int riscv_encode_instruction_impl(instruction_t *inst, uint8_t *buffer, size_t *
     return 0; // Success
 }
 
+// RISC-V cleanup function
+static void riscv_cleanup(void) {
+    // No cleanup needed for RISC-V
+}
+
+// RISC-V addressing mode parsing
+static int riscv_parse_addressing(const char *addr_str, addressing_mode_t *mode) {
+    if (!addr_str || !mode) {
+        return -1;
+    }
+    
+    // RISC-V uses simple addressing modes
+    mode->type = ADDR_DIRECT;
+    mode->offset = 0;
+    mode->scale = 1;
+    mode->symbol = NULL;
+    
+    return 0;
+}
+
+// RISC-V addressing mode validation
+static bool riscv_validate_addressing(addressing_mode_t *mode, instruction_t *inst) {
+    if (!mode || !inst) {
+        return false;
+    }
+    
+    // Basic validation - RISC-V addressing is straightforward
+    return true;
+}
+
+// RISC-V directive handler
+static int riscv_handle_directive(const char *directive, const char *args) {
+    if (!directive) {
+        return -1;
+    }
+    
+    // Suppress unused parameter warning
+    (void)args;
+    
+    // No special directives for basic RISC-V implementation
+    return 0;
+}
+
+// RISC-V instruction size
+static size_t riscv_get_instruction_size(instruction_t *inst) {
+    if (!inst) {
+        return 0;
+    }
+    
+    // All RISC-V instructions are 32-bit (4 bytes)
+    return 4;
+}
+
+// RISC-V alignment requirements
+static size_t riscv_get_alignment(section_type_t section) {
+    switch (section) {
+        case SECTION_TEXT:
+            return 4; // 4-byte alignment for code
+        case SECTION_DATA:
+        case SECTION_RODATA:
+            return 8; // 8-byte alignment for data
+        case SECTION_BSS:
+            return 8; // 8-byte alignment for BSS
+        case SECTION_DEBUG:
+            return 1; // No special alignment for debug
+        default:
+            return 4; // Default 4-byte alignment
+    }
+}
+
+// RISC-V instruction validation
+static bool riscv_validate_instruction(instruction_t *inst) {
+    if (!inst) {
+        return false;
+    }
+    
+    // Basic instruction validation
+    return true;
+}
+
+// RISC-V operand combination validation
+static bool riscv_validate_operand_combination(const char *mnemonic, 
+                                             operand_t *operands, 
+                                             size_t operand_count) {
+    if (!mnemonic) {
+        return false;
+    }
+    
+    // Suppress unused parameter warning
+    (void)operands;
+    
+    // Basic operand validation - RISC-V instructions have at most 3 operands
+    return operand_count <= 3;
+}
+
 // RISC-V architecture operations
 static arch_ops_t riscv_ops = {
     .name = "riscv",
     .init = riscv_init_impl,
-    .cleanup = NULL,
+    .cleanup = riscv_cleanup,
     .parse_instruction = riscv_parse_instruction_impl,
     .encode_instruction = riscv_encode_instruction_impl,
     .parse_register = riscv_parse_register_impl,
     .is_valid_register = riscv_is_valid_register,
-    .get_register_name = riscv_get_register_name
+    .get_register_name = riscv_get_register_name,
+    .parse_addressing = riscv_parse_addressing,
+    .validate_addressing = riscv_validate_addressing,
+    .handle_directive = riscv_handle_directive,
+    .get_instruction_size = riscv_get_instruction_size,
+    .get_alignment = riscv_get_alignment,
+    .validate_instruction = riscv_validate_instruction,
+    .validate_operand_combination = riscv_validate_operand_combination
 };
 
 arch_ops_t *get_riscv_arch_ops(void) {

@@ -128,9 +128,9 @@ void x86_32_cleanup(void);
 int x86_32_parse_instruction(const char *mnemonic, operand_t *operands, 
                            size_t operand_count, instruction_t *inst);
 int x86_32_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *length);
-int x86_32_parse_register(const char *reg_name, register_t *reg);
-bool x86_32_is_valid_register(register_t reg);
-const char *x86_32_get_register_name(register_t reg);
+int x86_32_parse_register(const char *reg_name, asm_register_t *reg);
+bool x86_32_is_valid_register(asm_register_t reg);
+const char *x86_32_get_register_name(asm_register_t reg);
 int x86_32_parse_addressing(const char *addr_str, addressing_mode_t *mode);
 bool x86_32_validate_addressing(addressing_mode_t *mode, instruction_t *inst);
 int x86_32_handle_directive(const char *directive, const char *args);
