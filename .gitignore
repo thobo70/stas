@@ -55,6 +55,12 @@ tmp/
 testbin/
 !testbin/README.md
 
+# Logs and reports (generated files)
+logs/
+reports/
+!logs/README.md
+!reports/README.md
+
 # Test output files
 *.o
 *.bin

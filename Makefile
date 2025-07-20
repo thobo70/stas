@@ -211,8 +211,13 @@ clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(TESTBIN_DIR)
 	@echo "Cleaned build artifacts"
 
+# Clean generated logs and reports  
+clean-logs:
+	rm -rf $(LOGS_DIR)/* $(REPORTS_DIR)/*
+	@echo "Cleaned generated logs and reports"
+
 # Clean everything including directories
-distclean: clean
+distclean: clean clean-logs
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(TESTBIN_DIR)
 	@echo "Cleaned all generated files and directories"
 
@@ -237,8 +242,10 @@ help:
 	@echo "  debug        - Build with debug symbols"
 	@echo "  test         - Build and test with sample assembly"
 	@echo "  test-unit-all - Run all unit tests (modern Unity framework)"
+	@echo "  test-comprehensive - Run complete test suite"
+	@echo "  test-help    - Show detailed testing help"
 	@echo "  test-phase7-advanced - Run Phase 7 advanced features"
-	@echo "  test-all     - Run all tests (sample + unit + phase7)"
+	@echo "  test-all     - Run enhanced comprehensive tests"
 	@echo "  static-x86_16 - Build static x86-16 only assembler"
 	@echo "  static-x86_32 - Build static x86-32 only assembler"
 	@echo "  static-x86_64 - Build static x86-64 only assembler"
@@ -246,6 +253,7 @@ help:
 	@echo "  static-riscv - Build static RISC-V only assembler"
 	@echo "  static-all   - Build all static architecture variants"
 	@echo "  clean        - Remove object files and executable"
+	@echo "  clean-logs   - Remove generated logs and reports"
 	@echo "  distclean    - Remove all generated files and directories"
 	@echo "  run          - Build and show help message"
 	@echo "  install      - Install the program to /usr/local/bin"
@@ -286,6 +294,10 @@ EXECUTION_TEST_DIR = tests/execution
 COVERAGE_DIR = tests/coverage
 FRAMEWORK_DIR = tests/framework
 
+# Generated files directories
+LOGS_DIR = logs
+REPORTS_DIR = reports
+
 # Unity extensions and Unicorn framework
 UNITY_EXTENSIONS = $(FRAMEWORK_DIR)/unity_extensions.c
 UNICORN_FRAMEWORK = $(FRAMEWORK_DIR)/unicorn_test_framework.c
@@ -316,12 +328,66 @@ test-unit-core:
 	@if [ -f $(TESTBIN_DIR)/unit_test_parser_simple ]; then echo "Running parser tests..."; ./$(TESTBIN_DIR)/unit_test_parser_simple; fi
 	@echo "Core unit tests completed"
 
+# Architecture module unit tests
+test-unit-arch:
+	@echo "=== Running Architecture Module Unit Tests ==="
+	@echo "Checking for architecture unit tests..."
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_16 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_16 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_32 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_32 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_64 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_64 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_arm64 || $(MAKE) $(TESTBIN_DIR)/unit_test_arm64 || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_riscv || $(MAKE) $(TESTBIN_DIR)/unit_test_riscv || true
+	@for test in unit_test_x86_16 unit_test_x86_32 unit_test_x86_64 unit_test_arm64 unit_test_riscv; do \
+		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
+	done
+	@echo "Architecture unit tests completed"
+
+# Format module unit tests
+test-unit-formats:
+	@echo "=== Running Format Module Unit Tests ==="
+	@echo "Checking for format unit tests..."
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_elf || $(MAKE) $(TESTBIN_DIR)/unit_test_elf || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_flat_binary || $(MAKE) $(TESTBIN_DIR)/unit_test_flat_binary || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_intel_hex || $(MAKE) $(TESTBIN_DIR)/unit_test_intel_hex || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_com_format || $(MAKE) $(TESTBIN_DIR)/unit_test_com_format || true
+	@for test in unit_test_elf unit_test_flat_binary unit_test_intel_hex unit_test_com_format; do \
+		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
+	done
+	@echo "Format unit tests completed"
+
+# Utility module unit tests
+test-unit-utils:
+	@echo "=== Running Utility Module Unit Tests ==="
+	@echo "Checking for utility unit tests..."
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_utils || $(MAKE) $(TESTBIN_DIR)/unit_test_utils || true
+	@if [ -f $(TESTBIN_DIR)/unit_test_utils ]; then echo "Running utility tests..."; ./$(TESTBIN_DIR)/unit_test_utils; fi
+	@echo "Utility unit tests completed"
+
 # All unit tests
 test-unit-all:
 	@echo "=== Running All Available Unit Tests ==="
-	@$(MAKE) test-unit-core
+	@$(MAKE) test-unit-core test-unit-arch test-unit-formats test-unit-utils
 
 # === INTEGRATION TESTING ===
+
+# Build variant testing
+test-build-variants:
+	@echo "=== Testing All Build Variants ==="
+	@if [ -f tests/integration/build_variants/test_all_builds.sh ]; then \
+		./tests/integration/build_variants/test_all_builds.sh; \
+	else \
+		echo "Build variant test script not found - testing basic build variants manually"; \
+		$(MAKE) clean && $(MAKE) all && echo "✅ Dynamic build successful"; \
+		$(MAKE) clean && $(MAKE) static-x86_64 && echo "✅ Static x86_64 build successful"; \
+	fi
+
+# Integration testing
+test-integration:
+	@echo "=== Running Integration Tests ==="
+	@echo "Running simplified integration tests..."
+	@$(MAKE) test
+	@$(MAKE) test-phase7-advanced
+	@echo "✅ Integration tests completed successfully"
 
 # Phase 7: Advanced Language Features Test  
 test-phase7-advanced: $(TARGET)
@@ -329,8 +395,46 @@ test-phase7-advanced: $(TARGET)
 	cd tests/phase7 && ./working_tests.sh
 	@echo "✅ All Phase 7 tests passed!"
 
+# === EXECUTION TESTING ===
+
+# Execution test compilation
+$(TESTBIN_DIR)/execution_test_%: tests/execution/*/test_%.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+# Architecture-specific execution tests
+test-execution-x86_16:
+	@echo "=== Running x86-16 Execution Tests ==="
+	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_16_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_16_basic || true
+	@if [ -f $(TESTBIN_DIR)/execution_test_x86_16_basic ]; then ./$(TESTBIN_DIR)/execution_test_x86_16_basic; fi
+
+test-execution-x86_32:
+	@echo "=== Running x86-32 Execution Tests ==="
+	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_32_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_32_basic || true
+	@if [ -f $(TESTBIN_DIR)/execution_test_x86_32_basic ]; then ./$(TESTBIN_DIR)/execution_test_x86_32_basic; fi
+
+test-execution-x86_64:
+	@echo "=== Running x86-64 Execution Tests ==="
+	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_64_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_64_basic || true
+	@if [ -f $(TESTBIN_DIR)/execution_test_x86_64_basic ]; then ./$(TESTBIN_DIR)/execution_test_x86_64_basic; fi
+
+test-execution-arm64:
+	@echo "=== Running ARM64 Execution Tests ==="
+	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_arm64_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_arm64_basic || true
+	@if [ -f $(TESTBIN_DIR)/execution_test_arm64_basic ]; then ./$(TESTBIN_DIR)/execution_test_arm64_basic; fi
+
+test-execution-riscv:
+	@echo "=== Running RISC-V Execution Tests ==="
+	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_riscv_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_riscv_basic || true
+	@if [ -f $(TESTBIN_DIR)/execution_test_riscv_basic ]; then ./$(TESTBIN_DIR)/execution_test_riscv_basic; fi
+
+# All execution tests
+test-execution-all:
+	@echo "=== Running All Execution Tests ==="
+	@$(MAKE) test-execution-x86_16 test-execution-x86_32 test-execution-x86_64 test-execution-arm64 test-execution-riscv
+
 # Modern test suite
-test-all: test test-unit-all test-phase7-advanced
+test-all: test test-unit-all test-build-variants test-integration test-phase7-advanced
 
 # === CODE COVERAGE ===
 
@@ -354,17 +458,27 @@ test-coverage:
 
 # === COMPREHENSIVE TESTING ===
 
-# Complete test suite
+# Complete test suite with Python orchestration
 test-comprehensive:
 	@echo "🚀 Starting STAS Comprehensive Test Suite..."
-	@$(MAKE) test-unit-all || true
-	@$(MAKE) test-phase7-advanced || true
-	@$(MAKE) test-coverage || true
+	@mkdir -p $(LOGS_DIR) $(REPORTS_DIR)
+	@if [ -f tests/framework/scripts/test_runner.py ]; then \
+		python3 tests/framework/scripts/test_runner.py; \
+	else \
+		echo "Python test runner not found - running comprehensive tests manually"; \
+		$(MAKE) test-unit-all || true; \
+		$(MAKE) test-build-variants || true; \
+		$(MAKE) test-execution-all || true; \
+		$(MAKE) test-integration || true; \
+		$(MAKE) test-phase7-advanced || true; \
+		$(MAKE) test-coverage || true; \
+	fi
 
 # Quick test (essential tests only)
 test-quick:
 	@echo "=== Running Quick Test Suite ==="
 	@$(MAKE) test-unit-core
+	@$(MAKE) test
 	@echo "Quick tests completed"
 
 # Continuous integration test  
@@ -372,15 +486,58 @@ test-ci:
 	@echo "=== Running CI Test Suite ==="
 	@$(MAKE) test-comprehensive
 
-# Performance tests (placeholder)
+# Performance tests
 test-performance:
 	@echo "=== Running Performance Tests ==="
 	@echo "Performance tests not yet implemented"
 	@echo "Measuring basic assembly performance..."
 	@time $(MAKE) -B $(TARGET) || true
+	@echo "Measuring test execution time..."
+	@time $(MAKE) test-quick || true
+
+# Test help
+test-help:
+	@echo "STAS Testing Framework - Available Test Targets:"
+	@echo ""
+	@echo "Unit Testing:"
+	@echo "  test-unit-all        - Run all unit tests"
+	@echo "  test-unit-core       - Test core modules (lexer, parser, etc.)"
+	@echo "  test-unit-arch       - Test architecture modules"
+	@echo "  test-unit-formats    - Test output format modules"
+	@echo "  test-unit-utils      - Test utility modules"
+	@echo ""
+	@echo "Build Testing:"
+	@echo "  test-build-variants  - Test all build configurations"
+	@echo ""
+	@echo "Execution Testing:"
+	@echo "  test-execution-all   - Test code execution on all architectures"
+	@echo "  test-execution-x86_16 - Test x86-16 code execution"
+	@echo "  test-execution-x86_32 - Test x86-32 code execution"  
+	@echo "  test-execution-x86_64 - Test x86-64 code execution"
+	@echo "  test-execution-arm64 - Test ARM64 code execution"
+	@echo "  test-execution-riscv - Test RISC-V code execution"
+	@echo ""
+	@echo "Integration Testing:"
+	@echo "  test-integration     - Test end-to-end workflows"
+	@echo "  test-phase7-advanced - Test Phase 7 advanced features"
+	@echo ""
+	@echo "Code Coverage:"
+	@echo "  test-coverage        - Generate code coverage report"
+	@echo ""
+	@echo "Comprehensive Testing:"
+	@echo "  test-comprehensive   - Run complete test suite"
+	@echo "  test-quick          - Run essential tests only"
+	@echo "  test-ci             - Run CI/CD test suite"
+	@echo "  test-performance    - Run performance benchmarks"
+	@echo ""
+	@echo "Legacy compatibility:"
+	@echo "  test-all            - Enhanced comprehensive test suite"
+	@echo "  test                - Basic functionality test"
 
 # Declare phony targets (cleaned up for modern framework)
 .PHONY: all debug test clean distclean run install uninstall help structure \
-        test-unit-all test-unit-core test-phase7-advanced test-all \
-        test-comprehensive test-quick test-ci test-performance test-coverage coverage-build \
-        static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all
+        test-unit-all test-unit-core test-unit-arch test-unit-formats test-unit-utils \
+        test-build-variants test-execution-all test-execution-x86_16 test-execution-x86_32 \
+        test-execution-x86_64 test-execution-arm64 test-execution-riscv test-integration \
+        test-phase7-advanced test-all test-comprehensive test-quick test-ci test-performance \
+        test-coverage coverage-build test-help

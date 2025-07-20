@@ -359,9 +359,11 @@ class STASTestRunner:
         
         # Save JSON report
         try:
-            with open('test_report.json', 'w') as f:
+            # Ensure logs directory exists
+            os.makedirs('logs', exist_ok=True)
+            with open('logs/test_report.json', 'w') as f:
                 json.dump(report, f, indent=2)
-            self.log_success("Test report saved to test_report.json")
+            self.log_success("Test report saved to logs/test_report.json")
         except Exception as e:
             self.log_warning(f"Failed to save test report: {e}")
         
