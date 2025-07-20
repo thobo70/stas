@@ -115,8 +115,11 @@ int encode_mov_instruction(instruction_t *inst, uint8_t *buffer, size_t *length)
         return -1;
     }
     
-    operand_t *dst = &inst->operands[0];
-    operand_t *src = &inst->operands[1];
+    // AT&T syntax: movq src, dst (source first, destination second)
+    operand_t *src = &inst->operands[0];
+    operand_t *dst = &inst->operands[1];
+    
+    printf("DEBUG MOV: src type=%d, dst type=%d\n", src->type, dst->type);
     
     size_t pos = 0;
     bool needs_rex = false;
@@ -128,8 +131,9 @@ int encode_mov_instruction(instruction_t *inst, uint8_t *buffer, size_t *length)
         needs_rex = true;
     }
     
-    // Handle MOV r64, imm64 (special case)
-    if (dst->type == OPERAND_REGISTER && src->type == OPERAND_IMMEDIATE) {
+    // Handle MOV imm64, r64 (AT&T: movq $imm, %reg)
+    if (src->type == OPERAND_IMMEDIATE && dst->type == OPERAND_REGISTER) {
+        printf("DEBUG: immediate to register path\n");
         bool reg_needs_rex;
         int reg_encoding = get_register_encoding(dst->value.reg, &reg_needs_rex);
         
@@ -156,8 +160,9 @@ int encode_mov_instruction(instruction_t *inst, uint8_t *buffer, size_t *length)
         return 0;
     }
     
-    // Handle MOV r/m, r (general case)
-    if (dst->type == OPERAND_REGISTER && src->type == OPERAND_REGISTER) {
+    // Handle MOV r, r/m (AT&T: movq %src, %dst)
+    if (src->type == OPERAND_REGISTER && dst->type == OPERAND_REGISTER) {
+        printf("DEBUG: register to register path\n");
         bool dst_needs_rex, src_needs_rex;
         int dst_encoding = get_register_encoding(dst->value.reg, &dst_needs_rex);
         int src_encoding = get_register_encoding(src->value.reg, &src_needs_rex);
@@ -194,8 +199,9 @@ int encode_arithmetic_instruction(instruction_t *inst, uint8_t *buffer, size_t *
         if (strcmp(inst->mnemonic, instruction_encodings[i].mnemonic) == 0) {
             const x86_64_instruction_encoding_t *enc = &instruction_encodings[i];
             
-            operand_t *dst = &inst->operands[0];
-            operand_t *src = &inst->operands[1];
+            // AT&T syntax: source first, destination second
+            operand_t *src = &inst->operands[0];
+            operand_t *dst = &inst->operands[1];
             
             if (dst->type == OPERAND_REGISTER && src->type == OPERAND_REGISTER) {
                 size_t pos = 0;

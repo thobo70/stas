@@ -22,10 +22,10 @@ void test_x86_64_comprehensive_instruction_encoding(void) {
     operand_t operands[2];
     
     // Test 1: movq $60, %rax (REX.W + 0xB8 + reg + imm64)
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rax", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 60;
+    operands[0].type = OPERAND_IMMEDIATE;  // AT&T: source first
+    operands[0].value.immediate = 60;
+    operands[1].type = OPERAND_REGISTER;   // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));
@@ -39,10 +39,10 @@ void test_x86_64_comprehensive_instruction_encoding(void) {
     printf("]\n");
     
     // Test 2: movq %rbx, %rax (REX.W + 0x89 + ModR/M)
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rax", &operands[0].value.reg);
-    operands[1].type = OPERAND_REGISTER;
-    arch->parse_register("rbx", &operands[1].value.reg);
+    operands[0].type = OPERAND_REGISTER;   // AT&T: source first
+    arch->parse_register("rbx", &operands[0].value.reg);
+    operands[1].type = OPERAND_REGISTER;   // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));
@@ -68,6 +68,8 @@ void test_x86_64_comprehensive_instruction_encoding(void) {
     printf("]\n");
     
     // Test 4: pushq %rax
+    operands[0].type = OPERAND_REGISTER;
+    arch->parse_register("rax", &operands[0].value.reg);
     arch->parse_instruction("pushq", operands, 1, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));
     TEST_ASSERT_EQUAL(1, length);
@@ -97,10 +99,10 @@ void test_x86_64_hello_world_program_encoding(void) {
     printf("Encoding Hello World program instructions:\n");
     
     // movq $1, %rax
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rax", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 1;
+    operands[0].type = OPERAND_IMMEDIATE;  // AT&T: source first
+    operands[0].value.immediate = 1;
+    operands[1].type = OPERAND_REGISTER;   // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));
@@ -109,10 +111,10 @@ void test_x86_64_hello_world_program_encoding(void) {
     printf("\n");
     
     // movq $1, %rdi  
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rdi", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 1;
+    operands[0].type = OPERAND_IMMEDIATE;  // AT&T: source first
+    operands[0].value.immediate = 1;
+    operands[1].type = OPERAND_REGISTER;   // AT&T: destination second
+    arch->parse_register("rdi", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));
@@ -121,10 +123,10 @@ void test_x86_64_hello_world_program_encoding(void) {
     printf("\n");
     
     // movq $14, %rdx
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rdx", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 14;
+    operands[0].type = OPERAND_IMMEDIATE;  // AT&T: source first
+    operands[0].value.immediate = 14;
+    operands[1].type = OPERAND_REGISTER;   // AT&T: destination second
+    arch->parse_register("rdx", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));
@@ -140,10 +142,10 @@ void test_x86_64_hello_world_program_encoding(void) {
     printf("\n");
     
     // movq $60, %rax
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rax", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 60;
+    operands[0].type = OPERAND_IMMEDIATE;  // AT&T: source first 
+    operands[0].value.immediate = 60;
+    operands[1].type = OPERAND_REGISTER;   // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     TEST_ASSERT_EQUAL(0, arch->encode_instruction(&inst, buffer, &length));

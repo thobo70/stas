@@ -312,7 +312,7 @@ static test_result_t test_stack_operations(void) {
     total_length += inst_length;
     
     // MOV AX, 0x1234 (overwrite AX)
-    mov_operands[1].value.immediate = 0x1234;
+    mov_operands[0].value.immediate = 0x1234;
     if (!encode_instruction_helper("mov", mov_operands, 2, code_buffer + total_length, &inst_length)) {
         return create_test_result(test_name, false, "Failed to encode second MOV instruction");
     }
@@ -407,14 +407,14 @@ static test_result_t test_conditional_jumps(void) {
     total_length += inst_length;
     
     // MOV AX, 0xFFFF (should be skipped)
-    mov_operands[1].value.immediate = 0xFFFF;
+    mov_operands[0].value.immediate = 0xFFFF;
     if (!encode_instruction_helper("mov", mov_operands, 2, code_buffer + total_length, &inst_length)) {
         return create_test_result(test_name, false, "Failed to encode conditional MOV instruction");
     }
     total_length += inst_length;
     
     // MOV AX, 0x9999 (should be executed)
-    mov_operands[1].value.immediate = 0x9999;
+    mov_operands[0].value.immediate = 0x9999;
     if (!encode_instruction_helper("mov", mov_operands, 2, code_buffer + total_length, &inst_length)) {
         return create_test_result(test_name, false, "Failed to encode final MOV instruction");
     }

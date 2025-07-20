@@ -99,11 +99,11 @@ void test_x86_64_register_to_register_mov(void) {
     
     // Test movq %rbx, %rax (should produce REX.W + 0x89 + ModR/M)
     operand_t operands[2];
-    operands[0].type = OPERAND_REGISTER; // destination
-    arch->parse_register("rax", &operands[0].value.reg);
+    operands[0].type = OPERAND_REGISTER; // AT&T: source first
+    arch->parse_register("rbx", &operands[0].value.reg);
     
-    operands[1].type = OPERAND_REGISTER; // source
-    arch->parse_register("rbx", &operands[1].value.reg);
+    operands[1].type = OPERAND_REGISTER; // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     instruction_t inst;
     int result = arch->parse_instruction("movq", operands, 2, &inst);
@@ -130,11 +130,11 @@ void test_x86_64_immediate_mov(void) {
     
     // Test movq $60, %rax
     operand_t operands[2];
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rax", &operands[0].value.reg);
+    operands[0].type = OPERAND_IMMEDIATE; // AT&T: source first
+    operands[0].value.immediate = 60;
     
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 60;
+    operands[1].type = OPERAND_REGISTER;  // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     instruction_t inst;
     int result = arch->parse_instruction("movq", operands, 2, &inst);
@@ -168,10 +168,10 @@ void test_x86_64_arithmetic_instructions(void) {
     
     // Test addq %rbx, %rax
     operand_t operands[2];
-    operands[0].type = OPERAND_REGISTER; // destination
-    arch->parse_register("rax", &operands[0].value.reg);
-    operands[1].type = OPERAND_REGISTER; // source
-    arch->parse_register("rbx", &operands[1].value.reg);
+    operands[0].type = OPERAND_REGISTER; // AT&T: source first
+    arch->parse_register("rbx", &operands[0].value.reg);
+    operands[1].type = OPERAND_REGISTER; // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     instruction_t inst;
     int result = arch->parse_instruction("addq", operands, 2, &inst);

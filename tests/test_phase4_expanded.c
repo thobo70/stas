@@ -130,10 +130,10 @@ void test_x86_64_complete_program_sequence(void) {
     printf("Encoding a complete program sequence:\n");
     
     // movq $5, %rax
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rax", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 5;
+    operands[0].type = OPERAND_IMMEDIATE; // AT&T: source first
+    operands[0].value.immediate = 5;
+    operands[1].type = OPERAND_REGISTER;  // AT&T: destination second
+    arch->parse_register("rax", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     arch->encode_instruction(&inst, buffer, &length);
@@ -142,10 +142,10 @@ void test_x86_64_complete_program_sequence(void) {
     printf("\n");
     
     // movq $3, %rbx
-    operands[0].type = OPERAND_REGISTER;
-    arch->parse_register("rbx", &operands[0].value.reg);
-    operands[1].type = OPERAND_IMMEDIATE;
-    operands[1].value.immediate = 3;
+    operands[0].type = OPERAND_IMMEDIATE; // AT&T: source first
+    operands[0].value.immediate = 3;
+    operands[1].type = OPERAND_REGISTER;  // AT&T: destination second
+    arch->parse_register("rbx", &operands[1].value.reg);
     
     arch->parse_instruction("movq", operands, 2, &inst);
     arch->encode_instruction(&inst, buffer, &length);
