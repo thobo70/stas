@@ -98,7 +98,7 @@ test_assembly_syntax() {
 # Build Unicorn test program
 build_unicorn_test() {
     local test_source="tests/test_unicorn_comprehensive.c"
-    local test_binary="tests/test_unicorn_comprehensive"
+    local test_binary="testbin/test_unicorn_comprehensive"
     
     print_status "INFO" "Building Unicorn Engine test program..."
     
@@ -111,14 +111,14 @@ build_unicorn_test() {
     if pkg-config --exists unicorn 2>/dev/null; then
         local cflags=$(pkg-config --cflags unicorn)
         local libs=$(pkg-config --libs unicorn)
-        if gcc $cflags "$test_source" $libs -o "$test_binary" 2>/dev/null; then
+        if gcc $cflags "$test_source" tests/unity.c $libs -o "$test_binary" 2>/dev/null; then
             print_status "INFO" "Unicorn test built with pkg-config"
             return 0
         fi
     fi
     
     # Fallback to direct linking
-    if gcc "$test_source" -lunicorn -o "$test_binary" 2>/dev/null; then
+    if gcc "$test_source" tests/unity.c -lunicorn -o "$test_binary" 2>/dev/null; then
         print_status "INFO" "Unicorn test built with direct linking"
         return 0
     fi
@@ -129,7 +129,7 @@ build_unicorn_test() {
 
 # Test with Unicorn Engine emulation
 test_unicorn_emulation() {
-    local test_program="tests/test_unicorn_comprehensive"
+    local test_program="testbin/test_unicorn_comprehensive"
     
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
