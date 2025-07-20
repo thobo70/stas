@@ -419,6 +419,10 @@ $(TESTBIN_DIR)/execution_test_x86_32_basic: tests/execution/x86_32/test_basic.c 
 	@echo "Compiling x86_32 execution test: $@"
 	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
 
+$(TESTBIN_DIR)/execution_test_x86_32_real_to_protected: tests/execution/x86_32/test_real_to_protected_mode.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_32 real-to-protected mode test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
 $(TESTBIN_DIR)/execution_test_x86_64_basic: tests/execution/x86_64/test_basic.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "Compiling x86_64 execution test: $@"
 	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
@@ -441,6 +445,8 @@ test-execution-x86_32:
 	@echo "=== Running x86-32 Execution Tests ==="
 	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_32_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_32_basic || true
 	@if [ -f $(TESTBIN_DIR)/execution_test_x86_32_basic ]; then ./$(TESTBIN_DIR)/execution_test_x86_32_basic; fi
+	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected || true
+	@if [ -f $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected ]; then ./$(TESTBIN_DIR)/execution_test_x86_32_real_to_protected; fi
 
 test-execution-x86_64:
 	@echo "=== Running x86-64 Execution Tests ==="
