@@ -1,0 +1,685 @@
+make[1]: Entering directory '/home/tom/project/stas'
+Creating test assembly file...
+Testing with sample assembly file...
+./bin/stas --verbose --debug test.s
+Loading architecture plugins...
+  Loaded x86_16 architecture plugin
+  Loaded x86_32 architecture plugin
+  Loaded x86_64 architecture plugin
+  Loaded arm64 architecture plugin
+  Loaded riscv architecture plugin
+STAS - STIX Modular Assembler
+Input file: test.s
+Output file: a.out
+Architecture: x86_64
+Assembling test.s for x86_64 architecture...
+=== LEXER TOKENS ===
+  Line 1: DIRECTIVE = '.section'
+  Line 1: DIRECTIVE = '.text'
+  Line 1: NEWLINE = '
+'
+  Line 2: DIRECTIVE = '.global'
+  Line 2: SYMBOL = '_start'
+  Line 2: NEWLINE = '
+'
+  Line 3: NEWLINE = '
+'
+  Line 4: LABEL = '_start'
+  Line 4: NEWLINE = '
+'
+  Line 5: INSTRUCTION = 'movq'
+  Line 5: IMMEDIATE = 'message'
+  Line 5: COMMA = ','
+  Line 5: REGISTER = 'rdi'
+  Line 5: NEWLINE = '
+'
+  Line 6: INSTRUCTION = 'movq'
+  Line 6: IMMEDIATE = '14'
+  Line 6: COMMA = ','
+  Line 6: REGISTER = 'rsi'
+  Line 6: NEWLINE = '
+'
+  Line 7: INSTRUCTION = 'movq'
+  Line 7: IMMEDIATE = '1'
+  Line 7: COMMA = ','
+  Line 7: REGISTER = 'rax'
+  Line 7: NEWLINE = '
+'
+  Line 8: INSTRUCTION = 'syscall'
+  Line 8: NEWLINE = '
+'
+  Line 9: NEWLINE = '
+'
+  Line 10: DIRECTIVE = '.section'
+  Line 10: DIRECTIVE = '.data'
+  Line 10: NEWLINE = '
+'
+  Line 11: LABEL = 'message'
+  Line 11: DIRECTIVE = '.ascii'
+  Line 11: STRING = 'Hello, World!\n'
+  Line 11: NEWLINE = '
+'
+  Line 12: EOF = ''
+
+=== PARSER AST ===
+
+=== AST TREE ===
+DIRECTIVE (".section", line 1)
+  name: .section
+  args: 1
+    - ".text"
+DIRECTIVE (".global", line 2)
+  name: .global
+  args: 1
+    - "_start"
+LABEL ("_start", line 4)
+  name: _start
+INSTRUCTION ("movq", line 5)
+  mnemonic: movq
+  operands: 2
+    - Operand [IMMEDIATE, size=1]: $0
+    - Operand [REGISTER, size=8]: %rdi (id=59)
+INSTRUCTION ("movq", line 6)
+  mnemonic: movq
+  operands: 2
+    - Operand [IMMEDIATE, size=1]: $14
+    - Operand [REGISTER, size=8]: %rsi (id=58)
+INSTRUCTION ("movq", line 7)
+  mnemonic: movq
+  operands: 2
+    - Operand [IMMEDIATE, size=1]: $1
+    - Operand [REGISTER, size=8]: %rax (id=52)
+INSTRUCTION ("syscall", line 8)
+  mnemonic: syscall
+  operands: 0
+DIRECTIVE (".section", line 10)
+  name: .section
+  args: 1
+    - ".data"
+LABEL ("message", line 11)
+  name: message
+DIRECTIVE (".ascii", line 11)
+  name: .ascii
+  args: 1
+    - "Hello, World!\n"
+=== END AST ===
+
+AST Summary:
+  1. DIRECTIVE (.section, 1 args) [line 1]
+  2. DIRECTIVE (.global, 1 args) [line 2]
+  3. LABEL (_start) [line 4]
+  4. INSTRUCTION (movq, 2 operands) [line 5]
+  5. INSTRUCTION (movq, 2 operands) [line 6]
+  6. INSTRUCTION (movq, 2 operands) [line 7]
+  7. INSTRUCTION (syscall, 0 operands) [line 8]
+  8. DIRECTIVE (.section, 1 args) [line 10]
+  9. LABEL (message) [line 11]
+  10. DIRECTIVE (.ascii, 1 args) [line 11]
+Total nodes: 10
+
+AST created successfully with directive root node
+Code generation starting...
+Processing directive: .section
+Warning: Ignoring unsupported directive '.section'
+Processing directive: .global
+Warning: Ignoring unsupported directive '.global'
+Label '_start' at address 0x00000000
+Encoded 'movq': 48 BF 00 00 00 00 00 00 00 00 (10 bytes)
+Encoded 'movq': 48 BE 0E 00 00 00 00 00 00 00 (10 bytes)
+Encoded 'movq': 48 B8 01 00 00 00 00 00 00 00 (10 bytes)
+Encoded 'syscall': 0F 05 (2 bytes)
+Processing directive: .section
+Warning: Ignoring unsupported directive '.section'
+Label 'message' at address 0x00000020
+Processing directive: .ascii
+Warning: Ignoring unsupported directive '.ascii'
+Added section '.text': 32 bytes at 0x00000020
+Code generation complete: 32 bytes generated
+Flat Binary Output:
+  Address range: 0x00000020 - 0x00000040
+  Total size: 32 bytes
+  Section '.text': 32 bytes at offset 0x00000000
+Flat binary written successfully to 'a.out'
+Assembly completed successfully!
+Output written to: a.out
+Compiling unit test: testbin/test_ast_printer
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_ast_printer.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_ast_printer
+Compiling unit test: testbin/test_lexer
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_lexer.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_lexer
+Compiling unit test: testbin/test_parser_simple
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_parser_simple.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_parser_simple
+Compiling unit test: testbin/test_phase1_parser
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_phase1_parser.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_phase1_parser
+Building Phase 2 advanced parsing test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase2_advanced_parsing.c \
+	obj/arch/x86_16/x86_16.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase2_advanced_parsing
+Phase 2 advanced parsing test built: testbin/test_phase2_advanced_parsing
+Building Phase 3 basic symbol test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase3_basic.c \
+	obj/arch/x86_16/x86_16.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase3_basic
+Phase 3 basic symbol test built: testbin/test_phase3_basic
+Building Phase 3 symbol enhancement test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase3_final.c \
+	obj/arch/x86_16/x86_16.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase3_final
+Phase 3 symbol enhancement test built: testbin/test_phase3_final
+Compiling unit test: testbin/test_phase3_symbol_enhancement
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_phase3_symbol_enhancement.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_phase3_symbol_enhancement
+Building Phase 4 comprehensive test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase4_comprehensive.c \
+	tests/unity.c \
+	obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase4_comprehensive
+Phase 4 comprehensive test built: testbin/test_phase4_comprehensive
+Building Phase 4 expanded instruction test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase4_expanded.c \
+	tests/unity.c \
+	obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase4_expanded
+Phase 4 expanded instruction test built: testbin/test_phase4_expanded
+Building Phase 4 x86-64 test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase4_x86_64.c \
+	tests/unity.c \
+	obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase4_x86_64
+Phase 4 x86-64 test built: testbin/test_phase4_x86_64
+Building Phase 5 ELF format test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -g -O0 -Iinclude -Isrc/core -Isrc/arch \
+	tests/test_phase5_elf.c \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o \
+	obj/arch/x86_32/x86_32.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/utils/utils.o \
+	-o testbin/test_phase5_elf
+Phase 5 ELF format test built: testbin/test_phase5_elf
+Compiling unit test: testbin/test_symbols
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_symbols.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_symbols
+Compiling unit test: testbin/test_unity_install
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests -Iinclude tests/test_unity_install.c tests/unity.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -lunicorn -o testbin/test_unity_install
+Building comprehensive x86_16 test...
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Iinclude -Isrc/core -Isrc/arch -Itests \
+	tests/test_x86_16_comprehensive.c \
+	obj/arch/x86_16/x86_16.o \
+	obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o \
+	obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o \
+	obj/utils/utils.o \
+	`pkg-config --cflags --libs unicorn` \
+	-o testbin/test_x86_16_comprehensive
+Comprehensive x86_16 test built: testbin/test_x86_16_comprehensive
+===========================================
+Running STAS Unit Tests
+===========================================
+Running testbin/test_ast_printer...
+tests/test_ast_printer.c:111:test_ast_node_type_to_string:PASS
+
+=== Test AST Output ===
+=== AST TREE ===
+INSTRUCTION ("movq", line 1)
+  mnemonic: movq
+  operands: 2
+    - Operand [IMMEDIATE, size=1]: $42
+    - Operand [REGISTER, size=8]: %rax (id=0)
+=== END AST ===
+=== End Test AST ===
+tests/test_ast_printer.c:112:test_ast_print_tree_with_simple_instruction:PASS
+
+=== Test Directive AST ===
+=== AST TREE ===
+DIRECTIVE (".global", line 1)
+  name: .global
+  args: 1
+    - "_start"
+=== END AST ===
+=== End Test Directive AST ===
+tests/test_ast_printer.c:113:test_ast_print_tree_with_directive:PASS
+
+=== Test NULL AST ===
+AST: (empty)
+=== End Test NULL AST ===
+tests/test_ast_printer.c:114:test_ast_print_tree_with_null_ast:PASS
+
+-----------------------
+4 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_ast_printer PASSED
+
+Running testbin/test_lexer...
+tests/test_lexer.c:117:test_lexer_creation:PASS
+tests/test_lexer.c:118:test_basic_tokenization:PASS
+tests/test_lexer.c:119:test_register_tokenization:PASS
+tests/test_lexer.c:120:test_immediate_value_tokenization:PASS
+tests/test_lexer.c:121:test_complete_instruction_tokenization:PASS
+
+-----------------------
+5 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_lexer PASSED
+
+Running testbin/test_parser_simple...
+tests/test_parser_simple.c:53:test_parser_initialization:PASS
+tests/test_parser_simple.c:54:test_basic_instruction_parsing:PASS
+
+-----------------------
+2 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_parser_simple PASSED
+
+Running testbin/test_phase1_parser...
+tests/test_phase1_parser.c:176:test_parse_complete_program:PASS
+tests/test_phase1_parser.c:177:test_parse_instruction_with_operands:PASS
+tests/test_phase1_parser.c:178:test_parse_directive_with_arguments:PASS
+tests/test_phase1_parser.c:179:test_parse_label:PASS
+tests/test_phase1_parser.c:180:test_parse_syscall_instruction:PASS
+
+-----------------------
+5 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_phase1_parser PASSED
+
+Running testbin/test_phase2_advanced_parsing...
+=== STAS Phase 2: Advanced Parsing Test Suite ===
+
+  Initializing x86-16 architecture module
+x86_16 architecture initialized successfully
+
+Test: Expression evaluation
+Test: Arithmetic expressions
+Test: Bitwise expressions
+Test: Symbol resolution
+Test: Forward references
+Test: Immediate expressions
+=== Test Results ===
+
+--- Expression evaluation ---
+Status: PASSED
+Expected: 42, Actual: 42
+
+--- Arithmetic expressions ---
+Status: PASSED
+Expected: 14, Actual: 14
+
+--- Bitwise expressions ---
+Status: PASSED
+Expected: 15, Actual: 15
+
+--- Symbol resolution ---
+Status: PASSED
+Expected: 1, Actual: 1
+
+--- Forward references ---
+Status: PASSED
+Expected: 1, Actual: 1
+
+--- Immediate expressions ---
+Status: PASSED
+Expected: 1, Actual: 1
+
+=== Summary ===
+Tests passed: 6/6
+Success rate: 100.0%
+✅ testbin/test_phase2_advanced_parsing PASSED
+
+Running testbin/test_phase3_basic...
+=== Phase 3: Symbol Table Enhancement - Basic Tests ===
+
+Test: Forward Reference Basic
+Status: PASSED
+----------------------------------------
+Test: Address Calculation
+Status: PASSED
+----------------------------------------
+Test: Expression Symbol Resolution
+Status: PASSED
+----------------------------------------
+=== Test Summary ===
+Total tests: 3
+Passed: 3
+Failed: 0
+Success rate: 100.0%
+✅ testbin/test_phase3_basic PASSED
+
+Running testbin/test_phase3_final...
+=== Phase 3: Symbol Table Enhancement - Final Integration Tests ===
+
+Test: Multi-Pass Forward Reference Resolution
+Status: PASSED
+----------------------------------------
+Test: Complex Forward References with Dependencies
+Status: PASSED
+----------------------------------------
+Test: Symbol Address Calculation
+Status: PASSED
+----------------------------------------
+=== Test Summary ===
+Total tests: 3
+Passed: 3
+Failed: 0
+Success rate: 100.0%
+✅ testbin/test_phase3_final PASSED
+
+Running testbin/test_phase3_symbol_enhancement...
+=== Phase 3: Symbol Table Enhancement - Comprehensive Symbol Tests ===
+
+Performance metrics:
+  Add 1000 symbols: 0 ms
+  Lookup 1000 symbols: 1 ms
+  Resolve 100 forward refs: 0 ms
+Test: Hash Table Optimization
+Status: PASSED
+----------------------------------------
+Test: Symbol Type Resolution
+Status: PASSED
+----------------------------------------
+Test: Large Symbol Table Performance
+Status: PASSED
+----------------------------------------
+=== Test Summary ===
+Total tests: 3
+Passed: 3
+Failed: 0
+Success rate: 100.0%
+✅ testbin/test_phase3_symbol_enhancement PASSED
+
+Running testbin/test_phase4_comprehensive...
+
+=== Comprehensive x86-64 Instruction Encoding Test ===
+✓ movq $60, %rax: [0x48 0xB8 0x3C 0x00 0x00 0x00 0x00 0x00 0x00 0x00 ]
+✓ movq %rbx, %rax: [0x48 0x89 0xD8 ]
+✓ addq %rbx, %rax: [0x48 0x01 0xD8 ]
+✓ pushq %rax: [0x50]
+✓ syscall: [0x0F 0x05]
+tests/test_phase4_comprehensive.c:162:test_x86_64_comprehensive_instruction_encoding:PASS
+
+=== x86-64 Hello World Program Instruction Encoding ===
+Encoding Hello World program instructions:
+  movq $1, %rax:      48 B8 01 00 00 00 00 00 00 00 
+  movq $1, %rdi:      48 BF 01 00 00 00 00 00 00 00 
+  movq $14, %rdx:     48 BA 0E 00 00 00 00 00 00 00 
+  syscall:            0F 05 
+  movq $60, %rax:     48 B8 3C 00 00 00 00 00 00 00 
+✓ All Hello World instructions encoded successfully!
+tests/test_phase4_comprehensive.c:163:test_x86_64_hello_world_program_encoding:PASS
+
+-----------------------
+2 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_phase4_comprehensive PASSED
+
+Running testbin/test_phase4_expanded...
+
+=== Testing x86-64 Expanded Instruction Set ===
+✓ andq %rbx, %rax: [0x48 0x21 0xD8]
+✓ orq %rbx, %rax: [0x48 0x09 0xD8]
+✓ xorq %rbx, %rax: [0x48 0x31 0xD8]
+✓ cmpq %rbx, %rax: [0x48 0x39 0xD8]
+tests/test_phase4_expanded.c:181:test_x86_64_expanded_instruction_set:PASS
+
+=== Testing x86-64 Single Operand Instructions ===
+✓ incq %rax: [0x48 0xFF 0xC0]
+✓ decq %rax: [0x48 0xFF 0xC8]
+tests/test_phase4_expanded.c:182:test_x86_64_single_operand_instructions:PASS
+
+=== Testing x86-64 Conditional Jumps ===
+✓ je: [0x74 0x00]
+✓ jne: [0x75 0x00]
+✓ jmp: [0xEB 0x00]
+tests/test_phase4_expanded.c:183:test_x86_64_conditional_jumps:PASS
+
+=== Testing x86-64 Complete Program Sequence ===
+Encoding a complete program sequence:
+  movq $5, %rax:    48 B8 05 00 00 00 00 00 00 00 
+  movq $3, %rbx:    48 BB 03 00 00 00 00 00 00 00 
+  cmpq %rbx, %rax:   48 39 D8 
+  je:               74 00 
+✓ Complete program sequence encoded successfully!
+tests/test_phase4_expanded.c:184:test_x86_64_complete_program_sequence:PASS
+
+-----------------------
+4 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_phase4_expanded PASSED
+
+Running testbin/test_phase4_x86_64...
+
+=== Testing x86-64 Basic Instruction Encoding ===
+✓ Register parsing works
+✓ Extended register parsing works
+tests/test_phase4_x86_64.c:249:test_x86_64_basic_instruction_encoding:PASS
+
+=== Testing x86-64 Instruction Parsing ===
+✓ Instruction parsing works
+tests/test_phase4_x86_64.c:250:test_x86_64_instruction_parsing:PASS
+
+=== Testing x86-64 Instruction Encoding ===
+✓ SYSCALL encoding: 0x0F 0x05
+✓ NOP encoding: 0x90
+tests/test_phase4_x86_64.c:251:test_x86_64_instruction_encoding:PASS
+
+=== Testing x86-64 Register-to-Register MOV ===
+✓ MOV reg,reg encoding: REX.W(0x48) + 0x89 + ModR/M(0xD8)
+tests/test_phase4_x86_64.c:252:test_x86_64_register_to_register_mov:PASS
+
+=== Testing x86-64 Immediate MOV ===
+✓ MOV reg,imm64 encoding: REX.W(0x48) + 0xB8 + imm64(52)
+tests/test_phase4_x86_64.c:253:test_x86_64_immediate_mov:PASS
+
+=== Testing x86-64 Arithmetic Instructions ===
+✓ ADD encoding: REX.W(0x48) + 0x01 + ModR/M(0xD8)
+✓ SUB encoding: REX.W(0x48) + 0x29 + ModR/M(0xD8)
+tests/test_phase4_x86_64.c:254:test_x86_64_arithmetic_instructions:PASS
+
+=== Testing x86-64 Stack Instructions ===
+✓ PUSH encoding: 0x50
+✓ POP encoding: 0x58
+tests/test_phase4_x86_64.c:255:test_x86_64_stack_instructions:PASS
+
+-----------------------
+7 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_phase4_x86_64 PASSED
+
+Running testbin/test_phase5_elf...
+Loading architecture plugins...
+  Loaded x86_16 architecture plugin
+  Loaded x86_32 architecture plugin
+  Loaded x86_64 architecture plugin
+  Loaded arm64 architecture plugin
+  Loaded riscv architecture plugin
+Assembly completed successfully!
+Output written to: testbin/phase5_test32.o
+Loading architecture plugins...
+  Loaded x86_16 architecture plugin
+  Loaded x86_32 architecture plugin
+  Loaded x86_64 architecture plugin
+  Loaded arm64 architecture plugin
+  Loaded riscv architecture plugin
+Assembly completed successfully!
+Output written to: testbin/phase5_test64.o
+Loading architecture plugins...
+  Loaded x86_16 architecture plugin
+  Loaded x86_32 architecture plugin
+  Loaded x86_64 architecture plugin
+  Loaded arm64 architecture plugin
+  Loaded riscv architecture plugin
+Assembly completed successfully!
+Output written to: testbin/phase5_sections.o
+objdump: testbin/phase5_test32.o: file format not recognized
+objdump: testbin/phase5_test64.o: file format not recognized
+=== Phase 5 Testing: Advanced Output Formats ===
+
+Test 1: ELF32 format generation
+  ✓ ELF32 generation successful
+Test 2: ELF64 format generation
+  ✓ ELF64 generation successful
+Test 3: ELF header validation
+  ✓ ELF header validation successful
+Test 4: Section management
+  ✓ .text section found
+  ✓ Section management test completed
+Test 5: Object file analysis
+  Analyzing ELF32 object:
+Running: objdump -h testbin/phase5_test32.o | head -10
+  Analyzing ELF64 object:
+Running: objdump -h testbin/phase5_test64.o | head -10
+  ✓ Object file analysis completed
+
+=== Phase 5 Test Results ===
+Tests passed: 5/5
+🎉 Phase 5 ELF format implementation: SUCCESS
+✅ ELF32 and ELF64 object file generation working
+✅ Proper ELF headers generated
+✅ Section management functional
+✅ Standard ELF tools can analyze generated files
+✅ testbin/test_phase5_elf PASSED
+
+Running testbin/test_symbols...
+tests/test_symbols.c:91:test_symbol_table_creation:PASS
+tests/test_symbols.c:92:test_symbol_creation:PASS
+tests/test_symbols.c:93:test_symbol_table_insert_and_lookup:PASS
+tests/test_symbols.c:94:test_symbol_table_hash_distribution:PASS
+
+-----------------------
+4 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_symbols PASSED
+
+Running testbin/test_unicorn_comprehensive...
+tests/test_unicorn_comprehensive.c:25:test_unicorn_basic:PASS
+
+-----------------------
+1 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_unicorn_comprehensive PASSED
+
+Running testbin/test_unity_install...
+tests/test_unity_install.c:29:test_unity_is_working:PASS
+tests/test_unity_install.c:30:test_basic_assertions:PASS
+
+-----------------------
+2 Tests 0 Failures 0 Ignored 
+OK
+✅ testbin/test_unity_install PASSED
+
+Running testbin/test_x86_16_comprehensive...
+=== STAS x86_16 Comprehensive Test Suite ===
+
+  Initializing x86-16 architecture module
+x86_16 architecture initialized successfully
+
+Test: Simple MOV instruction
+Generated code (3 bytes): B8 34 12 
+Test: Arithmetic operations
+Generated code (8 bytes): B8 0A 00 BB 05 00 01 D8 
+Test: Stack operations
+Generated code (8 bytes): B8 78 56 50 B8 34 12 58 
+Test: Conditional jumps
+Generated code (15 bytes): B8 05 00 81 F8 05 00 74 03 B8 FF FF B8 99 99 
+Test: DOS exit program
+Generated code (5 bytes): B8 00 4C CD 21 
+=== Test Results ===
+
+--- Simple MOV instruction ---
+Status: PASSED
+Generated code (3 bytes): B8 34 12 
+Expected AX: 0x1234, Actual AX: 0x1234
+
+--- Arithmetic operations ---
+Status: PASSED
+Generated code (8 bytes): B8 0A 00 BB 05 00 01 D8 
+Expected AX: 0x000F, Actual AX: 0x000F
+
+--- Stack operations ---
+Status: PASSED
+Generated code (8 bytes): B8 78 56 50 B8 34 12 58 
+Expected AX: 0x5678, Actual AX: 0x5678
+
+--- Conditional jumps ---
+Status: PASSED
+Generated code (15 bytes): B8 05 00 81 F8 05 00 74 03 B8 FF FF B8 99 99 
+Expected AX: 0x9999, Actual AX: 0x9999
+
+--- DOS exit program ---
+Status: PASSED
+Generated code (5 bytes): B8 00 4C CD 21 
+Expected AX: 0x4C00, Actual AX: 0x4C00
+
+=== Summary ===
+Tests passed: 5/5
+Success rate: 100.0%
+✅ testbin/test_x86_16_comprehensive PASSED
+
+🎉 All unit tests completed successfully!
+Running Unicorn Engine tests...
+./tests/run_unicorn_tests.sh
+==========================================
+STAS Unicorn Engine Test Suite
+==========================================
+[0;34m[INFO][0m Checking Unicorn Engine availability...
+[0;34m[INFO][0m Unicorn Engine development libraries found (pkg-config)
+Testing assembly syntax validation...
+[0;32m[PASS][0m x86_16 syntax test: Assembly validation successful
+[0;32m[PASS][0m x86_32 syntax test: Assembly validation successful
+[0;32m[PASS][0m x86_64 syntax test: Assembly validation successful
+
+Testing Unicorn Engine emulation...
+tests/test_unicorn_comprehensive.c:25:test_unicorn_basic:PASS
+
+-----------------------
+1 Tests 0 Failures 0 Ignored 
+OK
+[0;32m[PASS][0m Unicorn emulation test: Multi-architecture instruction execution successful
+
+==========================================
+Test Results Summary
+==========================================
+Tests run: 4
+Tests passed: 4
+Tests failed: 0
+[0;32m[PASS][0m All tests passed!
+=== Running Phase 7 Advanced Language Features Tests ===
+cd tests/phase7 && ./working_tests.sh
+[1;33mSTAS Phase 7 Working Test Suite[0m
+==================================
+
+Testing Basic macros... [0;32mPASS[0m
+Testing ifdef conditional... [0;32mPASS[0m
+Testing ifndef conditional... [0;32mPASS[0m
+Testing include directives... [0;32mPASS[0m
+Testing macro expressions... [0;32mPASS[0m
+Testing combined features... [0;32mPASS[0m
+
+[0;34mTest Results:[0m
+Total Tests: 6
+[0;32mPassed: 6[0m
+[0;31mFailed: 0[0m
+[0;32m🎉 ALL TESTS PASSED! Phase 7 is working correctly.[0m
+✅ All Phase 7 tests passed!
+🎉 All phase tests completed successfully!
+make[1]: Leaving directory '/home/tom/project/stas'

@@ -1,0 +1,1686 @@
+make[1]: Entering directory '/home/tom/project/stas'
+=== Running All Available Unit Tests ===
+make[2]: Entering directory '/home/tom/project/stas'
+=== Running Core Module Unit Tests ===
+Checking for core unit tests...
+make[3]: Entering directory '/home/tom/project/stas'
+mkdir -p testbin
+Compiling unit test: testbin/unit_test_lexer
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests/framework -Itests -DUNITY_INCLUDE_CONFIG_H tests/unit/core/test_lexer.c tests/unity.c tests/framework/unity_extensions.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -o testbin/unit_test_lexer
+make[3]: Leaving directory '/home/tom/project/stas'
+make[3]: Entering directory '/home/tom/project/stas'
+Compiling unit test: testbin/unit_test_parser
+gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -fPIC -Itests/framework -Itests -DUNITY_INCLUDE_CONFIG_H tests/unit/core/test_parser.c tests/unity.c tests/framework/unity_extensions.c obj/core/lexer.o obj/core/parser.o obj/core/expr.o obj/core/symbols.o obj/core/expressions.o obj/core/output.o obj/core/output_format.o obj/core/codegen.o obj/macro.o obj/include.o obj/formats/elf.o obj/formats/flat_binary.o obj/formats/com_format.o obj/formats/intel_hex.o obj/formats/motorola_srec.o obj/utils/utils.o obj/arch/x86_64/x86_64.o obj/arch/x86_64/instructions.o obj/arch/x86_64/registers.o obj/arch/x86_64/addressing.o obj/arch/x86_64/x86_64_advanced.o obj/arch/x86_32/x86_32.o obj/arch/x86_16/x86_16.o obj/arch/arm64/arm64.o obj/arch/arm64/arm64_utils.o obj/arch/riscv/riscv.o -o testbin/unit_test_parser
+tests/unit/core/test_parser.c:9:8: error: unknown type name ‘Parser’
+    9 | static Parser* parser;
+      |        ^~~~~~
+tests/unit/core/test_parser.c:10:8: error: unknown type name ‘SymbolTable’
+   10 | static SymbolTable* symbols;
+      |        ^~~~~~~~~~~
+tests/unit/core/test_parser.c: In function ‘setUp’:
+tests/unit/core/test_parser.c:13:15: error: too few arguments to function ‘symbol_table_create’
+   13 |     symbols = symbol_table_create();
+      |               ^~~~~~~~~~~~~~~~~~~
+In file included from tests/framework/../../include/parser.h:6,
+                 from tests/unit/core/test_parser.c:3:
+tests/framework/../../include/symbols.h:55:17: note: declared here
+   55 | symbol_table_t *symbol_table_create(size_t initial_size);
+      |                 ^~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c: In function ‘tearDown’:
+tests/unit/core/test_parser.c:19:24: error: passing argument 1 of ‘parser_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   19 |         parser_destroy(parser);
+      |                        ^~~~~~
+      |                        |
+      |                        int *
+tests/framework/../../include/parser.h:97:31: note: expected ‘parser_t *’ {aka ‘struct parser *’} but argument is of type ‘int *’
+   97 | void parser_destroy(parser_t *parser);
+      |                     ~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:22:30: error: passing argument 1 of ‘symbol_table_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   22 |         symbol_table_destroy(symbols);
+      |                              ^~~~~~~
+      |                              |
+      |                              int *
+tests/framework/../../include/symbols.h:56:43: note: expected ‘symbol_table_t *’ but argument is of type ‘int *’
+   56 | void symbol_table_destroy(symbol_table_t *table);
+      |                           ~~~~~~~~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_init_success’:
+tests/unit/core/test_parser.c:28:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+   28 |     Lexer* lexer = lexer_create("mov eax, ebx");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:28:20: error: too few arguments to function ‘lexer_create’
+   28 |     Lexer* lexer = lexer_create("mov eax, ebx");
+      |                    ^~~~~~~~~~~~
+In file included from tests/framework/../../include/parser.h:4:
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:29:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   29 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:29:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   29 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:29:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+   29 |     parser = parser_create(lexer, symbols);
+      |            ^
+In file included from tests/unity.h:22,
+                 from tests/unit/core/test_parser.c:1:
+tests/unit/core/test_parser.c:32:32: error: request for member ‘lexer’ in something not a structure or union
+   32 |     TEST_ASSERT_NOT_NULL(parser->lexer);
+      |                                ^~
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unity.h:141:100: note: in expansion of macro ‘UNITY_TEST_ASSERT_NOT_NULL’
+  141 | #define TEST_ASSERT_NOT_NULL(pointer)                                                              UNITY_TEST_ASSERT_NOT_NULL((pointer), __LINE__, " Expected Non-NULL")
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:32:5: note: in expansion of macro ‘TEST_ASSERT_NOT_NULL’
+   32 |     TEST_ASSERT_NOT_NULL(parser->lexer);
+      |     ^~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:33:32: error: request for member ‘symbol_table’ in something not a structure or union
+   33 |     TEST_ASSERT_NOT_NULL(parser->symbol_table);
+      |                                ^~
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unity.h:141:100: note: in expansion of macro ‘UNITY_TEST_ASSERT_NOT_NULL’
+  141 | #define TEST_ASSERT_NOT_NULL(pointer)                                                              UNITY_TEST_ASSERT_NOT_NULL((pointer), __LINE__, " Expected Non-NULL")
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:33:5: note: in expansion of macro ‘TEST_ASSERT_NOT_NULL’
+   33 |     TEST_ASSERT_NOT_NULL(parser->symbol_table);
+      |     ^~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:35:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   35 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_init_null_lexer’:
+tests/unit/core/test_parser.c:39:34: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   39 |     parser = parser_create(NULL, symbols);
+      |                                  ^~~~~~~
+      |                                  |
+      |                                  int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:39:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+   39 |     parser = parser_create(NULL, symbols);
+      |            ^
+tests/unit/core/test_parser.c: In function ‘test_parser_init_null_symbols’:
+tests/unit/core/test_parser.c:44:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+   44 |     Lexer* lexer = lexer_create("mov eax, ebx");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:44:20: error: too few arguments to function ‘lexer_create’
+   44 |     Lexer* lexer = lexer_create("mov eax, ebx");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:45:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   45 |     parser = parser_create(lexer, NULL);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:45:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+   45 |     parser = parser_create(lexer, NULL);
+      |            ^
+tests/unit/core/test_parser.c:47:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   47 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_simple_mov_instruction’:
+tests/unit/core/test_parser.c:52:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+   52 |     Lexer* lexer = lexer_create("mov eax, ebx");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:52:20: error: too few arguments to function ‘lexer_create’
+   52 |     Lexer* lexer = lexer_create("mov eax, ebx");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:53:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   53 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:53:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   53 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:53:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+   53 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:55:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+   55 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:55:25: error: implicit declaration of function ‘parser_parse_instruction’; did you mean ‘parse_instruction’? [-Werror=implicit-function-declaration]
+   55 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+      |                         parse_instruction
+tests/unit/core/test_parser.c:55:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+tests/unit/core/test_parser.c:58:41: error: request for member ‘mnemonic’ in something not a structure or union
+   58 |     TEST_ASSERT_EQUAL_STRING("mov", inst->mnemonic);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:58:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+   58 |     TEST_ASSERT_EQUAL_STRING("mov", inst->mnemonic);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:59:30: error: request for member ‘operand_count’ in something not a structure or union
+   59 |     TEST_ASSERT_EQUAL(2, inst->operand_count);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:59:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   59 |     TEST_ASSERT_EQUAL(2, inst->operand_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:61:45: error: request for member ‘operands’ in something not a structure or union
+   61 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[0].type);
+      |                                             ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:61:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   61 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[0].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:62:41: error: request for member ‘operands’ in something not a structure or union
+   62 |     TEST_ASSERT_EQUAL_STRING("eax", inst->operands[0].value.reg.name);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:62:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+   62 |     TEST_ASSERT_EQUAL_STRING("eax", inst->operands[0].value.reg.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:64:45: error: request for member ‘operands’ in something not a structure or union
+   64 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[1].type);
+      |                                             ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:64:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   64 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:65:41: error: request for member ‘operands’ in something not a structure or union
+   65 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.reg.name);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:65:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+   65 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.reg.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:67:5: error: implicit declaration of function ‘instruction_destroy’ [-Werror=implicit-function-declaration]
+   67 |     instruction_destroy(inst);
+      |     ^~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:68:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   68 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_mov_immediate’:
+tests/unit/core/test_parser.c:72:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+   72 |     Lexer* lexer = lexer_create("mov eax, 0x1234");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:72:20: error: too few arguments to function ‘lexer_create’
+   72 |     Lexer* lexer = lexer_create("mov eax, 0x1234");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:73:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   73 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:73:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   73 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:73:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+   73 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:75:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+   75 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:75:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+   75 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:78:41: error: request for member ‘mnemonic’ in something not a structure or union
+   78 |     TEST_ASSERT_EQUAL_STRING("mov", inst->mnemonic);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:78:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+   78 |     TEST_ASSERT_EQUAL_STRING("mov", inst->mnemonic);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:79:30: error: request for member ‘operand_count’ in something not a structure or union
+   79 |     TEST_ASSERT_EQUAL(2, inst->operand_count);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:79:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   79 |     TEST_ASSERT_EQUAL(2, inst->operand_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:81:45: error: request for member ‘operands’ in something not a structure or union
+   81 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[0].type);
+      |                                             ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:81:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   81 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[0].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:82:41: error: request for member ‘operands’ in something not a structure or union
+   82 |     TEST_ASSERT_EQUAL_STRING("eax", inst->operands[0].value.reg.name);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:82:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+   82 |     TEST_ASSERT_EQUAL_STRING("eax", inst->operands[0].value.reg.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:84:46: error: request for member ‘operands’ in something not a structure or union
+   84 |     TEST_ASSERT_EQUAL(OPERAND_IMMEDIATE, inst->operands[1].type);
+      |                                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:84:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   84 |     TEST_ASSERT_EQUAL(OPERAND_IMMEDIATE, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:85:35: error: request for member ‘operands’ in something not a structure or union
+   85 |     TEST_ASSERT_EQUAL(0x1234, inst->operands[1].value.immediate);
+      |                                   ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:85:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   85 |     TEST_ASSERT_EQUAL(0x1234, inst->operands[1].value.immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:88:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   88 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_memory_operand_simple’:
+tests/unit/core/test_parser.c:92:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+   92 |     Lexer* lexer = lexer_create("mov eax, [ebx]");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:92:20: error: too few arguments to function ‘lexer_create’
+   92 |     Lexer* lexer = lexer_create("mov eax, [ebx]");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:93:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   93 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:93:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+   93 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:93:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+   93 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:95:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+   95 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:95:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+   95 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:98:30: error: request for member ‘operand_count’ in something not a structure or union
+   98 |     TEST_ASSERT_EQUAL(2, inst->operand_count);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:98:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+   98 |     TEST_ASSERT_EQUAL(2, inst->operand_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:100:45: error: request for member ‘operands’ in something not a structure or union
+  100 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[0].type);
+      |                                             ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:100:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  100 |     TEST_ASSERT_EQUAL(OPERAND_REGISTER, inst->operands[0].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:101:43: error: request for member ‘operands’ in something not a structure or union
+  101 |     TEST_ASSERT_EQUAL(OPERAND_MEMORY, inst->operands[1].type);
+      |                                           ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:101:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  101 |     TEST_ASSERT_EQUAL(OPERAND_MEMORY, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:102:41: error: request for member ‘operands’ in something not a structure or union
+  102 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.memory.base);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:102:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  102 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.memory.base);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:103:26: error: request for member ‘operands’ in something not a structure or union
+  103 |     TEST_ASSERT_NULL(inst->operands[1].value.memory.index);
+      |                          ^~
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unity.h:140:100: note: in expansion of macro ‘UNITY_TEST_ASSERT_NULL’
+  140 | #define TEST_ASSERT_NULL(pointer)                                                                  UNITY_TEST_ASSERT_NULL(    (pointer), __LINE__, " Expected NULL")
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:103:5: note: in expansion of macro ‘TEST_ASSERT_NULL’
+  103 |     TEST_ASSERT_NULL(inst->operands[1].value.memory.index);
+      |     ^~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:104:30: error: request for member ‘operands’ in something not a structure or union
+  104 |     TEST_ASSERT_EQUAL(0, inst->operands[1].value.memory.displacement);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:104:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  104 |     TEST_ASSERT_EQUAL(0, inst->operands[1].value.memory.displacement);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:107:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  107 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_memory_operand_displacement’:
+tests/unit/core/test_parser.c:111:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  111 |     Lexer* lexer = lexer_create("mov eax, [ebx+8]");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:111:20: error: too few arguments to function ‘lexer_create’
+  111 |     Lexer* lexer = lexer_create("mov eax, [ebx+8]");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:112:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  112 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:112:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  112 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:112:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  112 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:114:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  114 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:114:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  114 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:117:43: error: request for member ‘operands’ in something not a structure or union
+  117 |     TEST_ASSERT_EQUAL(OPERAND_MEMORY, inst->operands[1].type);
+      |                                           ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:117:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  117 |     TEST_ASSERT_EQUAL(OPERAND_MEMORY, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:118:41: error: request for member ‘operands’ in something not a structure or union
+  118 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.memory.base);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:118:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  118 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.memory.base);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:119:30: error: request for member ‘operands’ in something not a structure or union
+  119 |     TEST_ASSERT_EQUAL(8, inst->operands[1].value.memory.displacement);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:119:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  119 |     TEST_ASSERT_EQUAL(8, inst->operands[1].value.memory.displacement);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:122:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  122 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_memory_operand_complex’:
+tests/unit/core/test_parser.c:126:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  126 |     Lexer* lexer = lexer_create("mov eax, [ebx+ecx*2+16]");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:126:20: error: too few arguments to function ‘lexer_create’
+  126 |     Lexer* lexer = lexer_create("mov eax, [ebx+ecx*2+16]");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:127:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  127 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:127:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  127 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:127:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  127 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:129:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  129 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:129:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  129 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:132:43: error: request for member ‘operands’ in something not a structure or union
+  132 |     TEST_ASSERT_EQUAL(OPERAND_MEMORY, inst->operands[1].type);
+      |                                           ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:132:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  132 |     TEST_ASSERT_EQUAL(OPERAND_MEMORY, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:133:41: error: request for member ‘operands’ in something not a structure or union
+  133 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.memory.base);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:133:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  133 |     TEST_ASSERT_EQUAL_STRING("ebx", inst->operands[1].value.memory.base);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:134:41: error: request for member ‘operands’ in something not a structure or union
+  134 |     TEST_ASSERT_EQUAL_STRING("ecx", inst->operands[1].value.memory.index);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:134:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  134 |     TEST_ASSERT_EQUAL_STRING("ecx", inst->operands[1].value.memory.index);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:135:30: error: request for member ‘operands’ in something not a structure or union
+  135 |     TEST_ASSERT_EQUAL(2, inst->operands[1].value.memory.scale);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:135:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  135 |     TEST_ASSERT_EQUAL(2, inst->operands[1].value.memory.scale);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:136:31: error: request for member ‘operands’ in something not a structure or union
+  136 |     TEST_ASSERT_EQUAL(16, inst->operands[1].value.memory.displacement);
+      |                               ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:136:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  136 |     TEST_ASSERT_EQUAL(16, inst->operands[1].value.memory.displacement);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:139:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  139 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_label_definition’:
+tests/unit/core/test_parser.c:144:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  144 |     Lexer* lexer = lexer_create("start:");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:144:20: error: too few arguments to function ‘lexer_create’
+  144 |     Lexer* lexer = lexer_create("start:");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:145:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  145 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:145:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  145 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:145:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  145 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:147:5: error: unknown type name ‘ParseResult’
+  147 |     ParseResult result = parser_parse_line(parser);
+      |     ^~~~~~~~~~~
+tests/unit/core/test_parser.c:147:26: error: implicit declaration of function ‘parser_parse_line’; did you mean ‘parser_parse’? [-Werror=implicit-function-declaration]
+  147 |     ParseResult result = parser_parse_line(parser);
+      |                          ^~~~~~~~~~~~~~~~~
+      |                          parser_parse
+tests/unit/core/test_parser.c:149:23: error: ‘PARSE_RESULT_LABEL’ undeclared (first use in this function)
+  149 |     TEST_ASSERT_EQUAL(PARSE_RESULT_LABEL, result.type);
+      |                       ^~~~~~~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:149:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  149 |     TEST_ASSERT_EQUAL(PARSE_RESULT_LABEL, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:149:23: note: each undeclared identifier is reported only once for each function it appears in
+  149 |     TEST_ASSERT_EQUAL(PARSE_RESULT_LABEL, result.type);
+      |                       ^~~~~~~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:149:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  149 |     TEST_ASSERT_EQUAL(PARSE_RESULT_LABEL, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:149:49: error: request for member ‘type’ in something not a structure or union
+  149 |     TEST_ASSERT_EQUAL(PARSE_RESULT_LABEL, result.type);
+      |                                                 ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:149:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  149 |     TEST_ASSERT_EQUAL(PARSE_RESULT_LABEL, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:150:45: error: request for member ‘data’ in something not a structure or union
+  150 |     TEST_ASSERT_EQUAL_STRING("start", result.data.label.name);
+      |                                             ^
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:150:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  150 |     TEST_ASSERT_EQUAL_STRING("start", result.data.label.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:153:5: error: implicit declaration of function ‘TEST_ASSERT_SYMBOL_EXISTS’; did you mean ‘TEST_ASSERT_NOT_EMPTY’? [-Werror=implicit-function-declaration]
+  153 |     TEST_ASSERT_SYMBOL_EXISTS(symbols, "start");
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~
+      |     TEST_ASSERT_NOT_EMPTY
+tests/unit/core/test_parser.c:155:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  155 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:147:17: error: variable ‘result’ set but not used [-Werror=unused-but-set-variable]
+  147 |     ParseResult result = parser_parse_line(parser);
+      |                 ^~~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_label_reference’:
+tests/unit/core/test_parser.c:160:5: error: implicit declaration of function ‘symbol_table_define’; did you mean ‘symbol_table_remove’? [-Werror=implicit-function-declaration]
+  160 |     symbol_table_define(symbols, "loop_start", 0x1000);
+      |     ^~~~~~~~~~~~~~~~~~~
+      |     symbol_table_remove
+tests/unit/core/test_parser.c:162:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  162 |     Lexer* lexer = lexer_create("jmp loop_start");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:162:20: error: too few arguments to function ‘lexer_create’
+  162 |     Lexer* lexer = lexer_create("jmp loop_start");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:163:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  163 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:163:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  163 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:163:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  163 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:165:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  165 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:165:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  165 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:168:41: error: request for member ‘mnemonic’ in something not a structure or union
+  168 |     TEST_ASSERT_EQUAL_STRING("jmp", inst->mnemonic);
+      |                                         ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:168:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  168 |     TEST_ASSERT_EQUAL_STRING("jmp", inst->mnemonic);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:169:30: error: request for member ‘operand_count’ in something not a structure or union
+  169 |     TEST_ASSERT_EQUAL(1, inst->operand_count);
+      |                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:169:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  169 |     TEST_ASSERT_EQUAL(1, inst->operand_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:170:23: error: ‘OPERAND_LABEL’ undeclared (first use in this function); did you mean ‘OPERAND_SYMBOL’?
+  170 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[0].type);
+      |                       ^~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:170:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  170 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[0].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:170:42: error: request for member ‘operands’ in something not a structure or union
+  170 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[0].type);
+      |                                          ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:170:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  170 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[0].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:171:48: error: request for member ‘operands’ in something not a structure or union
+  171 |     TEST_ASSERT_EQUAL_STRING("loop_start", inst->operands[0].value.label);
+      |                                                ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:171:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  171 |     TEST_ASSERT_EQUAL_STRING("loop_start", inst->operands[0].value.label);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:174:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  174 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_expression_simple’:
+tests/unit/core/test_parser.c:179:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  179 |     Lexer* lexer = lexer_create("mov eax, 10+5");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:179:20: error: too few arguments to function ‘lexer_create’
+  179 |     Lexer* lexer = lexer_create("mov eax, 10+5");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:180:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  180 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:180:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  180 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:180:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  180 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:182:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  182 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:182:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  182 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:185:46: error: request for member ‘operands’ in something not a structure or union
+  185 |     TEST_ASSERT_EQUAL(OPERAND_IMMEDIATE, inst->operands[1].type);
+      |                                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:185:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  185 |     TEST_ASSERT_EQUAL(OPERAND_IMMEDIATE, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:186:31: error: request for member ‘operands’ in something not a structure or union
+  186 |     TEST_ASSERT_EQUAL(15, inst->operands[1].value.immediate);
+      |                               ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:186:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  186 |     TEST_ASSERT_EQUAL(15, inst->operands[1].value.immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:189:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  189 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_expression_with_symbols’:
+tests/unit/core/test_parser.c:195:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  195 |     Lexer* lexer = lexer_create("mov eax, VALUE*2");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:195:20: error: too few arguments to function ‘lexer_create’
+  195 |     Lexer* lexer = lexer_create("mov eax, VALUE*2");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:196:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  196 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:196:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  196 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:196:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  196 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:198:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  198 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:198:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  198 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:201:46: error: request for member ‘operands’ in something not a structure or union
+  201 |     TEST_ASSERT_EQUAL(OPERAND_IMMEDIATE, inst->operands[1].type);
+      |                                              ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:201:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  201 |     TEST_ASSERT_EQUAL(OPERAND_IMMEDIATE, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:202:32: error: request for member ‘operands’ in something not a structure or union
+  202 |     TEST_ASSERT_EQUAL(200, inst->operands[1].value.immediate);
+      |                                ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:202:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  202 |     TEST_ASSERT_EQUAL(200, inst->operands[1].value.immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:205:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  205 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_db_directive’:
+tests/unit/core/test_parser.c:210:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  210 |     Lexer* lexer = lexer_create("db 0x41, 0x42, 0x43");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:210:20: error: too few arguments to function ‘lexer_create’
+  210 |     Lexer* lexer = lexer_create("db 0x41, 0x42, 0x43");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:211:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  211 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:211:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  211 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:211:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  211 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:213:5: error: unknown type name ‘ParseResult’
+  213 |     ParseResult result = parser_parse_line(parser);
+      |     ^~~~~~~~~~~
+tests/unit/core/test_parser.c:215:23: error: ‘PARSE_RESULT_DIRECTIVE’ undeclared (first use in this function)
+  215 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:215:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  215 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:215:53: error: request for member ‘type’ in something not a structure or union
+  215 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |                                                     ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:215:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  215 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:216:42: error: request for member ‘data’ in something not a structure or union
+  216 |     TEST_ASSERT_EQUAL_STRING("db", result.data.directive.name);
+      |                                          ^
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:216:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  216 |     TEST_ASSERT_EQUAL_STRING("db", result.data.directive.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:217:32: error: request for member ‘data’ in something not a structure or union
+  217 |     TEST_ASSERT_EQUAL(3, result.data.directive.arg_count);
+      |                                ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:217:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  217 |     TEST_ASSERT_EQUAL(3, result.data.directive.arg_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:218:35: error: request for member ‘data’ in something not a structure or union
+  218 |     TEST_ASSERT_EQUAL(0x41, result.data.directive.args[0].immediate);
+      |                                   ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:218:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  218 |     TEST_ASSERT_EQUAL(0x41, result.data.directive.args[0].immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:219:35: error: request for member ‘data’ in something not a structure or union
+  219 |     TEST_ASSERT_EQUAL(0x42, result.data.directive.args[1].immediate);
+      |                                   ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:219:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  219 |     TEST_ASSERT_EQUAL(0x42, result.data.directive.args[1].immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:220:35: error: request for member ‘data’ in something not a structure or union
+  220 |     TEST_ASSERT_EQUAL(0x43, result.data.directive.args[2].immediate);
+      |                                   ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:220:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  220 |     TEST_ASSERT_EQUAL(0x43, result.data.directive.args[2].immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:222:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  222 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:213:17: error: variable ‘result’ set but not used [-Werror=unused-but-set-variable]
+  213 |     ParseResult result = parser_parse_line(parser);
+      |                 ^~~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_dw_directive’:
+tests/unit/core/test_parser.c:226:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  226 |     Lexer* lexer = lexer_create("dw 0x1234, 0x5678");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:226:20: error: too few arguments to function ‘lexer_create’
+  226 |     Lexer* lexer = lexer_create("dw 0x1234, 0x5678");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:227:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  227 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:227:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  227 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:227:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  227 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:229:5: error: unknown type name ‘ParseResult’
+  229 |     ParseResult result = parser_parse_line(parser);
+      |     ^~~~~~~~~~~
+tests/unit/core/test_parser.c:231:23: error: ‘PARSE_RESULT_DIRECTIVE’ undeclared (first use in this function)
+  231 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:231:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  231 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:231:53: error: request for member ‘type’ in something not a structure or union
+  231 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |                                                     ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:231:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  231 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:232:42: error: request for member ‘data’ in something not a structure or union
+  232 |     TEST_ASSERT_EQUAL_STRING("dw", result.data.directive.name);
+      |                                          ^
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:232:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  232 |     TEST_ASSERT_EQUAL_STRING("dw", result.data.directive.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:233:32: error: request for member ‘data’ in something not a structure or union
+  233 |     TEST_ASSERT_EQUAL(2, result.data.directive.arg_count);
+      |                                ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:233:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  233 |     TEST_ASSERT_EQUAL(2, result.data.directive.arg_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:234:37: error: request for member ‘data’ in something not a structure or union
+  234 |     TEST_ASSERT_EQUAL(0x1234, result.data.directive.args[0].immediate);
+      |                                     ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:234:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  234 |     TEST_ASSERT_EQUAL(0x1234, result.data.directive.args[0].immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:235:37: error: request for member ‘data’ in something not a structure or union
+  235 |     TEST_ASSERT_EQUAL(0x5678, result.data.directive.args[1].immediate);
+      |                                     ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:235:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  235 |     TEST_ASSERT_EQUAL(0x5678, result.data.directive.args[1].immediate);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:237:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  237 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:229:17: error: variable ‘result’ set but not used [-Werror=unused-but-set-variable]
+  229 |     ParseResult result = parser_parse_line(parser);
+      |                 ^~~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_section_directive’:
+tests/unit/core/test_parser.c:242:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  242 |     Lexer* lexer = lexer_create(".text");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:242:20: error: too few arguments to function ‘lexer_create’
+  242 |     Lexer* lexer = lexer_create(".text");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:243:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  243 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:243:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  243 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:243:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  243 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:245:5: error: unknown type name ‘ParseResult’
+  245 |     ParseResult result = parser_parse_line(parser);
+      |     ^~~~~~~~~~~
+tests/unit/core/test_parser.c:247:23: error: ‘PARSE_RESULT_DIRECTIVE’ undeclared (first use in this function)
+  247 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:247:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  247 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:247:53: error: request for member ‘type’ in something not a structure or union
+  247 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |                                                     ^
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:247:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  247 |     TEST_ASSERT_EQUAL(PARSE_RESULT_DIRECTIVE, result.type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:248:45: error: request for member ‘data’ in something not a structure or union
+  248 |     TEST_ASSERT_EQUAL_STRING(".text", result.data.directive.name);
+      |                                             ^
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:248:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  248 |     TEST_ASSERT_EQUAL_STRING(".text", result.data.directive.name);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:250:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  250 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:245:17: error: variable ‘result’ set but not used [-Werror=unused-but-set-variable]
+  245 |     ParseResult result = parser_parse_line(parser);
+      |                 ^~~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_invalid_instruction’:
+tests/unit/core/test_parser.c:255:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  255 |     Lexer* lexer = lexer_create("invalid_instruction eax, ebx");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:255:20: error: too few arguments to function ‘lexer_create’
+  255 |     Lexer* lexer = lexer_create("invalid_instruction eax, ebx");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:256:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  256 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:256:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  256 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:256:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  256 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:258:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  258 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:258:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  258 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:261:39: error: passing argument 1 of ‘parser_has_error’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  261 |     TEST_ASSERT_TRUE(parser_has_error(parser));
+      |                                       ^~~~~~
+      |                                       |
+      |                                       int *
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unit/core/test_parser.c:261:5: note: in expansion of macro ‘TEST_ASSERT_TRUE’
+  261 |     TEST_ASSERT_TRUE(parser_has_error(parser));
+      |     ^~~~~~~~~~~~~~~~
+tests/framework/../../include/parser.h:99:39: note: expected ‘const parser_t *’ {aka ‘const struct parser *’} but argument is of type ‘int *’
+   99 | bool parser_has_error(const parser_t *parser);
+      |                       ~~~~~~~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:262:49: error: passing argument 1 of ‘parser_get_error’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  262 |     TEST_ASSERT_ERROR_CONTAINS(parser_get_error(parser), "invalid_instruction");
+      |                                                 ^~~~~~
+      |                                                 |
+      |                                                 int *
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unity.h:141:100: note: in expansion of macro ‘UNITY_TEST_ASSERT_NOT_NULL’
+  141 | #define TEST_ASSERT_NOT_NULL(pointer)                                                              UNITY_TEST_ASSERT_NOT_NULL((pointer), __LINE__, " Expected Non-NULL")
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/framework/../framework/unity_extensions.h:34:5: note: in expansion of macro ‘TEST_ASSERT_NOT_NULL’
+   34 |     TEST_ASSERT_NOT_NULL(error_msg); \
+      |     ^~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:262:5: note: in expansion of macro ‘TEST_ASSERT_ERROR_CONTAINS’
+  262 |     TEST_ASSERT_ERROR_CONTAINS(parser_get_error(parser), "invalid_instruction");
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/framework/../../include/parser.h:100:46: note: expected ‘const parser_t *’ {aka ‘const struct parser *’} but argument is of type ‘int *’
+  100 | const char *parser_get_error(const parser_t *parser);
+      |                              ~~~~~~~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:262:49: error: passing argument 1 of ‘parser_get_error’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  262 |     TEST_ASSERT_ERROR_CONTAINS(parser_get_error(parser), "invalid_instruction");
+      |                                                 ^~~~~~
+      |                                                 |
+      |                                                 int *
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unity.h:141:100: note: in expansion of macro ‘UNITY_TEST_ASSERT_NOT_NULL’
+  141 | #define TEST_ASSERT_NOT_NULL(pointer)                                                              UNITY_TEST_ASSERT_NOT_NULL((pointer), __LINE__, " Expected Non-NULL")
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/framework/../framework/unity_extensions.h:35:5: note: in expansion of macro ‘TEST_ASSERT_NOT_NULL’
+   35 |     TEST_ASSERT_NOT_NULL(strstr(error_msg, expected_text))
+      |     ^~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:262:5: note: in expansion of macro ‘TEST_ASSERT_ERROR_CONTAINS’
+  262 |     TEST_ASSERT_ERROR_CONTAINS(parser_get_error(parser), "invalid_instruction");
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/framework/../../include/parser.h:100:46: note: expected ‘const parser_t *’ {aka ‘const struct parser *’} but argument is of type ‘int *’
+  100 | const char *parser_get_error(const parser_t *parser);
+      |                              ~~~~~~~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:264:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  264 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_invalid_operand’:
+tests/unit/core/test_parser.c:268:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  268 |     Lexer* lexer = lexer_create("mov eax, @invalid");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:268:20: error: too few arguments to function ‘lexer_create’
+  268 |     Lexer* lexer = lexer_create("mov eax, @invalid");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:269:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  269 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:269:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  269 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:269:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  269 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:271:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  271 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:271:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  271 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:274:39: error: passing argument 1 of ‘parser_has_error’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  274 |     TEST_ASSERT_TRUE(parser_has_error(parser));
+      |                                       ^~~~~~
+      |                                       |
+      |                                       int *
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unit/core/test_parser.c:274:5: note: in expansion of macro ‘TEST_ASSERT_TRUE’
+  274 |     TEST_ASSERT_TRUE(parser_has_error(parser));
+      |     ^~~~~~~~~~~~~~~~
+tests/framework/../../include/parser.h:99:39: note: expected ‘const parser_t *’ {aka ‘const struct parser *’} but argument is of type ‘int *’
+   99 | bool parser_has_error(const parser_t *parser);
+      |                       ~~~~~~~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:276:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  276 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_missing_operand’:
+tests/unit/core/test_parser.c:280:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  280 |     Lexer* lexer = lexer_create("mov eax,");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:280:20: error: too few arguments to function ‘lexer_create’
+  280 |     Lexer* lexer = lexer_create("mov eax,");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:281:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  281 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:281:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  281 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:281:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  281 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:283:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  283 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:283:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  283 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:286:39: error: passing argument 1 of ‘parser_has_error’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  286 |     TEST_ASSERT_TRUE(parser_has_error(parser));
+      |                                       ^~~~~~
+      |                                       |
+      |                                       int *
+tests/unity_internals.h:891:107: note: in definition of macro ‘UNITY_TEST_ASSERT’
+  891 | #define UNITY_TEST_ASSERT(condition, line, message)                                              do { if (condition) { /* nothing*/ } else { UNITY_TEST_FAIL((line), (message)); } } while (0)
+      |                                                                                                           ^~~~~~~~~
+tests/unit/core/test_parser.c:286:5: note: in expansion of macro ‘TEST_ASSERT_TRUE’
+  286 |     TEST_ASSERT_TRUE(parser_has_error(parser));
+      |     ^~~~~~~~~~~~~~~~
+tests/framework/../../include/parser.h:99:39: note: expected ‘const parser_t *’ {aka ‘const struct parser *’} but argument is of type ‘int *’
+   99 | bool parser_has_error(const parser_t *parser);
+      |                       ~~~~~~~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:288:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  288 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_undefined_symbol’:
+tests/unit/core/test_parser.c:292:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  292 |     Lexer* lexer = lexer_create("mov eax, undefined_symbol");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:292:20: error: too few arguments to function ‘lexer_create’
+  292 |     Lexer* lexer = lexer_create("mov eax, undefined_symbol");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:293:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  293 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:293:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  293 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:293:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  293 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:295:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  295 |     Instruction* inst = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:295:25: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  295 |     Instruction* inst = parser_parse_instruction(parser);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:299:23: error: ‘OPERAND_LABEL’ undeclared (first use in this function); did you mean ‘OPERAND_SYMBOL’?
+  299 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[1].type);
+      |                       ^~~~~~~~~~~~~
+tests/unity_internals.h:897:133: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                     ^~~~~~~~
+tests/unit/core/test_parser.c:299:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  299 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:299:42: error: request for member ‘operands’ in something not a structure or union
+  299 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[1].type);
+      |                                          ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:299:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  299 |     TEST_ASSERT_EQUAL(OPERAND_LABEL, inst->operands[1].type);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:300:54: error: request for member ‘operands’ in something not a structure or union
+  300 |     TEST_ASSERT_EQUAL_STRING("undefined_symbol", inst->operands[1].value.label);
+      |                                                      ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:300:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  300 |     TEST_ASSERT_EQUAL_STRING("undefined_symbol", inst->operands[1].value.label);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:303:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  303 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_multiple_instructions’:
+tests/unit/core/test_parser.c:308:5: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  308 |     Lexer* lexer = lexer_create("mov eax, ebx\nadd eax, 5\nret");
+      |     ^~~~~
+      |     lexer_t
+tests/unit/core/test_parser.c:308:20: error: too few arguments to function ‘lexer_create’
+  308 |     Lexer* lexer = lexer_create("mov eax, ebx\nadd eax, 5\nret");
+      |                    ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:309:28: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  309 |     parser = parser_create(lexer, symbols);
+      |                            ^~~~~
+      |                            |
+      |                            int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:309:35: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  309 |     parser = parser_create(lexer, symbols);
+      |                                   ^~~~~~~
+      |                                   |
+      |                                   int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:309:12: error: assignment to ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  309 |     parser = parser_create(lexer, symbols);
+      |            ^
+tests/unit/core/test_parser.c:312:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  312 |     Instruction* inst1 = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:312:26: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  312 |     Instruction* inst1 = parser_parse_instruction(parser);
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:314:42: error: request for member ‘mnemonic’ in something not a structure or union
+  314 |     TEST_ASSERT_EQUAL_STRING("mov", inst1->mnemonic);
+      |                                          ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:314:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  314 |     TEST_ASSERT_EQUAL_STRING("mov", inst1->mnemonic);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:317:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  317 |     Instruction* inst2 = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:317:26: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  317 |     Instruction* inst2 = parser_parse_instruction(parser);
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:319:42: error: request for member ‘mnemonic’ in something not a structure or union
+  319 |     TEST_ASSERT_EQUAL_STRING("add", inst2->mnemonic);
+      |                                          ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:319:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  319 |     TEST_ASSERT_EQUAL_STRING("add", inst2->mnemonic);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:322:5: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  322 |     Instruction* inst3 = parser_parse_instruction(parser);
+      |     ^~~~~~~~~~~
+      |     instruction_t
+tests/unit/core/test_parser.c:322:26: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  322 |     Instruction* inst3 = parser_parse_instruction(parser);
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:324:42: error: request for member ‘mnemonic’ in something not a structure or union
+  324 |     TEST_ASSERT_EQUAL_STRING("ret", inst3->mnemonic);
+      |                                          ^~
+tests/unity_internals.h:1004:160: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_STRING’
+ 1004 | #define UNITY_TEST_ASSERT_EQUAL_STRING(expected, actual, line, message)                          UnityAssertEqualString((const char*)(expected), (const char*)(actual), (message), (UNITY_LINE_TYPE)(line))
+      |                                                                                                                                                                ^~~~~~
+tests/unit/core/test_parser.c:324:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL_STRING’
+  324 |     TEST_ASSERT_EQUAL_STRING("ret", inst3->mnemonic);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:325:31: error: request for member ‘operand_count’ in something not a structure or union
+  325 |     TEST_ASSERT_EQUAL(0, inst3->operand_count);
+      |                               ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:325:5: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  325 |     TEST_ASSERT_EQUAL(0, inst3->operand_count);
+      |     ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:330:19: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  330 |     lexer_destroy(lexer);
+      |                   ^~~~~
+      |                   |
+      |                   int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c: In function ‘test_parser_different_operand_counts’:
+tests/unit/core/test_parser.c:346:9: error: unknown type name ‘Lexer’; did you mean ‘lexer_t’?
+  346 |         Lexer* lexer = lexer_create(instructions[i]);
+      |         ^~~~~
+      |         lexer_t
+tests/unit/core/test_parser.c:346:24: error: too few arguments to function ‘lexer_create’
+  346 |         Lexer* lexer = lexer_create(instructions[i]);
+      |                        ^~~~~~~~~~~~
+tests/framework/../../include/lexer.h:60:10: note: declared here
+   60 | lexer_t *lexer_create(const char *input, const char *filename);
+      |          ^~~~~~~~~~~~
+tests/unit/core/test_parser.c:347:9: error: unknown type name ‘Parser’; did you mean ‘parser_t’?
+  347 |         Parser* test_parser = parser_create(lexer, symbols);
+      |         ^~~~~~
+      |         parser_t
+tests/unit/core/test_parser.c:347:45: error: passing argument 1 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  347 |         Parser* test_parser = parser_create(lexer, symbols);
+      |                                             ^~~~~
+      |                                             |
+      |                                             int *
+tests/framework/../../include/parser.h:96:34: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                         ~~~~~~~~~^~~~~
+tests/unit/core/test_parser.c:347:52: error: passing argument 2 of ‘parser_create’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  347 |         Parser* test_parser = parser_create(lexer, symbols);
+      |                                                    ^~~~~~~
+      |                                                    |
+      |                                                    int *
+tests/framework/../../include/parser.h:96:53: note: expected ‘arch_ops_t *’ {aka ‘struct arch_ops *’} but argument is of type ‘int *’
+   96 | parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch);
+      |                                         ~~~~~~~~~~~~^~~~
+tests/unit/core/test_parser.c:347:31: error: initialization of ‘int *’ from incompatible pointer type ‘parser_t *’ {aka ‘struct parser *’} [-Werror=incompatible-pointer-types]
+  347 |         Parser* test_parser = parser_create(lexer, symbols);
+      |                               ^~~~~~~~~~~~~
+tests/unit/core/test_parser.c:349:9: error: unknown type name ‘Instruction’; did you mean ‘instruction_t’?
+  349 |         Instruction* inst = parser_parse_instruction(test_parser);
+      |         ^~~~~~~~~~~
+      |         instruction_t
+tests/unit/core/test_parser.c:349:29: error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
+  349 |         Instruction* inst = parser_parse_instruction(test_parser);
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:351:51: error: request for member ‘operand_count’ in something not a structure or union
+  351 |         TEST_ASSERT_EQUAL(expected_counts[i], inst->operand_count);
+      |                                                   ^~
+tests/unity_internals.h:897:156: note: in definition of macro ‘UNITY_TEST_ASSERT_EQUAL_INT’
+  897 | #define UNITY_TEST_ASSERT_EQUAL_INT(expected, actual, line, message)                             UnityAssertEqualNumber((UNITY_INT)(expected), (UNITY_INT)(actual), (message), (UNITY_LINE_TYPE)(line), UNITY_DISPLAY_STYLE_INT)
+      |                                                                                                                                                            ^~~~~~
+tests/unit/core/test_parser.c:351:9: note: in expansion of macro ‘TEST_ASSERT_EQUAL’
+  351 |         TEST_ASSERT_EQUAL(expected_counts[i], inst->operand_count);
+      |         ^~~~~~~~~~~~~~~~~
+tests/unit/core/test_parser.c:354:24: error: passing argument 1 of ‘parser_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  354 |         parser_destroy(test_parser);
+      |                        ^~~~~~~~~~~
+      |                        |
+      |                        int *
+tests/framework/../../include/parser.h:97:31: note: expected ‘parser_t *’ {aka ‘struct parser *’} but argument is of type ‘int *’
+   97 | void parser_destroy(parser_t *parser);
+      |                     ~~~~~~~~~~^~~~~~
+tests/unit/core/test_parser.c:355:23: error: passing argument 1 of ‘lexer_destroy’ from incompatible pointer type [-Werror=incompatible-pointer-types]
+  355 |         lexer_destroy(lexer);
+      |                       ^~~~~
+      |                       |
+      |                       int *
+tests/framework/../../include/lexer.h:61:29: note: expected ‘lexer_t *’ but argument is of type ‘int *’
+   61 | void lexer_destroy(lexer_t *lexer);
+      |                    ~~~~~~~~~^~~~~
+cc1: all warnings being treated as errors
+make[3]: *** [Makefile:554: testbin/unit_test_parser] Error 1
+make[3]: Leaving directory '/home/tom/project/stas'
+Running lexer tests...
+tests/unit/core/test_lexer.c:317:test_lexer_init_success:[42mPASS[0m
+tests/unit/core/test_lexer.c:318:test_lexer_init_null_input:[42mPASS[0m
+tests/unit/core/test_lexer.c:319:test_lexer_init_empty_input:[42mPASS[0m
+tests/unit/core/test_lexer.c:322:test_lexer_instruction_token:[42mPASS[0m
+tests/unit/core/test_lexer.c:68:test_lexer_register_token:[41mFAIL[0m: Expected '%rax' Was 'rax'
+tests/unit/core/test_lexer.c:80:test_lexer_immediate_hex:[41mFAIL[0m: Expected '$0x1234' Was '0x1234'
+tests/unit/core/test_lexer.c:92:test_lexer_immediate_decimal:[41mFAIL[0m: Expected '$1234' Was '1234'
+tests/unit/core/test_lexer.c:104:test_lexer_label_token:[41mFAIL[0m: Expected 'main:' Was 'main'
+tests/unit/core/test_lexer.c:327:test_lexer_directive_token:[42mPASS[0m
+tests/unit/core/test_lexer.c:328:test_lexer_symbol_token:[42mPASS[0m
+tests/unit/core/test_lexer.c:140:test_lexer_string_literal:[41mFAIL[0m: Expected '"hello world"' Was 'hello world'
+tests/unit/core/test_lexer.c:152:test_lexer_comment:[41mFAIL[0m: Expected '# This is a comment' Was NULL
+tests/unit/core/test_lexer.c:331:test_lexer_comma_token:[42mPASS[0m
+tests/unit/core/test_lexer.c:332:test_lexer_parentheses:[42mPASS[0m
+tests/unit/core/test_lexer.c:333:test_lexer_newline:[42mPASS[0m
+tests/unit/core/test_lexer.c:334:test_lexer_eof:[42mPASS[0m
+tests/unit/core/test_lexer.c:221:test_lexer_multiple_tokens:[41mFAIL[0m: Expected '%rax' Was 'rax'
+tests/unit/core/test_lexer.c:243:test_lexer_macro_tokens:[41mFAIL[0m: Expected '#define' Was 'define'
+tests/unit/core/test_lexer.c:341:test_lexer_invalid_token:[42mPASS[0m
+tests/unit/core/test_lexer.c:344:test_lexer_position_tracking:[42mPASS[0m
+tests/unit/core/test_lexer.c:345:test_lexer_line_column_tracking:[42mPASS[0m
+
+-----------------------
+21 Tests 8 Failures 0 Ignored 
+[41mFAIL[0m
+make[2]: *** [Makefile:562: test-unit-core] Error 8
+make[2]: Leaving directory '/home/tom/project/stas'
+make[1]: *** [Makefile:586: test-unit-all] Error 2
+make[1]: Leaving directory '/home/tom/project/stas'

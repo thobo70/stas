@@ -1,0 +1,31 @@
+make[1]: Entering directory '/home/tom/project/stas'
+Running Unicorn Engine tests...
+./tests/run_unicorn_tests.sh
+==========================================
+STAS Unicorn Engine Test Suite
+==========================================
+[0;34m[INFO][0m Checking Unicorn Engine availability...
+[0;34m[INFO][0m Unicorn Engine development libraries found (pkg-config)
+Testing assembly syntax validation...
+[0;32m[PASS][0m x86_16 syntax test: Assembly validation successful
+[0;32m[PASS][0m x86_32 syntax test: Assembly validation successful
+[0;32m[PASS][0m x86_64 syntax test: Assembly validation successful
+
+Testing Unicorn Engine emulation...
+[0;34m[INFO][0m Building Unicorn Engine test program...
+[0;34m[INFO][0m Unicorn test built with pkg-config
+tests/test_unicorn_comprehensive.c:25:test_unicorn_basic:PASS
+
+-----------------------
+1 Tests 0 Failures 0 Ignored 
+OK
+[0;32m[PASS][0m Unicorn emulation test: Multi-architecture instruction execution successful
+
+==========================================
+Test Results Summary
+==========================================
+Tests run: 4
+Tests passed: 4
+Tests failed: 0
+[0;32m[PASS][0m All tests passed!
+make[1]: Leaving directory '/home/tom/project/stas'

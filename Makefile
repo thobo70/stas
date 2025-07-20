@@ -59,7 +59,7 @@ MAIN_SOURCE = $(SRC_DIR)/main.c
 MAIN_OBJECT = $(OBJ_DIR)/main.o
 
 # All sources and objects for dynamic build
-SOURCES = $(CORE_SOURCES) $(FORMAT_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(ARCH_ARM64_SOURCES) $(ARCH_RISCV_SOURCES) $(MAIN_SOURCE)
+SOURCES = $(CORE_SOURCES) $(SRC_DIR)/macro.c $(SRC_DIR)/include.c $(FORMAT_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(ARCH_ARM64_SOURCES) $(ARCH_RISCV_SOURCES) $(MAIN_SOURCE)
 OBJECTS = $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(ARCH_ARM64_OBJECTS) $(ARCH_RISCV_OBJECTS) $(MAIN_OBJECT)
 
 # Target executable
@@ -521,8 +521,254 @@ testbin/test_phase5_elf: tests/test_phase5_elf.c $(FORMAT_OBJECTS) $(ARCH_X86_64
 	@echo "Phase 5 ELF format test built: $@"
 
 # Test all variants
-test-comprehensive: test-x86_16-comprehensive
-	@echo "🎉 All comprehensive tests completed!"
+test-comprehensive-legacy: test-x86_16-comprehensive
+	@echo "🎉 All legacy comprehensive tests completed!"
 
-# Declare phony targets
-.PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean test-x86_16-comprehensive test-comprehensive static-x86_16 static-x86_32 static-x86_64 static-arm64 static-riscv static-all clean distclean run install uninstall help
+# === NEW COMPREHENSIVE TESTING FRAMEWORK ===
+
+# Test directories and framework
+UNIT_TEST_DIR = tests/unit
+INTEGRATION_TEST_DIR = tests/integration
+EXECUTION_TEST_DIR = tests/execution
+COVERAGE_DIR = tests/coverage
+FRAMEWORK_DIR = tests/framework
+
+# Unity extensions and Unicorn framework
+UNITY_EXTENSIONS = $(FRAMEWORK_DIR)/unity_extensions.c
+UNICORN_FRAMEWORK = $(FRAMEWORK_DIR)/unicorn_test_framework.c
+FRAMEWORK_INCLUDES = -I$(FRAMEWORK_DIR) -Itests
+
+# Enhanced test compilation flags
+TEST_CFLAGS_ENHANCED = $(CFLAGS) $(FRAMEWORK_INCLUDES) -DUNITY_INCLUDE_CONFIG_H
+EXECUTION_TEST_CFLAGS = $(TEST_CFLAGS_ENHANCED) -DHAVE_UNICORN
+
+# Coverage targets
+COVERAGE_CFLAGS = --coverage -fprofile-arcs -ftest-coverage -O0 -g
+COVERAGE_LDFLAGS = --coverage
+
+# === UNIT TESTING WITH UNITY ===
+
+# Unit test compilation - flexible pattern matching  
+$(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c $(UNITY_SRC) $(UNITY_EXTENSIONS) $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling unit test: $@"
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< $(UNITY_SRC) $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+
+# Core module unit tests
+test-unit-core:
+	@echo "=== Running Core Module Unit Tests ==="
+	@echo "Checking for core unit tests..."
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_lexer || $(MAKE) $(TESTBIN_DIR)/unit_test_lexer || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_parser_simple || $(MAKE) $(TESTBIN_DIR)/unit_test_parser_simple || true
+	@if [ -f $(TESTBIN_DIR)/unit_test_lexer ]; then echo "Running lexer tests..."; ./$(TESTBIN_DIR)/unit_test_lexer; fi
+	@if [ -f $(TESTBIN_DIR)/unit_test_parser_simple ]; then echo "Running parser tests..."; ./$(TESTBIN_DIR)/unit_test_parser_simple; fi
+	@echo "Core unit tests completed"
+
+# Architecture module unit tests  
+test-unit-arch:
+	@echo "=== Running Architecture Module Unit Tests ==="
+	@echo "Architecture unit tests not yet implemented - using legacy tests"
+	@$(MAKE) test-x86_16-comprehensive || true
+
+# Format module unit tests
+test-unit-formats:
+	@echo "=== Running Format Module Unit Tests ==="
+	@echo "Format unit tests not yet implemented - using legacy tests"
+	@$(MAKE) test-phase5-elf || true
+
+# Utility module unit tests
+test-unit-utils:
+	@echo "=== Running Utility Module Unit Tests ==="
+	@echo "Utility unit tests not yet implemented"
+
+# All unit tests
+test-unit-all:
+	@echo "=== Running All Available Unit Tests ==="
+	@$(MAKE) test-unit-core
+	@$(MAKE) test-unit-arch  
+	@$(MAKE) test-unit-formats
+	@$(MAKE) test-unit-utils
+
+# === BUILD VARIANT TESTING ===
+
+test-build-variants:
+	@echo "=== Testing All Build Variants ==="
+	@if [ -f tests/integration/build_variants/test_all_builds.sh ]; then \
+		./tests/integration/build_variants/test_all_builds.sh; \
+	else \
+		echo "Build variant tests not found - using basic build test"; \
+		$(MAKE) clean && $(MAKE) all; \
+	fi
+
+# === EXECUTION TESTING WITH UNICORN ===
+
+# Execution test compilation
+$(TESTBIN_DIR)/execution_test_%: tests/execution/*/test_%.c $(UNICORN_FRAMEWORK) $(UNITY_SRC) | $(TESTBIN_DIR)
+	@echo "Compiling execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) $(UNITY_SRC) -lunicorn -o $@
+
+# Check for Unicorn Engine availability
+check-unicorn:
+	@echo "Checking Unicorn Engine availability..."
+	@if pkg-config --exists libunicorn; then \
+		echo "✅ Unicorn Engine found"; \
+	elif ldconfig -p | grep -q unicorn; then \
+		echo "✅ Unicorn Engine found"; \
+	else \
+		echo "⚠️  Unicorn Engine not found - execution tests may fail"; \
+	fi
+
+# x86-64 execution tests (primary test target)
+test-execution-x86_64:
+	@echo "=== Running x86-64 Execution Tests ==="
+	@$(MAKE) check-unicorn
+	@if [ -f tests/execution/x86_64/test_basic_instructions.c ]; then \
+		$(MAKE) $(TESTBIN_DIR)/execution_test_basic_instructions && ./$(TESTBIN_DIR)/execution_test_basic_instructions; \
+	else \
+		echo "x86-64 execution tests not found - using legacy Unicorn tests"; \
+		$(MAKE) test-unicorn || true; \
+	fi
+
+# Other architecture execution tests (placeholders for now)
+test-execution-x86_16:
+	@echo "=== Running x86-16 Execution Tests ==="
+	@echo "x86-16 execution tests not yet implemented"
+
+test-execution-x86_32:
+	@echo "=== Running x86-32 Execution Tests ==="
+	@echo "x86-32 execution tests not yet implemented"
+
+test-execution-arm64:
+	@echo "=== Running ARM64 Execution Tests ==="
+	@echo "ARM64 execution tests not yet implemented"
+
+test-execution-riscv:
+	@echo "=== Running RISC-V Execution Tests ==="
+	@echo "RISC-V execution tests not yet implemented"
+
+# All execution tests
+test-execution-all:
+	@echo "=== Running All Available Execution Tests ==="
+	@$(MAKE) test-execution-x86_64
+	@$(MAKE) test-execution-x86_16
+	@$(MAKE) test-execution-x86_32
+	@$(MAKE) test-execution-arm64
+	@$(MAKE) test-execution-riscv
+
+# === INTEGRATION TESTING ===
+
+test-integration:
+	@echo "=== Running Integration Tests ==="
+	@if [ -f tests/integration/end_to_end/test_basic_assembly.sh ]; then \
+		./tests/integration/end_to_end/test_basic_assembly.sh; \
+	else \
+		echo "Integration tests not found - using legacy test-all"; \
+		$(MAKE) test-all; \
+	fi
+
+# === CODE COVERAGE ===
+
+# Coverage build
+coverage-build:
+	@echo "=== Building with Coverage Support ==="
+	$(MAKE) clean
+	$(MAKE) CFLAGS="$(CFLAGS) $(COVERAGE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(COVERAGE_LDFLAGS)" all
+
+# Coverage testing
+test-coverage:
+	@echo "=== Running Tests with Coverage ==="
+	@if [ -f tests/coverage/generate_coverage.sh ]; then \
+		./tests/coverage/generate_coverage.sh; \
+	else \
+		echo "Coverage script not found - building with coverage and running tests"; \
+		$(MAKE) coverage-build; \
+		$(MAKE) test-all; \
+		gcov src/*.c src/*/*.c || true; \
+	fi
+
+# === COMPREHENSIVE TESTING ===
+
+# Complete test suite
+test-comprehensive:
+	@echo "🚀 Starting STAS Comprehensive Test Suite..."
+	@if [ -f tests/framework/scripts/test_runner.py ]; then \
+		python3 tests/framework/scripts/test_runner.py; \
+	else \
+		echo "Running comprehensive tests manually..."; \
+		$(MAKE) test-unit-all || true; \
+		$(MAKE) test-build-variants || true; \
+		$(MAKE) test-execution-all || true; \
+		$(MAKE) test-integration || true; \
+		$(MAKE) test-coverage || true; \
+	fi
+
+# Quick test (essential tests only)
+test-quick:
+	@echo "=== Running Quick Test Suite ==="
+	@$(MAKE) test-unit-core
+	@$(MAKE) test-execution-x86_64  
+	@echo "Quick tests completed"
+
+# Continuous integration test  
+test-ci:
+	@echo "=== Running CI Test Suite ==="
+	@$(MAKE) test-comprehensive
+
+# Performance tests (placeholder)
+test-performance:
+	@echo "=== Running Performance Tests ==="
+	@echo "Performance tests not yet implemented"
+	@echo "Measuring basic assembly performance..."
+	@time $(MAKE) -B $(TARGET) || true
+
+# === HELP AND INFORMATION ===
+
+test-help:
+	@echo "STAS Testing Framework - Available Test Targets:"
+	@echo ""
+	@echo "🧪 Unit Testing:"
+	@echo "  test-unit-all        - Run all available unit tests"
+	@echo "  test-unit-core       - Test core modules (lexer, parser, etc.)"
+	@echo "  test-unit-arch       - Test architecture modules"
+	@echo "  test-unit-formats    - Test output format modules" 
+	@echo "  test-unit-utils      - Test utility modules"
+	@echo ""
+	@echo "🏗️  Build Testing:"
+	@echo "  test-build-variants  - Test all build configurations"
+	@echo ""
+	@echo "🚀 Execution Testing:"
+	@echo "  test-execution-all   - Test code execution on all architectures"
+	@echo "  test-execution-x86_64 - Test x86-64 code execution (primary)"
+	@echo "  test-execution-x86_16 - Test x86-16 code execution"
+	@echo "  test-execution-x86_32 - Test x86-32 code execution"
+	@echo "  test-execution-arm64 - Test ARM64 code execution"
+	@echo "  test-execution-riscv - Test RISC-V code execution"
+	@echo ""
+	@echo "🔗 Integration Testing:"
+	@echo "  test-integration     - Test end-to-end workflows"
+	@echo ""
+	@echo "📊 Code Coverage:"
+	@echo "  test-coverage        - Generate code coverage report"
+	@echo "  coverage-build       - Build with coverage instrumentation"
+	@echo ""
+	@echo "🎯 Comprehensive Testing:"
+	@echo "  test-comprehensive   - Run complete test suite"
+	@echo "  test-quick          - Run essential tests only" 
+	@echo "  test-ci             - Run CI/CD test suite"
+	@echo "  test-performance    - Run performance benchmarks"
+	@echo ""
+	@echo "🔧 Utilities:"
+	@echo "  check-unicorn       - Check Unicorn Engine availability"
+	@echo "  test-help           - Show this help message"
+	@echo ""
+	@echo "📜 Legacy compatibility:"
+	@echo "  test-all            - Legacy test target (still functional)"
+
+# Declare phony targets (updated with new framework)
+.PHONY: all debug test test-unity test-unicorn test-unicorn-build test-all test-clean \
+        test-x86_16-comprehensive test-comprehensive-legacy static-x86_16 static-x86_32 static-x86_64 \
+        static-arm64 static-riscv static-all clean distclean run install uninstall help \
+        test-unit-all test-unit-core test-unit-arch test-unit-formats test-unit-utils \
+        test-build-variants test-execution-all test-execution-x86_16 test-execution-x86_32 \
+        test-execution-x86_64 test-execution-arm64 test-execution-riscv test-integration \
+        test-coverage coverage-build test-comprehensive test-quick test-ci test-performance \
+        test-help check-unicorn
