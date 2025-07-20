@@ -234,7 +234,19 @@ static int srec_add_section(output_context_t *ctx, const char *name,
     // Add new section
     output_section_t *section = &ctx->sections[ctx->section_count];
     section->name = safe_strdup(name);
-    section->data = data;
+    
+    // Make a copy of the data instead of just storing the pointer
+    if (data && size > 0) {
+        section->data = malloc(size);
+        if (!section->data) {
+            free((char*)section->name);
+            return -1;
+        }
+        memcpy(section->data, data, size);
+    } else {
+        section->data = NULL;
+    }
+    
     section->size = size;
     section->virtual_address = address;
     section->file_offset = 0; // Not used in Motorola S-Record
@@ -247,9 +259,10 @@ static int srec_add_section(output_context_t *ctx, const char *name,
 static void srec_cleanup(output_context_t *ctx) {
     if (!ctx) return;
     
-    // Free section names
+    // Free section names and data
     for (size_t i = 0; i < ctx->section_count; i++) {
         free((char*)ctx->sections[i].name);
+        free(ctx->sections[i].data);  // Free the copied data
     }
     
     // Free sections array

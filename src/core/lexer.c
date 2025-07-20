@@ -253,6 +253,12 @@ token_t lexer_next_token(lexer_t *lexer) {
         case '#':
             return lexer_handle_hash(lexer);
             
+        case ';':
+            // Semicolon comment (common in assembly language)
+            lexer_skip_comment(lexer);
+            token.type = TOKEN_COMMENT;
+            break;
+            
         case '%':
             lexer_advance(lexer);
             token.value = lexer_read_identifier(lexer);
@@ -474,6 +480,7 @@ bool is_instruction_token(const char *str) {
         
         // System
         "int", "iret", "hlt", "nop", "syscall", "sysenter", "sysexit",
+        "cli", "sti", "cld", "std", "clc", "stc", "cmc",
         
         // Bit manipulation
         "shl", "shlb", "shlw", "shll", "shlq",

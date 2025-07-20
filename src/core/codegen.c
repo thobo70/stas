@@ -96,9 +96,11 @@ int codegen_generate(codegen_ctx_t *ctx, ast_node_t *ast) {
     if (ctx->code_size > 0) {
         output_format_ops_t *format_ops = get_output_format(ctx->output->format);
         if (format_ops && format_ops->add_section) {
+            // Use the base address, not the current address (which is the end address)
+            uint32_t section_start_address = ctx->output->base_address;
             int result = format_ops->add_section(ctx->output, ctx->current_section, 
                                                ctx->code_buffer, ctx->code_size, 
-                                               ctx->current_address);
+                                               section_start_address);
             if (result != 0) {
                 fprintf(stderr, "Error: Failed to add code section\n");
                 return -1;
@@ -106,7 +108,7 @@ int codegen_generate(codegen_ctx_t *ctx, ast_node_t *ast) {
             
             if (ctx->verbose) {
                 printf("Added section '%s': %zu bytes at 0x%08X\n", 
-                       ctx->current_section, ctx->code_size, ctx->current_address);
+                       ctx->current_section, ctx->code_size, section_start_address);
             }
         }
     }
@@ -220,6 +222,14 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node) {
     if (strcmp(directive, ".bss") == 0 || strcmp(directive, "bss") == 0) {
         ctx->current_section = ".bss";
         return 0;
+    }
+    
+    // Try architecture-specific directive handler
+    if (ctx->arch && ctx->arch->handle_directive) {
+        const char *args = NULL; // TODO: Extract args from AST if needed
+        if (ctx->arch->handle_directive(directive, args) == 0) {
+            return 0; // Successfully handled by architecture
+        }
     }
     
     // Handle other directives as needed

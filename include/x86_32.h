@@ -142,7 +142,9 @@ bool x86_32_validate_operand_combination(const char *mnemonic,
                                        size_t operand_count);
 
 // CPU feature detection
-bool x86_32_supports_feature(x86_32_cpu_level_t min_level);
-void x86_32_set_cpu_level(x86_32_cpu_level_t level);
+bool x86_32_supports_feature(uint8_t min_level);
+void x86_32_set_cpu_level(uint8_t level);
+uint8_t x86_32_get_code_mode(void);
+void x86_32_set_code_mode(uint8_t mode);
 
 #endif // X86_32_H
