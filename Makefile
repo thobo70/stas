@@ -409,9 +409,25 @@ test-phase7-advanced: $(TARGET)
 
 # === EXECUTION TESTING ===
 
-# Execution test compilation
-$(TESTBIN_DIR)/execution_test_%: tests/execution/*/test_%.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling execution test: $@"
+# Execution test compilation - specific rules for each architecture
+$(TESTBIN_DIR)/execution_test_x86_16_basic: tests/execution/x86_16/test_basic.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_16 execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+$(TESTBIN_DIR)/execution_test_x86_32_basic: tests/execution/x86_32/test_basic.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_32 execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+$(TESTBIN_DIR)/execution_test_x86_64_basic: tests/execution/x86_64/test_basic.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_64 execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+$(TESTBIN_DIR)/execution_test_arm64_basic: tests/execution/arm64/test_basic.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling arm64 execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+$(TESTBIN_DIR)/execution_test_riscv_basic: tests/execution/riscv/test_basic.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling riscv execution test: $@"
 	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
 
 # Architecture-specific execution tests
@@ -446,7 +462,7 @@ test-execution-all:
 	@$(MAKE) test-execution-x86_16 test-execution-x86_32 test-execution-x86_64 test-execution-arm64 test-execution-riscv
 
 # Modern test suite
-test-all: test test-unit-all test-build-variants test-integration test-phase7-advanced
+test-all: test test-unit-all test-execution-all test-build-variants test-integration test-phase7-advanced
 
 # === CODE COVERAGE ===
 

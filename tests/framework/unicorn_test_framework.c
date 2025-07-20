@@ -9,9 +9,9 @@ execution_context_t arch_x86_16 = {
     .mode = UC_MODE_16,
     .name = "x86_16",
     .code_addr = 0x1000,
-    .stack_addr = 0x8000,
-    .code_size = 64 * 1024,
-    .stack_size = 64 * 1024
+    .stack_addr = 0x7000,
+    .code_size = 4096,
+    .stack_size = 4096
 };
 
 execution_context_t arch_x86_32 = {
@@ -128,11 +128,10 @@ int execute_and_verify(execution_context_t* ctx, test_case_t* test) {
 }
 
 void setup_initial_state(uc_engine* uc, execution_context_t* ctx) {
-    uint64_t stack_ptr = ctx->stack_addr + ctx->stack_size - 8; // Point to top of stack
-    
     switch (ctx->arch) {
         case UC_ARCH_X86:
             if (ctx->mode == UC_MODE_64) {
+                uint64_t stack_ptr = ctx->stack_addr + ctx->stack_size - 8; 
                 uc_reg_write(uc, UC_X86_REG_RSP, &stack_ptr);
                 // Clear general purpose registers
                 uint64_t zero = 0;
@@ -141,7 +140,7 @@ void setup_initial_state(uc_engine* uc, execution_context_t* ctx) {
                 uc_reg_write(uc, UC_X86_REG_RCX, &zero);
                 uc_reg_write(uc, UC_X86_REG_RDX, &zero);
             } else if (ctx->mode == UC_MODE_32) {
-                uint32_t esp = (uint32_t)stack_ptr;
+                uint32_t esp = (uint32_t)(ctx->stack_addr + ctx->stack_size - 4);
                 uc_reg_write(uc, UC_X86_REG_ESP, &esp);
                 // Clear general purpose registers
                 uint32_t zero = 0;
@@ -150,7 +149,7 @@ void setup_initial_state(uc_engine* uc, execution_context_t* ctx) {
                 uc_reg_write(uc, UC_X86_REG_ECX, &zero);
                 uc_reg_write(uc, UC_X86_REG_EDX, &zero);
             } else { // 16-bit mode
-                uint16_t sp = (uint16_t)(stack_ptr & 0xFFFF);
+                uint16_t sp = (uint16_t)((ctx->stack_addr + ctx->stack_size - 2) & 0xFFFF);
                 uc_reg_write(uc, UC_X86_REG_SP, &sp);
                 // Clear general purpose registers
                 uint16_t zero = 0;
@@ -161,7 +160,8 @@ void setup_initial_state(uc_engine* uc, execution_context_t* ctx) {
             }
             break;
             
-        case UC_ARCH_ARM64:
+        case UC_ARCH_ARM64: {
+            uint64_t stack_ptr = ctx->stack_addr + ctx->stack_size - 8;
             uc_reg_write(uc, UC_ARM64_REG_SP, &stack_ptr);
             // Clear some general purpose registers
             uint64_t zero_val = 0;
@@ -169,8 +169,10 @@ void setup_initial_state(uc_engine* uc, execution_context_t* ctx) {
                 uc_reg_write(uc, i, &zero_val);
             }
             break;
+        }
             
-        case UC_ARCH_RISCV:
+        case UC_ARCH_RISCV: {
+            uint64_t stack_ptr = ctx->stack_addr + ctx->stack_size - 8;
             uc_reg_write(uc, UC_RISCV_REG_SP, &stack_ptr);
             // Clear some general purpose registers
             uint64_t zero_riscv = 0;
@@ -178,6 +180,7 @@ void setup_initial_state(uc_engine* uc, execution_context_t* ctx) {
                 uc_reg_write(uc, i, &zero_riscv);
             }
             break;
+        }
             
         default:
             // Unsupported architectures - no setup needed
@@ -191,7 +194,7 @@ int verify_execution_results(uc_engine* uc, execution_context_t* ctx, test_case_
     // Verify registers
     switch (ctx->arch) {
         case UC_ARCH_X86:
-            result = verify_x86_registers(uc, test);
+            result = verify_x86_registers(uc, ctx, test);
             break;
         case UC_ARCH_ARM64:
             result = verify_arm64_registers(uc, test);
@@ -211,39 +214,78 @@ int verify_execution_results(uc_engine* uc, execution_context_t* ctx, test_case_
     return verify_memory_contents(uc, test);
 }
 
-int verify_x86_registers(uc_engine* uc, test_case_t* test) {
+int verify_x86_registers(uc_engine* uc, execution_context_t* ctx, test_case_t* test) {
     for (int i = 0; i < 16; i++) {
         if (!test->check_regs[i]) continue;
         
-        uint64_t actual_value;
+        uint64_t actual_value = 0;
         uc_err err;
         
-        // Map test register index to Unicorn register constant
-        int uc_reg;
-        switch (i) {
-            case X86_64_RAX: uc_reg = UC_X86_REG_RAX; break;
-            case X86_64_RBX: uc_reg = UC_X86_REG_RBX; break;
-            case X86_64_RCX: uc_reg = UC_X86_REG_RCX; break;
-            case X86_64_RDX: uc_reg = UC_X86_REG_RDX; break;
-            case X86_64_RSI: uc_reg = UC_X86_REG_RSI; break;
-            case X86_64_RDI: uc_reg = UC_X86_REG_RDI; break;
-            case X86_64_RSP: uc_reg = UC_X86_REG_RSP; break;
-            case X86_64_RBP: uc_reg = UC_X86_REG_RBP; break;
-            case X86_64_R8:  uc_reg = UC_X86_REG_R8;  break;
-            case X86_64_R9:  uc_reg = UC_X86_REG_R9;  break;
-            case X86_64_R10: uc_reg = UC_X86_REG_R10; break;
-            case X86_64_R11: uc_reg = UC_X86_REG_R11; break;
-            case X86_64_R12: uc_reg = UC_X86_REG_R12; break;
-            case X86_64_R13: uc_reg = UC_X86_REG_R13; break;
-            case X86_64_R14: uc_reg = UC_X86_REG_R14; break;
-            case X86_64_R15: uc_reg = UC_X86_REG_R15; break;
-            default: continue;
+        // Map test register index to Unicorn register constant based on mode
+        int uc_reg = -1;
+        
+        if (ctx->mode == UC_MODE_64) {
+            // 64-bit mode
+            switch (i) {
+                case X86_64_RAX: uc_reg = UC_X86_REG_RAX; break;
+                case X86_64_RBX: uc_reg = UC_X86_REG_RBX; break;
+                case X86_64_RCX: uc_reg = UC_X86_REG_RCX; break;
+                case X86_64_RDX: uc_reg = UC_X86_REG_RDX; break;
+                case X86_64_RSI: uc_reg = UC_X86_REG_RSI; break;
+                case X86_64_RDI: uc_reg = UC_X86_REG_RDI; break;
+                case X86_64_RSP: uc_reg = UC_X86_REG_RSP; break;
+                case X86_64_RBP: uc_reg = UC_X86_REG_RBP; break;
+                case X86_64_R8:  uc_reg = UC_X86_REG_R8;  break;
+                case X86_64_R9:  uc_reg = UC_X86_REG_R9;  break;
+                case X86_64_R10: uc_reg = UC_X86_REG_R10; break;
+                case X86_64_R11: uc_reg = UC_X86_REG_R11; break;
+                case X86_64_R12: uc_reg = UC_X86_REG_R12; break;
+                case X86_64_R13: uc_reg = UC_X86_REG_R13; break;
+                case X86_64_R14: uc_reg = UC_X86_REG_R14; break;
+                case X86_64_R15: uc_reg = UC_X86_REG_R15; break;
+                default: continue;
+            }
+        } else if (ctx->mode == UC_MODE_32) {
+            // 32-bit mode
+            switch (i) {
+                case X86_32_EAX: uc_reg = UC_X86_REG_EAX; break;
+                case X86_32_EBX: uc_reg = UC_X86_REG_EBX; break;
+                case X86_32_ECX: uc_reg = UC_X86_REG_ECX; break;
+                case X86_32_EDX: uc_reg = UC_X86_REG_EDX; break;
+                case X86_32_ESI: uc_reg = UC_X86_REG_ESI; break;
+                case X86_32_EDI: uc_reg = UC_X86_REG_EDI; break;
+                case X86_32_ESP: uc_reg = UC_X86_REG_ESP; break;
+                case X86_32_EBP: uc_reg = UC_X86_REG_EBP; break;
+                default: continue;
+            }
+        } else {
+            // 16-bit mode
+            switch (i) {
+                case X86_16_AX: uc_reg = UC_X86_REG_AX; break;
+                case X86_16_BX: uc_reg = UC_X86_REG_BX; break;
+                case X86_16_CX: uc_reg = UC_X86_REG_CX; break;
+                case X86_16_DX: uc_reg = UC_X86_REG_DX; break;
+                case X86_16_SI: uc_reg = UC_X86_REG_SI; break;
+                case X86_16_DI: uc_reg = UC_X86_REG_DI; break;
+                case X86_16_SP: uc_reg = UC_X86_REG_SP; break;
+                case X86_16_BP: uc_reg = UC_X86_REG_BP; break;
+                default: continue;
+            }
         }
+        
+        if (uc_reg == -1) continue;
         
         err = uc_reg_read(uc, uc_reg, &actual_value);
         if (err != UC_ERR_OK) {
             printf("Failed to read register %d: %s\n", i, uc_strerror(err));
             return -1;
+        }
+        
+        // For 16-bit and 32-bit modes, mask the value appropriately
+        if (ctx->mode == UC_MODE_16) {
+            actual_value &= 0xFFFF;
+        } else if (ctx->mode == UC_MODE_32) {
+            actual_value &= 0xFFFFFFFF;
         }
         
         if (actual_value != test->expected_regs[i]) {

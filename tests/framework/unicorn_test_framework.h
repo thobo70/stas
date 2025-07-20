@@ -58,7 +58,7 @@ void setup_initial_state(uc_engine* uc, execution_context_t* ctx);
 int verify_execution_results(uc_engine* uc, execution_context_t* ctx, test_case_t* test);
 
 // Architecture-specific register verification
-int verify_x86_registers(uc_engine* uc, test_case_t* test);
+int verify_x86_registers(uc_engine* uc, execution_context_t* ctx, test_case_t* test);
 int verify_arm64_registers(uc_engine* uc, test_case_t* test);
 int verify_riscv_registers(uc_engine* uc, test_case_t* test);
 
