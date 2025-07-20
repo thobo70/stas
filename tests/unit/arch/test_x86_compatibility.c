@@ -221,17 +221,17 @@ void test_register_compatibility_matrix(void)
 
 void test_instruction_compatibility_basic(void)
 {
-    // Test that basic instructions work across all x86 variants
-    const char* basic_instructions[] = {"mov", "add", "sub", "cmp", "nop"};
+    // Test that basic zero-operand instructions work across all x86 variants
+    const char* basic_instructions[] = {"nop", "ret"};
     operand_t operands[2] = {0};
     
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
         instruction_t inst16, inst32, inst64;
         memset(&inst16, 0, sizeof(instruction_t));
         memset(&inst32, 0, sizeof(instruction_t));
         memset(&inst64, 0, sizeof(instruction_t));
         
-        // All should support basic instructions
+        // All should support basic zero-operand instructions
         int result16 = x86_16_ops->parse_instruction(basic_instructions[i], operands, 0, &inst16);
         int result32 = x86_32_ops->parse_instruction(basic_instructions[i], operands, 0, &inst32);
         int result64 = x86_64_ops->parse_instruction(basic_instructions[i], operands, 0, &inst64);

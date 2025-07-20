@@ -210,6 +210,11 @@ int x86_32_parse_register(const char *reg_name, asm_register_t *reg) {
         return -1;
     }
     
+    // Strip % prefix if present
+    if (reg_name[0] == '%') {
+        reg_name++;
+    }
+    
     uint8_t encoding, size;
     if (x86_32_find_register(reg_name, &encoding, &size) == 0) {
         reg->name = x86_32_safe_strdup(reg_name);

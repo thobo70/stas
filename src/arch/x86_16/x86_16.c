@@ -377,6 +377,11 @@ int x86_16_parse_register(const char *reg_name, asm_register_t *reg) {
         return -1;
     }
     
+    // Skip % prefix if present for AT&T syntax compatibility
+    if (reg_name[0] == '%') {
+        reg_name++;
+    }
+    
     // Convert to lowercase for comparison
     char lower_name[16];
     size_t len = strlen(reg_name);
