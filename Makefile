@@ -304,7 +304,7 @@ UNICORN_FRAMEWORK = $(FRAMEWORK_DIR)/unicorn_test_framework.c
 FRAMEWORK_INCLUDES = -I$(FRAMEWORK_DIR) -Itests
 
 # Enhanced test compilation flags
-TEST_CFLAGS_ENHANCED = $(CFLAGS) $(FRAMEWORK_INCLUDES) -DUNITY_INCLUDE_CONFIG_H
+TEST_CFLAGS_ENHANCED = $(CFLAGS) $(INCLUDES) $(FRAMEWORK_INCLUDES) -DUNITY_INCLUDE_CONFIG_H
 EXECUTION_TEST_CFLAGS = $(TEST_CFLAGS_ENHANCED) -DHAVE_UNICORN
 
 # Coverage targets
@@ -362,7 +362,8 @@ test-unit-formats:
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_flat_binary || $(MAKE) $(TESTBIN_DIR)/unit_test_flat_binary || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_intel_hex || $(MAKE) $(TESTBIN_DIR)/unit_test_intel_hex || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_com_format || $(MAKE) $(TESTBIN_DIR)/unit_test_com_format || true
-	@for test in unit_test_elf unit_test_flat_binary unit_test_intel_hex unit_test_com_format; do \
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_motorola_srec || $(MAKE) $(TESTBIN_DIR)/unit_test_motorola_srec || true
+	@for test in unit_test_elf unit_test_flat_binary unit_test_intel_hex unit_test_com_format unit_test_motorola_srec; do \
 		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
 	done
 	@echo "Format unit tests completed"
