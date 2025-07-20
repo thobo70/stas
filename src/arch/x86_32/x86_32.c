@@ -83,14 +83,42 @@ int x86_32_parse_instruction(const char *mnemonic, operand_t *operands,
         return -1;
     }
     
+    // Reject empty mnemonic
+    if (strlen(mnemonic) == 0) {
+        return -1;
+    }
+    
     // Check for x86_64-only instructions that should be rejected
-    const char* x86_64_only[] = {"movq", "addq", "pushq", "popq", "syscall"};
+    const char* x86_64_only[] = {"movq", "addq", "subq", "pushq", "popq", "syscall"};
     size_t x86_64_count = sizeof(x86_64_only) / sizeof(x86_64_only[0]);
     
     for (size_t i = 0; i < x86_64_count; i++) {
         if (strcmp(mnemonic, x86_64_only[i]) == 0) {
             return -1; // Reject x86_64-only instructions
         }
+    }
+    
+    // Define valid x86_32 instructions
+    const char* valid_x86_32[] = {
+        "mov", "movl", "add", "addl", "sub", "subl", "cmp", "cmpl",
+        "push", "pop", "call", "ret", "jmp", "je", "jne", "jl", "jg",
+        "jle", "jge", "jz", "jnz", "and", "andl", "or", "orl", 
+        "xor", "xorl", "inc", "incl", "dec", "decl", "nop", "hlt",
+        "int", "test", "testl"
+    };
+    size_t valid_count = sizeof(valid_x86_32) / sizeof(valid_x86_32[0]);
+    
+    // Check if instruction is in valid list
+    bool is_valid = false;
+    for (size_t i = 0; i < valid_count; i++) {
+        if (strcmp(mnemonic, valid_x86_32[i]) == 0) {
+            is_valid = true;
+            break;
+        }
+    }
+    
+    if (!is_valid) {
+        return -1; // Reject invalid instructions
     }
     
     // Basic instruction setup
