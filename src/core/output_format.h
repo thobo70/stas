@@ -12,7 +12,8 @@ typedef enum {
     FORMAT_FLAT_BIN,  // Flat binary (no headers, direct execution)
     FORMAT_COM,       // DOS .COM format (16-bit flat binary with ORG 0x100)
     FORMAT_HEX,       // Intel HEX format
-    FORMAT_SREC       // Motorola S-record format
+    FORMAT_SREC,      // Motorola S-record format
+    FORMAT_SMOF       // STIX Minimal Object Format
 } output_format_t;
 
 // Section information for output
@@ -59,5 +60,6 @@ output_format_ops_t *get_elf32_format(void);
 output_format_ops_t *get_elf64_format(void);
 output_format_ops_t *get_intel_hex_format(void);
 output_format_ops_t *get_motorola_srec_format(void);
+output_format_ops_t *get_smof_format(void);
 
 #endif // OUTPUT_FORMAT_H

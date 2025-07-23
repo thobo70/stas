@@ -9,6 +9,7 @@
 #include "formats/com_format.h"
 #include "formats/intel_hex.h"
 #include "formats/motorola_srec.h"
+#include "formats/smof.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -38,6 +39,8 @@ output_format_ops_t *get_output_format(output_format_t format) {
             return get_intel_hex_format();
         case FORMAT_SREC:
             return get_motorola_srec_format();
+        case FORMAT_SMOF:
+            return get_smof_format();
         default:
             return NULL; // Unknown format
     }

@@ -311,6 +311,16 @@ Since STAS has achieved complete Phase 7 implementation with all Advanced Langua
 - [ ] **RISC-V Extensions**: M (multiplication), A (atomic), F/D (floating point)
 - [ ] **Embedded Architectures**: 8051, PIC, AVR microcontroller support
 
+**Note on Embedded Architecture Testing**: Unicorn Engine does not support 8051, PIC, or AVR microcontrollers. These architectures would require alternative testing strategies:
+
+1. **Custom Simulators**: Develop lightweight instruction simulators for basic validation
+2. **Hardware-in-the-Loop Testing**: Use actual microcontroller development boards
+3. **Third-party Emulators**: Integrate with specialized embedded simulators (e.g., SimulAVR for AVR)
+4. **Unit Testing**: Focus on instruction encoding validation rather than execution testing
+5. **Cross-Reference Testing**: Compare generated machine code against official assemblers
+
+Unicorn Engine currently supports: x86 (16/32/64-bit), ARM (32/64-bit), MIPS, PowerPC, SPARC, and M68K. The PowerPC support includes some embedded variants (MPC5xx/8xx microcontrollers), which could serve as a reference for implementing embedded architecture testing frameworks.
+
 #### Phase 10: Advanced Output Features
 - [ ] **Debug Information**: DWARF debug info generation for ELF files
 - [ ] **Relocation Optimization**: More efficient relocation handling

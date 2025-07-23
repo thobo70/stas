@@ -63,7 +63,7 @@ void print_usage(const char *program_name) {
     printf("Options:\n");
 #ifdef STATIC_BUILD
     printf("  -o, --output=FILE    Output file\n");
-    printf("  -f, --format=FORMAT  Output format (bin, com, elf32, elf64, hex, srec)\n");
+    printf("  -f, --format=FORMAT  Output format (bin, com, elf32, elf64, hex, srec, smof)\n");
     printf("  -b, --base=ADDR      Base address for binary output (hex)\n");
     printf("  -v, --verbose        Verbose output\n");
     printf("  -d, --debug          Debug mode\n");
@@ -73,7 +73,7 @@ void print_usage(const char *program_name) {
 #else
     printf("  -a, --arch=ARCH      Target architecture (x86_16, x86_32, x86_64, arm64, riscv)\n");
     printf("  -o, --output=FILE    Output file\n");
-    printf("  -f, --format=FORMAT  Output format (bin, com, elf32, elf64, hex, srec)\n");
+    printf("  -f, --format=FORMAT  Output format (bin, com, elf32, elf64, hex, srec, smof)\n");
     printf("  -b, --base=ADDR      Base address for binary output (hex)\n");
     printf("  -v, --verbose        Verbose output\n");
     printf("  -d, --debug          Debug mode\n");
@@ -92,6 +92,7 @@ void print_usage(const char *program_name) {
     printf("  elf64                ELF 64-bit object file\n");
     printf("  hex                  Intel HEX format\n");
     printf("  srec                 Motorola S-Record format\n");
+    printf("  smof                 STIX Minimal Object Format\n");
 #endif
 }
 
@@ -440,6 +441,8 @@ int main(int argc, char *argv[]) {
                     config.output_format = FORMAT_HEX;
                 } else if (strcmp(optarg, "srec") == 0) {
                     config.output_format = FORMAT_SREC;
+                } else if (strcmp(optarg, "smof") == 0) {
+                    config.output_format = FORMAT_SMOF;
                 } else {
                     fprintf(stderr, "Error: Unknown output format '%s'\n", optarg);
                     return EXIT_FAILURE;
