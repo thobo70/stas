@@ -138,6 +138,8 @@ int smof_add_relocation(smof_context_t *ctx, uint32_t offset, uint16_t symbol_in
                         uint8_t type, uint8_t section_index);
 int smof_add_import(smof_context_t *ctx, const char *library, const char *symbol);
 int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose);
+int smof_write_file_with_data(smof_context_t *ctx, const char *filename, bool verbose,
+                             output_section_t *sections, size_t section_count);
 
 // Validation functions
 int smof_validate_header(const smof_header_t *header);

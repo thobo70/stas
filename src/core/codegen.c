@@ -15,6 +15,7 @@
 static int codegen_process_instruction(codegen_ctx_t *ctx, ast_node_t *inst_node);
 static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node);
 static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node);
+static int flush_current_section(codegen_ctx_t *ctx);
 
 codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output) {
     if (!arch || !output) {
@@ -31,6 +32,7 @@ codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output) {
     ctx->current_address = output->base_address;
     ctx->current_section = ".text";
     ctx->verbose = output->verbose;
+    ctx->total_code_size = 0; // Track total bytes generated
     
     // Initialize code buffer
     ctx->code_capacity = 1024;
@@ -93,29 +95,13 @@ int codegen_generate(codegen_ctx_t *ctx, ast_node_t *ast) {
         current = current->next;
     }
     
-    // Add generated code to output format
-    if (ctx->code_size > 0) {
-        output_format_ops_t *format_ops = get_output_format(ctx->output->format);
-        if (format_ops && format_ops->add_section) {
-            // Use the base address, not the current address (which is the end address)
-            uint32_t section_start_address = ctx->output->base_address;
-            int result = format_ops->add_section(ctx->output, ctx->current_section, 
-                                               ctx->code_buffer, ctx->code_size, 
-                                               section_start_address);
-            if (result != 0) {
-                fprintf(stderr, "Error: Failed to add code section\n");
-                return -1;
-            }
-            
-            if (ctx->verbose) {
-                printf("Added section '%s': %zu bytes at 0x%08X\n", 
-                       ctx->current_section, ctx->code_size, section_start_address);
-            }
-        }
+    // Flush the final section
+    if (flush_current_section(ctx) != 0) {
+        return -1;
     }
     
     if (ctx->verbose) {
-        printf("Code generation complete: %zu bytes generated\n", ctx->code_size);
+        printf("Code generation complete: %zu bytes generated\n", ctx->total_code_size);
     }
     
     return 0;
@@ -209,6 +195,37 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node) {
         printf("Processing directive: %s\n", directive);
     }
     
+    // Handle .section directive with argument
+    if (strcmp(directive, ".section") == 0 || strcmp(directive, "section") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            const char *section_name = ast_dir->args[0];
+            const char *new_section;
+            
+            if (strcmp(section_name, ".text") == 0 || strcmp(section_name, "text") == 0) {
+                new_section = ".text";
+            } else if (strcmp(section_name, ".data") == 0 || strcmp(section_name, "data") == 0) {
+                new_section = ".data";
+            } else if (strcmp(section_name, ".bss") == 0 || strcmp(section_name, "bss") == 0) {
+                new_section = ".bss";
+            } else {
+                new_section = section_name; // Use as-is for custom sections
+            }
+            
+            // Flush current section if switching to a different one
+            if (strcmp(ctx->current_section, new_section) != 0) {
+                if (flush_current_section(ctx) != 0) {
+                    return -1;
+                }
+                ctx->current_section = new_section;
+            }
+            
+            if (ctx->verbose) {
+                printf("Switched to section: %s\n", ctx->current_section);
+            }
+            return 0;
+        }
+    }
+    
     // Handle section directives
     if (strcmp(directive, ".text") == 0 || strcmp(directive, "text") == 0) {
         ctx->current_section = ".text";
@@ -223,6 +240,86 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node) {
     if (strcmp(directive, ".bss") == 0 || strcmp(directive, "bss") == 0) {
         ctx->current_section = ".bss";
         return 0;
+    }
+    
+    // Handle data directives
+    if (strcmp(directive, ".ascii") == 0 || strcmp(directive, "ascii") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            const char *str = ast_dir->args[0];
+            size_t str_len = strlen(str);
+            
+            // Remove quotes if present
+            if (str_len >= 2 && str[0] == '"' && str[str_len-1] == '"') {
+                str++; // Skip opening quote
+                str_len -= 2; // Remove both quotes
+            }
+            
+            // Ensure we have enough buffer space
+            size_t needed_space = ctx->code_size + str_len;
+            if (needed_space > ctx->code_capacity) {
+                size_t new_capacity = ctx->code_capacity * 2;
+                while (new_capacity < needed_space) {
+                    new_capacity *= 2;
+                }
+                
+                uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                if (!new_buffer) {
+                    return -1;
+                }
+                
+                ctx->code_buffer = new_buffer;
+                ctx->code_capacity = new_capacity;
+            }
+            
+            // Copy string data to buffer (without null terminator)
+            memcpy(ctx->code_buffer + ctx->code_size, str, str_len);
+            ctx->code_size += str_len;
+            ctx->current_address += str_len;
+            
+            if (ctx->verbose) {
+                printf("Added .ascii data: %zu bytes\n", str_len);
+            }
+            
+            return 0;
+        }
+    }
+    
+    if (strcmp(directive, ".space") == 0 || strcmp(directive, "space") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Parse the space size argument
+            const char *size_str = ast_dir->args[0];
+            size_t space_size = (size_t)strtoul(size_str, NULL, 10);
+            
+            if (space_size > 0) {
+                // Ensure we have enough buffer space
+                size_t needed_space = ctx->code_size + space_size;
+                if (needed_space > ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    while (new_capacity < needed_space) {
+                        new_capacity *= 2;
+                    }
+                    
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Fill space with zeros
+                memset(ctx->code_buffer + ctx->code_size, 0, space_size);
+                ctx->code_size += space_size;
+                ctx->current_address += space_size;
+                
+                if (ctx->verbose) {
+                    printf("Added .space: %zu bytes\n", space_size);
+                }
+                
+                return 0;
+            }
+        }
     }
     
     // Try architecture-specific directive handler
@@ -267,6 +364,9 @@ static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node) {
         // Check if this is a function (in .text section)
         if (strcmp(ctx->current_section, ".text") == 0) {
             symbol_type = SMOF_SYM_FUNC;
+        } else if (strcmp(ctx->current_section, ".data") == 0 || 
+                   strcmp(ctx->current_section, ".bss") == 0) {
+            symbol_type = SMOF_SYM_OBJECT;
         }
         
         // TODO: Check for .global directive to set SMOF_BIND_GLOBAL
@@ -290,4 +390,37 @@ static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node) {
     }
     
     return 0;
+}
+
+static int flush_current_section(codegen_ctx_t *ctx) {
+    if (!ctx || ctx->code_size == 0) {
+        return 0; // Nothing to flush
+    }
+    
+    output_format_ops_t *format_ops = get_output_format(ctx->output->format);
+    if (format_ops && format_ops->add_section) {
+        // Calculate section start address (current_address - code_size)
+        uint32_t section_start_address = ctx->current_address - ctx->code_size;
+        
+        int result = format_ops->add_section(ctx->output, ctx->current_section, 
+                                           ctx->code_buffer, ctx->code_size, 
+                                           section_start_address);
+        if (result != 0) {
+            fprintf(stderr, "Error: Failed to add section '%s'\n", ctx->current_section);
+            return -1;
+        }
+        
+        if (ctx->verbose) {
+            printf("Flushed section '%s': %zu bytes at 0x%08X\n", 
+                   ctx->current_section, ctx->code_size, section_start_address);
+        }
+        
+        // Track total size and reset code buffer for next section
+        ctx->total_code_size += ctx->code_size;
+        ctx->code_size = 0;
+        
+        return 0;
+    }
+    
+    return -1;
 }

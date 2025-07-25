@@ -259,6 +259,11 @@ int smof_add_symbol(smof_context_t *ctx, const char *name, uint32_t value,
 //=============================================================================
 
 int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
+    return smof_write_file_with_data(ctx, filename, verbose, NULL, 0);
+}
+
+int smof_write_file_with_data(smof_context_t *ctx, const char *filename, bool verbose,
+                             output_section_t *sections, size_t section_count) {
     if (!ctx || !filename) return -1;
     
     FILE *file = fopen(filename, "wb");
@@ -291,6 +296,17 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
     if (ctx->header.reloc_count > 0) {
         ctx->header.reloc_table_offset = current_offset;
         current_offset += ctx->header.reloc_count * sizeof(smof_relocation_t);
+    }
+    
+    // Calculate section data offsets and update section headers
+    if (sections && section_count > 0) {
+        uint32_t section_data_offset = current_offset;
+        for (size_t i = 0; i < section_count && i < ctx->header.section_count; i++) {
+            if (sections[i].size > 0) {
+                ctx->sections[i].file_offset = section_data_offset;
+                section_data_offset += sections[i].size;
+            }
+        }
     }
     
     // Write header (no checksum calculation for STAS format)
@@ -347,6 +363,27 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
             }
             fclose(file);
             return -1;
+        }
+    }
+    
+    // Write section data
+    if (sections && section_count > 0) {
+        for (size_t i = 0; i < section_count && i < ctx->header.section_count; i++) {
+            if (sections[i].size > 0 && sections[i].data) {
+                if (fwrite(sections[i].data, 1, sections[i].size, file) != sections[i].size) {
+                    if (verbose) {
+                        fprintf(stderr, "Error: Failed to write section data for %s\n", 
+                               sections[i].name);
+                    }
+                    fclose(file);
+                    return -1;
+                }
+                
+                if (verbose) {
+                    printf("Wrote section '%s' data: %zu bytes at offset 0x%08X\n",
+                           sections[i].name, sections[i].size, ctx->sections[i].file_offset);
+                }
+            }
         }
     }
     
@@ -424,8 +461,23 @@ static int smof_write_file_impl(output_context_t *ctx) {
         }
     }
     
-    // Write the file
-    int result = smof_write_file(&smof_ctx, ctx->filename, ctx->verbose);
+    // Calculate section data offsets before writing
+    uint32_t section_data_offset = sizeof(smof_header_t) + 
+                                   smof_ctx.header.section_count * sizeof(smof_section_t) +
+                                   smof_ctx.header.symbol_count * sizeof(smof_symbol_t) +
+                                   smof_ctx.header.string_table_size +
+                                   smof_ctx.header.reloc_count * sizeof(smof_relocation_t);
+    
+    for (size_t i = 0; i < ctx->section_count; i++) {
+        if (ctx->sections[i].size > 0) {
+            smof_ctx.sections[i].file_offset = section_data_offset;
+            section_data_offset += ctx->sections[i].size;
+        }
+    }
+    
+    // Write the file with section data
+    int result = smof_write_file_with_data(&smof_ctx, ctx->filename, ctx->verbose, 
+                                          ctx->sections, ctx->section_count);
     
     smof_cleanup_context(&smof_ctx);
     return result;
@@ -433,14 +485,45 @@ static int smof_write_file_impl(output_context_t *ctx) {
 
 static int smof_add_section_impl(output_context_t *ctx, const char *name, 
                                 uint8_t *data, size_t size, uint32_t address) {
-    // This is called during section accumulation
-    // The actual SMOF writing happens in smof_write_file_impl
-    (void)ctx;     // Unused parameter
-    (void)name;    // Unused parameter  
-    (void)data;    // Unused parameter
-    (void)size;    // Unused parameter
-    (void)address; // Unused parameter
-    return 0; // Success
+    if (!ctx || !name || !data) {
+        return -1;
+    }
+    
+    // Expand sections array if needed
+    size_t new_count = ctx->section_count + 1;
+    output_section_t *new_sections = realloc(ctx->sections, new_count * sizeof(output_section_t));
+    if (!new_sections) {
+        return -1;
+    }
+    
+    ctx->sections = new_sections;
+    
+    // Allocate memory for section name (will be freed in cleanup)
+    char *section_name = malloc(strlen(name) + 1);
+    if (!section_name) {
+        return -1;
+    }
+    strcpy(section_name, name);
+    
+    // Allocate memory for section data (will be freed in cleanup)
+    uint8_t *section_data = malloc(size);
+    if (!section_data) {
+        free(section_name);
+        return -1;
+    }
+    memcpy(section_data, data, size);
+    
+    // Store section
+    output_section_t *section = &ctx->sections[ctx->section_count];
+    section->name = section_name;
+    section->data = section_data;
+    section->size = size;
+    section->virtual_address = address;
+    section->file_offset = 0; // Will be calculated during writing
+    section->flags = 0; // Will be set based on section type
+    
+    ctx->section_count++;
+    return 0;
 }
 
 static int smof_add_symbol_impl(output_context_t *ctx, const char *name, uint32_t value,
@@ -479,6 +562,23 @@ static int smof_add_symbol_impl(output_context_t *ctx, const char *name, uint32_
 
 static void smof_cleanup_impl(output_context_t *ctx) {
     if (!ctx) return;
+    
+    // Free section names and data that were allocated
+    for (size_t i = 0; i < ctx->section_count; i++) {
+        if (ctx->sections[i].name) {
+            free((void*)ctx->sections[i].name);
+        }
+        if (ctx->sections[i].data) {
+            free(ctx->sections[i].data);
+        }
+    }
+    
+    // Free sections array
+    if (ctx->sections) {
+        free(ctx->sections);
+        ctx->sections = NULL;
+        ctx->section_count = 0;
+    }
     
     // Free symbol names that were allocated
     for (size_t i = 0; i < ctx->symbol_count; i++) {

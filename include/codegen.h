@@ -16,6 +16,7 @@ typedef struct {
     uint8_t *code_buffer;           // Generated machine code
     size_t code_size;               // Current size of generated code
     size_t code_capacity;           // Capacity of code buffer
+    size_t total_code_size;         // Total bytes generated across all sections
     
     uint32_t current_address;       // Current address for code generation
     const char *current_section;    // Current section name
