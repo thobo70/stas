@@ -9,8 +9,33 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <stddef.h>
 #include "formats/smof.h"
 #include "../core/output_format.h"
+
+// Checksum calculation function (matches STLD implementation)
+uint32_t smof_calculate_checksum(const smof_header_t* header) {
+    uint32_t checksum = 0;
+    const uint8_t* data = (const uint8_t*)header;
+    size_t checksum_offset = offsetof(smof_header_t, checksum);
+    size_t i;
+    
+    if (header == NULL) {
+        return 0;
+    }
+    
+    // Sum bytes before checksum field
+    for (i = 0; i < checksum_offset; i++) {
+        checksum += data[i];
+    }
+    
+    // Sum bytes after checksum field
+    for (i = checksum_offset + sizeof(uint32_t); i < sizeof(smof_header_t); i++) {
+        checksum += data[i];
+    }
+    
+    return checksum;
+}
 
 // Forward declarations for format operations
 static int smof_write_file_impl(output_context_t *ctx);
@@ -46,7 +71,7 @@ uint32_t smof_add_string(smof_context_t *ctx, const char *str) {
         const char *current = ctx->string_table + 1; // Skip null string at offset 0
         uint32_t offset = 1;
         
-        while (offset < ctx->header.string_table_size) {
+        while (offset < ctx->string_table_size) {
             if (strcmp(current, str) == 0) {
                 return offset;
             }
@@ -58,7 +83,7 @@ uint32_t smof_add_string(smof_context_t *ctx, const char *str) {
     
     // Add new string
     size_t len = strlen(str) + 1; // Include null terminator
-    size_t needed = ctx->header.string_table_size + len;
+    size_t needed = ctx->string_table_size + len;
     
     if (needed > ctx->string_table_capacity) {
         size_t new_capacity = ctx->string_table_capacity == 0 ? 256 : ctx->string_table_capacity * 2;
@@ -76,14 +101,14 @@ uint32_t smof_add_string(smof_context_t *ctx, const char *str) {
     }
     
     // Initialize string table with null string if empty
-    if (ctx->header.string_table_size == 0) {
+    if (ctx->string_table_size == 0) {
         ctx->string_table[0] = '\0';
-        ctx->header.string_table_size = 1;
+        ctx->string_table_size = 1;
     }
     
-    uint32_t offset = ctx->header.string_table_size;
+    uint32_t offset = ctx->string_table_size;
     strcpy(ctx->string_table + offset, str);
-    ctx->header.string_table_size += len;
+    ctx->string_table_size += len;
     
     return offset;
 }
@@ -95,11 +120,24 @@ uint32_t smof_add_string(smof_context_t *ctx, const char *str) {
 int smof_init_context(smof_context_t *ctx) {
     memset(ctx, 0, sizeof(smof_context_t));
     
+    // Detect endianness
+    uint16_t endian_test = 0x0001;
+    bool is_little_endian = (*(uint8_t*)&endian_test) == 0x01;
+    
     // Initialize header
     ctx->header.magic = SMOF_MAGIC;
     ctx->header.version = SMOF_VERSION_CURRENT;
     ctx->header.flags = SMOF_FLAG_EXECUTABLE;
+    
+    // Add endianness flag for STLD compatibility
+    if (is_little_endian) {
+        ctx->header.flags |= SMOF_FLAG_LITTLE_ENDIAN;
+    } else {
+        ctx->header.flags |= SMOF_FLAG_BIG_ENDIAN;
+    }
+    
     ctx->header.entry_point = 0;
+    ctx->header.checksum = 0; // Will be calculated later
     
     // Initialize string table with null string at offset 0
     ctx->string_table_capacity = 256;
@@ -108,7 +146,7 @@ int smof_init_context(smof_context_t *ctx) {
         return -1;
     }
     ctx->string_table[0] = '\0';
-    ctx->header.string_table_size = 1;
+    ctx->string_table_size = 1;
     
     return 0;
 }
@@ -225,17 +263,18 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
     
     // String table offset
     ctx->header.string_table_offset = current_offset;
-    current_offset += ctx->header.string_table_size;
+    current_offset += ctx->string_table_size;
     
     // Relocation table offset (if any)
-    if (ctx->header.reloc_count > 0) {
-        ctx->header.reloc_table_offset = current_offset;
-        current_offset += ctx->header.reloc_count * sizeof(smof_relocation_t);
-    } else {
-        ctx->header.reloc_table_offset = 0;
+    if (ctx->reloc_count > 0) {
+        uint32_t reloc_table_offset __attribute__((unused)) = current_offset;
+        current_offset += ctx->reloc_count * sizeof(smof_relocation_t);
     }
     
     // Write header
+    // Calculate and set header checksum before writing
+    ctx->header.checksum = smof_calculate_checksum(&ctx->header);
+    
     if (fwrite(&ctx->header, sizeof(smof_header_t), 1, file) != 1) {
         if (verbose) {
             fprintf(stderr, "Error: Failed to write SMOF header\n");
@@ -257,9 +296,9 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
     }
     
     // Write string table
-    if (ctx->header.string_table_size > 0) {
-        if (fwrite(ctx->string_table, 1, ctx->header.string_table_size, file) != 
-           ctx->header.string_table_size) {
+    if (ctx->string_table_size > 0) {
+        if (fwrite(ctx->string_table, 1, ctx->string_table_size, file) != 
+           ctx->string_table_size) {
             if (verbose) {
                 fprintf(stderr, "Error: Failed to write SMOF string table\n");
             }
@@ -269,9 +308,9 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
     }
     
     // Write relocation table (if any)
-    if (ctx->header.reloc_count > 0 && ctx->relocations) {
-        if (fwrite(ctx->relocations, sizeof(smof_relocation_t), 
-                  ctx->header.reloc_count, file) != ctx->header.reloc_count) {
+    if (ctx->reloc_count > 0 && ctx->relocations) {
+        if (fwrite(ctx->relocations, sizeof(smof_relocation_t),
+                  ctx->reloc_count, file) != ctx->reloc_count) {
             if (verbose) {
                 fprintf(stderr, "Error: Failed to write SMOF relocation table\n");
             }
@@ -285,7 +324,7 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
         printf("  Header size: %zu bytes\n", sizeof(smof_header_t));
         printf("  Sections: %u\n", ctx->header.section_count);
         printf("  Symbols: %u\n", ctx->header.symbol_count);
-        printf("  String table size: %u bytes\n", ctx->header.string_table_size);
+        printf("  String table size: %zu bytes\n", ctx->string_table_size);
         printf("  Total file size: %ld bytes\n", ftell(file));
     }
     
@@ -380,7 +419,8 @@ int smof_validate_header(const smof_header_t *header) {
     // Sanity checks
     if (header->section_count > 256) return 0; // Reasonable limit
     if (header->symbol_count > 32767) return 0; // uint16_t reasonable limit
-    if (header->string_table_size > 1048576) return 0; // 1MB limit
+    // Remove obsolete field validation
+    // if (header->string_table_size > 1048576) return 0; // 1MB limit
     
     // Offset validation
     if (header->section_table_offset < sizeof(smof_header_t)) return 0;
