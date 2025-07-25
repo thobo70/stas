@@ -70,7 +70,7 @@ test*.s
 demo*.s
 build_*.log
 assembly_*.log
-*_test.log
+*.log
 
 # IDE files
 .vscode/
