@@ -6,7 +6,7 @@
 #include "../src/core/output_format.h"
 
 // SMOF Magic number: 'SMOF' in little-endian
-#define SMOF_MAGIC 0x464F4D53
+#define SMOF_MAGIC 0x534D4F46U
 
 // SMOF Version
 #define SMOF_VERSION_CURRENT 1
@@ -57,21 +57,23 @@
 #define SMOF_RELOC_GOT        6  // Global Offset Table
 #define SMOF_RELOC_PLT        7  // Procedure Linkage Table
 
-// SMOF Header structure (32 bytes) - Must match STLD specification exactly
+// STAS Original SMOF Header structure (36 bytes) - Memory-optimized for embedded
 typedef struct {
     uint32_t magic;              // 0x534D4F46 ('SMOF')
     uint16_t version;            // Format version (current: 1)
-    uint16_t flags;              // File flags  
+    uint16_t flags;              // File flags
     uint32_t entry_point;        // Virtual address of entry point
     uint16_t section_count;      // Number of sections
     uint16_t symbol_count;       // Number of symbols
+    uint32_t string_table_offset; // Offset to string table
+    uint32_t string_table_size;   // Size of string table
     uint32_t section_table_offset; // Offset to section table
-    uint32_t symbol_table_offset;  // Offset to symbol table
-    uint32_t string_table_offset;  // Offset to string table
-    uint32_t checksum;           // Header checksum (for STLD compatibility)
+    uint32_t reloc_table_offset;   // Offset to relocation table
+    uint16_t reloc_count;        // Number of relocations
+    uint16_t import_count;       // Number of imports
 } __attribute__((packed)) smof_header_t;
 
-// Section Table Entry (12 bytes)
+// Section Table Entry (20 bytes) - Optimized for embedded systems
 typedef struct {
     uint32_t name_offset;        // Offset into string table
     uint32_t virtual_addr;       // Virtual address when loaded
@@ -82,7 +84,7 @@ typedef struct {
     uint8_t  reserved;           // Reserved for future use
 } __attribute__((packed)) smof_section_t;
 
-// Symbol Table Entry (16 bytes)
+// Symbol Table Entry (16 bytes) - Compatible but optimized
 typedef struct {
     uint32_t name_offset;        // Offset into string table
     uint32_t value;              // Symbol value/address
@@ -92,7 +94,7 @@ typedef struct {
     uint8_t  binding;            // Symbol binding
 } __attribute__((packed)) smof_symbol_t;
 
-// Relocation Entry (8 bytes)
+// Relocation Entry (8 bytes) - Simplified for embedded
 typedef struct {
     uint32_t offset;             // Offset within section
     uint16_t symbol_index;       // Index into symbol table
@@ -100,7 +102,7 @@ typedef struct {
     uint8_t  section_index;      // Section to relocate
 } __attribute__((packed)) smof_relocation_t;
 
-// Import Table Entry (8 bytes)
+// Import Table Entry (8 bytes) - For dynamic linking support
 typedef struct {
     uint32_t name_offset;        // Library name offset
     uint32_t symbol_offset;      // Symbol name offset
@@ -115,27 +117,26 @@ typedef struct {
     smof_import_t *imports;
     char *string_table;
     size_t string_table_capacity;
-    size_t string_table_size;     // Track string table size separately
     size_t sections_capacity;
     size_t symbols_capacity;
     size_t relocations_capacity;
     size_t imports_capacity;
-    uint16_t reloc_count;         // Track relocation count separately
-    uint16_t import_count;        // Track import count separately
 } smof_context_t;
 
 // Function declarations
 output_format_ops_t *get_smof_format(void);
 
-// SMOF-specific functions
+// SMOF-specific functions - Original STAS interface
 int smof_init_context(smof_context_t *ctx);
 void smof_cleanup_context(smof_context_t *ctx);
 uint32_t smof_add_string(smof_context_t *ctx, const char *str);
-uint32_t smof_calculate_checksum(const smof_header_t *header);
 int smof_add_section(smof_context_t *ctx, const char *name, uint32_t virtual_addr,
                      uint32_t size, uint32_t file_offset, uint16_t flags, uint8_t alignment);
 int smof_add_symbol(smof_context_t *ctx, const char *name, uint32_t value,
                     uint32_t size, uint16_t section_index, uint8_t type, uint8_t binding);
+int smof_add_relocation(smof_context_t *ctx, uint32_t offset, uint16_t symbol_index, 
+                        uint8_t type, uint8_t section_index);
+int smof_add_import(smof_context_t *ctx, const char *library, const char *symbol);
 int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose);
 
 // Validation functions
