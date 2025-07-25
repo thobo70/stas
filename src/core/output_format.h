@@ -26,12 +26,23 @@ typedef struct {
     uint32_t flags;
 } output_section_t;
 
+// Symbol information for output
+typedef struct {
+    const char *name;
+    uint32_t value;
+    uint32_t size;
+    uint8_t type;
+    uint8_t binding;
+} output_symbol_t;
+
 // Output context
 typedef struct {
     output_format_t format;
     const char *filename;
     output_section_t *sections;
     size_t section_count;
+    output_symbol_t *symbols;
+    size_t symbol_count;
     uint32_t entry_point;
     uint32_t base_address;
     bool verbose;
@@ -44,6 +55,8 @@ typedef struct {
     int (*write_file)(output_context_t *ctx);
     int (*add_section)(output_context_t *ctx, const char *name, 
                       uint8_t *data, size_t size, uint32_t address);
+    int (*add_symbol)(output_context_t *ctx, const char *name, uint32_t value,
+                     uint32_t size, uint8_t type, uint8_t binding);
     void (*cleanup)(output_context_t *ctx);
 } output_format_ops_t;
 

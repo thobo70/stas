@@ -317,6 +317,8 @@ int assemble_file(const config_t *config) {
         .filename = config->output_file,
         .sections = NULL,
         .section_count = 0,
+        .symbols = NULL,
+        .symbol_count = 0,
         .entry_point = 0,
         .base_address = config->base_address,
         .verbose = config->verbose

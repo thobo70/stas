@@ -6,6 +6,7 @@
 #include "codegen.h"
 #include "parser.h"
 #include "output_format.h"
+#include "formats/smof.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -256,8 +257,37 @@ static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node) {
         printf("Label '%s' at address 0x%08X\n", label, ctx->current_address);
     }
     
-    // Labels don't generate code, they just mark positions
-    // In a full implementation, we'd update the symbol table here
+    // Add symbol to SMOF output format
+    output_format_ops_t *format_ops = get_output_format(ctx->output->format);
+    if (format_ops && format_ops->add_symbol) {
+        // Determine symbol type and binding
+        uint8_t symbol_type = SMOF_SYM_OBJECT;  // Default to data object
+        uint8_t symbol_binding = SMOF_BIND_LOCAL;  // Default to local
+        
+        // Check if this is a function (in .text section)
+        if (strcmp(ctx->current_section, ".text") == 0) {
+            symbol_type = SMOF_SYM_FUNC;
+        }
+        
+        // TODO: Check for .global directive to set SMOF_BIND_GLOBAL
+        // For now, assume _start is global
+        if (strcmp(label, "_start") == 0) {
+            symbol_binding = SMOF_BIND_GLOBAL;
+        }
+        
+        // Add symbol to output format
+        int result = format_ops->add_symbol(ctx->output, label, ctx->current_address, 
+                                          0, /* size - unknown for now */
+                                          symbol_type, symbol_binding);
+        if (result != 0) {
+            if (ctx->verbose) {
+                printf("Warning: Failed to add symbol '%s'\n", label);
+            }
+        } else if (ctx->verbose) {
+            printf("Added symbol '%s': address=0x%08X, type=%d, binding=%d\n", 
+                   label, ctx->current_address, symbol_type, symbol_binding);
+        }
+    }
     
     return 0;
 }

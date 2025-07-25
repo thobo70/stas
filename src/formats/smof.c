@@ -15,13 +15,33 @@
 
 // STAS Original SMOF implementation - no checksums
 static size_t get_string_table_size(smof_context_t *ctx) {
-    return strlen(ctx->string_table) + 1;
+    if (!ctx->string_table) {
+        return 1; // Just null terminator
+    }
+    
+    // Calculate actual string table size by scanning for the end
+    size_t current_size = 1; // Start with null string at offset 0
+    
+    // Find actual current size by scanning the string table
+    for (size_t i = 1; i < ctx->string_table_capacity; i++) {
+        if (ctx->string_table[i] == '\0') {
+            current_size = i + 1;
+            // Check if this is the end (double null or end of capacity)
+            if (i + 1 >= ctx->string_table_capacity || ctx->string_table[i + 1] == '\0') {
+                break; // Found the end
+            }
+        }
+    }
+    
+    return current_size;
 }
 
 // Forward declarations for format operations
 static int smof_write_file_impl(output_context_t *ctx);
 static int smof_add_section_impl(output_context_t *ctx, const char *name, 
                                 uint8_t *data, size_t size, uint32_t address);
+static int smof_add_symbol_impl(output_context_t *ctx, const char *name, uint32_t value,
+                               uint32_t size, uint8_t type, uint8_t binding);
 static void smof_cleanup_impl(output_context_t *ctx);
 
 // Format operation structure
@@ -30,6 +50,7 @@ static output_format_ops_t smof_ops = {
     .extension = ".smof",
     .write_file = smof_write_file_impl,
     .add_section = smof_add_section_impl,
+    .add_symbol = smof_add_symbol_impl,
     .cleanup = smof_cleanup_impl
 };
 
@@ -256,6 +277,11 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
     ctx->header.section_table_offset = current_offset;
     current_offset += ctx->header.section_count * sizeof(smof_section_t);
     
+    // Symbol table comes right after sections (no separate offset field)
+    if (ctx->header.symbol_count > 0) {
+        current_offset += ctx->header.symbol_count * sizeof(smof_symbol_t);
+    }
+    
     // String table offset
     ctx->header.string_table_offset = current_offset;
     ctx->header.string_table_size = get_string_table_size(ctx);
@@ -282,6 +308,18 @@ int smof_write_file(smof_context_t *ctx, const char *filename, bool verbose) {
                   ctx->header.section_count, file) != ctx->header.section_count) {
             if (verbose) {
                 fprintf(stderr, "Error: Failed to write SMOF section table\n");
+            }
+            fclose(file);
+            return -1;
+        }
+    }
+    
+    // Write symbol table
+    if (ctx->header.symbol_count > 0 && ctx->symbols) {
+        if (fwrite(ctx->symbols, sizeof(smof_symbol_t),
+                  ctx->header.symbol_count, file) != ctx->header.symbol_count) {
+            if (verbose) {
+                fprintf(stderr, "Error: Failed to write SMOF symbol table\n");
             }
             fclose(file);
             return -1;
@@ -372,6 +410,20 @@ static int smof_write_file_impl(output_context_t *ctx) {
         }
     }
     
+    // Add symbols
+    for (size_t i = 0; i < ctx->symbol_count; i++) {
+        output_symbol_t *symbol = &ctx->symbols[i];
+        
+        // Map to SMOF section index (0 = no section for now)
+        uint16_t section_index = 0;
+        
+        if (smof_add_symbol(&smof_ctx, symbol->name, symbol->value,
+                           symbol->size, section_index, symbol->type, symbol->binding) < 0) {
+            smof_cleanup_context(&smof_ctx);
+            return -1;
+        }
+    }
+    
     // Write the file
     int result = smof_write_file(&smof_ctx, ctx->filename, ctx->verbose);
     
@@ -391,9 +443,56 @@ static int smof_add_section_impl(output_context_t *ctx, const char *name,
     return 0; // Success
 }
 
+static int smof_add_symbol_impl(output_context_t *ctx, const char *name, uint32_t value,
+                               uint32_t size, uint8_t type, uint8_t binding) {
+    if (!ctx || !name) {
+        return -1;
+    }
+    
+    // Expand symbols array if needed
+    size_t new_count = ctx->symbol_count + 1;
+    output_symbol_t *new_symbols = realloc(ctx->symbols, new_count * sizeof(output_symbol_t));
+    if (!new_symbols) {
+        return -1;
+    }
+    
+    ctx->symbols = new_symbols;
+    
+    // Allocate memory for symbol name (will be freed in cleanup)
+    char *symbol_name = malloc(strlen(name) + 1);
+    if (!symbol_name) {
+        return -1;
+    }
+    strcpy(symbol_name, name);
+    
+    // Store symbol
+    output_symbol_t *symbol = &ctx->symbols[ctx->symbol_count];
+    symbol->name = symbol_name;
+    symbol->value = value;
+    symbol->size = size;
+    symbol->type = type;
+    symbol->binding = binding;
+    
+    ctx->symbol_count++;
+    return 0;
+}
+
 static void smof_cleanup_impl(output_context_t *ctx) {
-    // Nothing special to clean up for SMOF format
-    (void)ctx; // Unused parameter
+    if (!ctx) return;
+    
+    // Free symbol names that were allocated
+    for (size_t i = 0; i < ctx->symbol_count; i++) {
+        if (ctx->symbols[i].name) {
+            free((void*)ctx->symbols[i].name);
+        }
+    }
+    
+    // Free symbols array
+    if (ctx->symbols) {
+        free(ctx->symbols);
+        ctx->symbols = NULL;
+        ctx->symbol_count = 0;
+    }
 }
 
 //=============================================================================
