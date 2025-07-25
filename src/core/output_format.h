@@ -35,6 +35,14 @@ typedef struct {
     uint8_t binding;
 } output_symbol_t;
 
+// Relocation information for output
+typedef struct {
+    uint32_t offset;           // Offset within section
+    const char *symbol_name;   // Symbol to reference  
+    uint8_t type;              // Relocation type
+    uint8_t section_index;     // Section containing the location to patch
+} output_relocation_t;
+
 // Output context
 typedef struct {
     output_format_t format;
@@ -43,6 +51,8 @@ typedef struct {
     size_t section_count;
     output_symbol_t *symbols;
     size_t symbol_count;
+    output_relocation_t *relocations;
+    size_t relocation_count;
     uint32_t entry_point;
     uint32_t base_address;
     bool verbose;
@@ -57,6 +67,8 @@ typedef struct {
                       uint8_t *data, size_t size, uint32_t address);
     int (*add_symbol)(output_context_t *ctx, const char *name, uint32_t value,
                      uint32_t size, uint8_t type, uint8_t binding);
+    int (*add_relocation)(output_context_t *ctx, uint32_t offset, 
+                         const char *symbol_name, uint8_t type, uint8_t section_index);
     void (*cleanup)(output_context_t *ctx);
 } output_format_ops_t;
 

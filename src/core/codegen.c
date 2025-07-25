@@ -123,6 +123,95 @@ static int codegen_process_instruction(codegen_ctx_t *ctx, ast_node_t *inst_node
     inst.operands = ast_inst->operands;
     inst.operand_count = ast_inst->operand_count;
     
+    // Check for symbol operands and create relocations
+    for (size_t i = 0; i < inst.operand_count; i++) {
+        if (inst.operands[i].type == OPERAND_SYMBOL) {
+            const char *symbol_name = inst.operands[i].value.symbol;
+            
+            // Skip if this is actually a register name (parser bug workaround)
+            if (symbol_name && (
+                // x86_64 registers
+                strcmp(symbol_name, "rax") == 0 || strcmp(symbol_name, "rbx") == 0 ||
+                strcmp(symbol_name, "rcx") == 0 || strcmp(symbol_name, "rdx") == 0 ||
+                strcmp(symbol_name, "rsi") == 0 || strcmp(symbol_name, "rdi") == 0 ||
+                strcmp(symbol_name, "rsp") == 0 || strcmp(symbol_name, "rbp") == 0 ||
+                strcmp(symbol_name, "r8") == 0 || strcmp(symbol_name, "r9") == 0 ||
+                strcmp(symbol_name, "r10") == 0 || strcmp(symbol_name, "r11") == 0 ||
+                strcmp(symbol_name, "r12") == 0 || strcmp(symbol_name, "r13") == 0 ||
+                strcmp(symbol_name, "r14") == 0 || strcmp(symbol_name, "r15") == 0 ||
+                // x86_32 registers
+                strcmp(symbol_name, "eax") == 0 || strcmp(symbol_name, "ebx") == 0 ||
+                strcmp(symbol_name, "ecx") == 0 || strcmp(symbol_name, "edx") == 0 ||
+                strcmp(symbol_name, "esi") == 0 || strcmp(symbol_name, "edi") == 0 ||
+                strcmp(symbol_name, "esp") == 0 || strcmp(symbol_name, "ebp") == 0 ||
+                // x86_16 registers
+                strcmp(symbol_name, "ax") == 0 || strcmp(symbol_name, "bx") == 0 ||
+                strcmp(symbol_name, "cx") == 0 || strcmp(symbol_name, "dx") == 0 ||
+                strcmp(symbol_name, "si") == 0 || strcmp(symbol_name, "di") == 0 ||
+                strcmp(symbol_name, "sp") == 0 || strcmp(symbol_name, "bp") == 0 ||
+                // 8-bit registers
+                strcmp(symbol_name, "al") == 0 || strcmp(symbol_name, "bl") == 0 ||
+                strcmp(symbol_name, "cl") == 0 || strcmp(symbol_name, "dl") == 0 ||
+                strcmp(symbol_name, "ah") == 0 || strcmp(symbol_name, "bh") == 0 ||
+                strcmp(symbol_name, "ch") == 0 || strcmp(symbol_name, "dh") == 0)) {
+                continue; // Skip register names misclassified as symbols
+            }
+            
+            // Create relocation entry
+            output_format_ops_t *format_ops = get_output_format(ctx->output->format);
+            if (format_ops && format_ops->add_relocation) {
+                // Determine relocation type based on instruction and operand
+                uint8_t reloc_type = SMOF_RELOC_ABS32; // Default to 32-bit absolute
+                
+                // For x86_64, determine if we need PC-relative or absolute addressing
+                if (strcmp(inst.mnemonic, "mov") == 0 || strcmp(inst.mnemonic, "movq") == 0) {
+                    reloc_type = SMOF_RELOC_ABS32; // mov uses absolute addressing
+                } else if (strcmp(inst.mnemonic, "call") == 0 || strcmp(inst.mnemonic, "jmp") == 0 ||
+                          strncmp(inst.mnemonic, "j", 1) == 0) { // All conditional jumps start with 'j'
+                    reloc_type = SMOF_RELOC_REL32; // branches use PC-relative addressing
+                } else if (strcmp(inst.mnemonic, "lea") == 0) {
+                    reloc_type = SMOF_RELOC_REL32; // LEA often uses PC-relative for symbols
+                }
+                
+                // Calculate relocation offset - for most x86_64 instructions,
+                // the displacement field comes after the opcode and ModRM byte
+                uint32_t reloc_offset = ctx->code_size;
+                
+                // For instructions with immediate operands, the relocation typically
+                // points to the immediate field, not the instruction start
+                if (i > 0) { // If symbol is not the first operand
+                    reloc_offset += 1; // Add typical opcode size
+                    if (inst.operand_count > 1) {
+                        reloc_offset += 1; // Add ModRM byte if multiple operands
+                    }
+                }
+                
+                // Create relocation at calculated offset
+                int result = format_ops->add_relocation(ctx->output, reloc_offset, 
+                                                       symbol_name, reloc_type, 0);
+                if (result != 0) {
+                    fprintf(stderr, "Warning: Failed to create relocation for symbol '%s'\n", symbol_name);
+                } else {
+                    // Add symbol to symbol table if not already present
+                    if (format_ops->add_symbol) {
+                        // Add as undefined symbol (will be resolved by linker)
+                        format_ops->add_symbol(ctx->output, symbol_name, 0, 0, 
+                                             SMOF_SYM_NOTYPE, SMOF_BIND_GLOBAL);
+                    }
+                }
+            }
+            
+            // Replace symbol operand with immediate 0 for encoding
+            inst.operands[i].type = OPERAND_IMMEDIATE;
+            inst.operands[i].value.immediate = 0;
+            inst.operands[i].size = 8; // 64-bit placeholder
+            
+            if (ctx->verbose) {
+                printf("Created relocation for symbol '%s', replaced with immediate 0\n", symbol_name);
+            }
+        }
+    }
+    
     // Parse instruction using architecture-specific parser to set up encoding
     if (ctx->arch->parse_instruction) {
         int result = ctx->arch->parse_instruction(inst.mnemonic, inst.operands, 

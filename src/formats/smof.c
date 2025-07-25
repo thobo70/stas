@@ -42,6 +42,8 @@ static int smof_add_section_impl(output_context_t *ctx, const char *name,
                                 uint8_t *data, size_t size, uint32_t address);
 static int smof_add_symbol_impl(output_context_t *ctx, const char *name, uint32_t value,
                                uint32_t size, uint8_t type, uint8_t binding);
+static int smof_add_relocation_impl(output_context_t *ctx, uint32_t offset, 
+                                   const char *symbol_name, uint8_t type, uint8_t section_index);
 static void smof_cleanup_impl(output_context_t *ctx);
 
 // Format operation structure
@@ -51,6 +53,7 @@ static output_format_ops_t smof_ops = {
     .write_file = smof_write_file_impl,
     .add_section = smof_add_section_impl,
     .add_symbol = smof_add_symbol_impl,
+    .add_relocation = smof_add_relocation_impl,
     .cleanup = smof_cleanup_impl
 };
 
@@ -252,6 +255,32 @@ int smof_add_symbol(smof_context_t *ctx, const char *name, uint32_t value,
     
     ctx->header.symbol_count++;
     return ctx->header.symbol_count - 1; // Return symbol index
+}
+
+int smof_add_relocation(smof_context_t *ctx, uint32_t offset, uint16_t symbol_index, 
+                        uint8_t type, uint8_t section_index) {
+    if (!ctx) return -1;
+    
+    // Expand relocations array if needed
+    if (ctx->header.reloc_count >= ctx->relocations_capacity) {
+        size_t new_capacity = ctx->relocations_capacity == 0 ? 16 : ctx->relocations_capacity * 2;
+        smof_relocation_t *new_relocations = realloc(ctx->relocations, 
+                                                    new_capacity * sizeof(smof_relocation_t));
+        if (!new_relocations) {
+            return -1;
+        }
+        ctx->relocations = new_relocations;
+        ctx->relocations_capacity = new_capacity;
+    }
+    
+    smof_relocation_t *relocation = &ctx->relocations[ctx->header.reloc_count];
+    relocation->offset = offset;
+    relocation->symbol_index = symbol_index;
+    relocation->type = type;
+    relocation->section_index = section_index;
+    
+    ctx->header.reloc_count++;
+    return ctx->header.reloc_count - 1; // Return relocation index
 }
 
 //=============================================================================
@@ -461,6 +490,26 @@ static int smof_write_file_impl(output_context_t *ctx) {
         }
     }
     
+    // Add relocations
+    for (size_t i = 0; i < ctx->relocation_count && ctx->relocations; i++) {
+        output_relocation_t *relocation = &ctx->relocations[i];
+        
+        // Find the symbol index for this relocation
+        uint16_t symbol_index = 0;
+        for (size_t j = 0; j < ctx->symbol_count; j++) {
+            if (strcmp(ctx->symbols[j].name, relocation->symbol_name) == 0) {
+                symbol_index = (uint16_t)j;
+                break;
+            }
+        }
+        
+        if (smof_add_relocation(&smof_ctx, relocation->offset, symbol_index,
+                               relocation->type, relocation->section_index) < 0) {
+            smof_cleanup_context(&smof_ctx);
+            return -1;
+        }
+    }
+    
     // Calculate section data offsets before writing
     uint32_t section_data_offset = sizeof(smof_header_t) + 
                                    smof_ctx.header.section_count * sizeof(smof_section_t) +
@@ -560,6 +609,40 @@ static int smof_add_symbol_impl(output_context_t *ctx, const char *name, uint32_
     return 0;
 }
 
+static int smof_add_relocation_impl(output_context_t *ctx, uint32_t offset, 
+                                   const char *symbol_name, uint8_t type, uint8_t section_index) {
+    if (!ctx || !symbol_name) {
+        return -1;
+    }
+    
+    // Expand relocations array if needed
+    size_t new_count = ctx->relocation_count + 1;
+    
+    output_relocation_t *new_relocations = realloc(ctx->relocations, new_count * sizeof(output_relocation_t));
+    if (!new_relocations) {
+        return -1;
+    }
+    
+    ctx->relocations = new_relocations;
+    
+    // Allocate memory for symbol name (will be freed in cleanup)
+    char *reloc_symbol_name = malloc(strlen(symbol_name) + 1);
+    if (!reloc_symbol_name) {
+        return -1;
+    }
+    strcpy(reloc_symbol_name, symbol_name);
+    
+    // Store relocation
+    output_relocation_t *relocation = &ctx->relocations[ctx->relocation_count];
+    relocation->offset = offset;
+    relocation->symbol_name = reloc_symbol_name;
+    relocation->type = type;
+    relocation->section_index = section_index;
+    
+    ctx->relocation_count++;
+    return 0;
+}
+
 static void smof_cleanup_impl(output_context_t *ctx) {
     if (!ctx) return;
     
@@ -592,6 +675,20 @@ static void smof_cleanup_impl(output_context_t *ctx) {
         free(ctx->symbols);
         ctx->symbols = NULL;
         ctx->symbol_count = 0;
+    }
+    
+    // Free relocation symbol names that were allocated
+    for (size_t i = 0; i < ctx->relocation_count; i++) {
+        if (ctx->relocations[i].symbol_name) {
+            free((void*)ctx->relocations[i].symbol_name);
+        }
+    }
+    
+    // Free relocations array
+    if (ctx->relocations) {
+        free(ctx->relocations);
+        ctx->relocations = NULL;
+        ctx->relocation_count = 0;
     }
 }
 
