@@ -531,6 +531,139 @@ static bool test_instruction_recognition(arch_ops_t* arch_ops, const instruction
     return result == 0;
 }
 
+static void setup_dummy_operands(operand_t* operands, size_t operand_count, const char* arch_name, const char* mnemonic) {
+    // Initialize all operands to zero
+    memset(operands, 0, sizeof(operand_t) * operand_count);
+    
+    // Check if this is a shift operation that needs special operand handling
+    bool is_shift_op = (strcmp(mnemonic, "shl") == 0 || strcmp(mnemonic, "shr") == 0 ||
+                       strcmp(mnemonic, "sal") == 0 || strcmp(mnemonic, "sar") == 0 ||
+                       strcmp(mnemonic, "rol") == 0 || strcmp(mnemonic, "ror") == 0 ||
+                       strcmp(mnemonic, "rcl") == 0 || strcmp(mnemonic, "rcr") == 0);
+    
+    bool is_3op_shift = (strcmp(mnemonic, "shld") == 0 || strcmp(mnemonic, "shrd") == 0);
+    
+    // Set up appropriate dummy operands based on architecture
+    for (size_t i = 0; i < operand_count && i < 4; i++) {
+        if (strcmp(arch_name, "x86_32") == 0) {
+            // Special handling for shift operations with AT&T syntax
+            if (is_shift_op && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: immediate count (AT&T: source comes first)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 1;
+                    operands[i].size = 1;
+                } else {
+                    // Second operand: destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "eax";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 4;
+                }
+            } else if (is_3op_shift && operand_count == 3) {
+                if (i == 0) {
+                    // First operand: immediate count (AT&T: count comes first)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 1;
+                    operands[i].size = 1;
+                } else if (i == 1) {
+                    // Second operand: source register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "ebx";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 3;
+                    operands[i].size = 4;
+                } else {
+                    // Third operand: destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "eax";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 4;
+                }
+            } else {
+                // Default register operands
+                operands[i].type = OPERAND_REGISTER;
+                operands[i].value.reg.name = (i == 0) ? "eax" : "ebx";
+                operands[i].value.reg.size = 4;
+                operands[i].value.reg.encoding = (i == 0) ? 0 : 3;
+                operands[i].size = 4;
+            }
+        } else if (strcmp(arch_name, "x86_16") == 0) {
+            // Special handling for shift operations with AT&T syntax
+            if (is_shift_op && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: immediate count (AT&T: source comes first)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 1;
+                    operands[i].size = 1;
+                } else {
+                    // Second operand: destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "ax";
+                    operands[i].value.reg.size = 2;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 2;
+                }
+            } else if (is_3op_shift && operand_count == 3) {
+                if (i == 0) {
+                    // First operand: immediate count (AT&T: count comes first)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 1;
+                    operands[i].size = 1;
+                } else if (i == 1) {
+                    // Second operand: source register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "bx";
+                    operands[i].value.reg.size = 2;
+                    operands[i].value.reg.encoding = 3;
+                    operands[i].size = 2;
+                } else {
+                    // Third operand: destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "ax";
+                    operands[i].value.reg.size = 2;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 2;
+                }
+            } else {
+                // Default register operands
+                operands[i].type = OPERAND_REGISTER;
+                operands[i].value.reg.name = (i == 0) ? "ax" : "bx";
+                operands[i].value.reg.size = 2;
+                operands[i].value.reg.encoding = (i == 0) ? 0 : 3;
+                operands[i].size = 2;
+            }
+        } else if (strcmp(arch_name, "x86_64") == 0) {
+            operands[i].type = OPERAND_REGISTER;
+            operands[i].value.reg.name = (i == 0) ? "rax" : "rbx";
+            operands[i].value.reg.size = 8;
+            operands[i].value.reg.encoding = (i == 0) ? 0 : 3;
+            operands[i].size = 8;
+        } else if (strcmp(arch_name, "arm64") == 0) {
+            operands[i].type = OPERAND_REGISTER;
+            operands[i].value.reg.name = (i == 0) ? "x0" : "x1";
+            operands[i].value.reg.size = 8;
+            operands[i].value.reg.encoding = (i == 0) ? 0 : 1;
+            operands[i].size = 8;
+        } else if (strcmp(arch_name, "riscv") == 0) {
+            operands[i].type = OPERAND_REGISTER;
+            operands[i].value.reg.name = (i == 0) ? "x1" : "x2";
+            operands[i].value.reg.size = 8;
+            operands[i].value.reg.encoding = (i == 0) ? 1 : 2;
+            operands[i].size = 8;
+        } else {
+            // Default to register operands
+            operands[i].type = OPERAND_REGISTER;
+            operands[i].value.reg.name = "r0";
+            operands[i].value.reg.size = 4;
+            operands[i].value.reg.encoding = 0;
+            operands[i].size = 4;
+        }
+    }
+}
+
 static bool test_instruction_functional(arch_ops_t* arch_ops, const instruction_def_t* instr) {
     if (!test_instruction_recognition(arch_ops, instr)) return false;
     
@@ -539,6 +672,30 @@ static bool test_instruction_functional(arch_ops_t* arch_ops, const instruction_
     
     operand_t dummy_operands[4] = {0};
     instruction_t test_instr = {0};
+    
+    // Set up proper dummy operands - try to identify architecture by testing against known architectures
+    const char* arch_name = "unknown";
+    
+    // Test with each architecture's get function to identify which one this is
+    arch_ops_t* x86_16_ops = get_arch_ops_x86_16();
+    arch_ops_t* x86_32_ops = get_arch_ops_x86_32();
+    arch_ops_t* x86_64_ops = get_arch_ops_x86_64();
+    arch_ops_t* arm64_ops = get_arch_ops_arm64();
+    arch_ops_t* riscv_ops = get_riscv_arch_ops();
+    
+    if (arch_ops == x86_32_ops) {
+        arch_name = "x86_32";
+    } else if (arch_ops == x86_16_ops) {
+        arch_name = "x86_16";
+    } else if (arch_ops == x86_64_ops) {
+        arch_name = "x86_64";
+    } else if (arch_ops == arm64_ops) {
+        arch_name = "arm64";
+    } else if (arch_ops == riscv_ops) {
+        arch_name = "riscv";
+    }
+    
+    setup_dummy_operands(dummy_operands, instr->operand_count, arch_name, instr->mnemonic);
     
     int parse_result = arch_ops->parse_instruction(instr->mnemonic, dummy_operands, 
                                                  instr->operand_count, &test_instr);
