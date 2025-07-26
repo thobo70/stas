@@ -30,7 +30,10 @@ static arch_ops_t* get_arch_ops_by_name(const char* arch_name) {
 static bool test_instruction_recognition(arch_ops_t* arch_ops, const instruction_def_t* instr) {
     if (!arch_ops || !arch_ops->parse_instruction || !instr) return false;
     
-    operand_t dummy_operands[4] = {0};
+    // Safety check for operand count
+    if (instr->operand_count > 6) return false;
+    
+    operand_t dummy_operands[6] = {0};
     instruction_t test_instr = {0};
     
     int result = arch_ops->parse_instruction(instr->mnemonic, dummy_operands, 
@@ -350,12 +353,23 @@ static void setup_dummy_operands(operand_t* operands, size_t operand_count, cons
 }
 
 static bool test_instruction_functional(arch_ops_t* arch_ops, const instruction_def_t* instr) {
-    if (!test_instruction_recognition(arch_ops, instr)) return false;
+    // Skip extension instructions that might not be supported
+    if (instr->is_extension) {
+        // For extension instructions, if recognition fails, skip functional testing
+        if (!test_instruction_recognition(arch_ops, instr)) return false;
+    } else {
+        if (!test_instruction_recognition(arch_ops, instr)) return false;
+    }
     
     // Test encoding capability for functional support
     if (!arch_ops->encode_instruction) return false;
     
-    operand_t dummy_operands[4] = {0};
+    // Safety check for operand count to prevent buffer overflows
+    if (instr->operand_count > 6) {
+        return false; // Skip instructions with too many operands
+    }
+    
+    operand_t dummy_operands[6] = {0};
     instruction_t test_instr = {0};
     
     // Set up proper dummy operands - try to identify architecture by testing against known architectures
