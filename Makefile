@@ -340,16 +340,8 @@ test-unit-arch:
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_arm64 || $(MAKE) $(TESTBIN_DIR)/unit_test_arm64 || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_riscv || $(MAKE) $(TESTBIN_DIR)/unit_test_riscv || true
 	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_compatibility || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_compatibility || true
-	@for test in unit_test_x86_64 unit_test_x86_32 unit_test_x86_16 unit_test_arm64 unit_test_riscv unit_test_x86_compatibility; do \
-		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
-	done
-	@echo "Architecture unit tests completed"
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_32 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_32 || true
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_64 || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_64 || true
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_arm64 || $(MAKE) $(TESTBIN_DIR)/unit_test_arm64 || true
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_riscv || $(MAKE) $(TESTBIN_DIR)/unit_test_riscv || true
-	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_compatibility || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_compatibility || true
-	@for test in unit_test_x86_16 unit_test_x86_32 unit_test_x86_64 unit_test_arm64 unit_test_riscv unit_test_x86_compatibility; do \
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_x86_att_syntax || $(MAKE) $(TESTBIN_DIR)/unit_test_x86_att_syntax || true
+	@for test in unit_test_x86_64 unit_test_x86_32 unit_test_x86_16 unit_test_arm64 unit_test_riscv unit_test_x86_compatibility unit_test_x86_att_syntax; do \
 		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
 	done
 	@echo "Architecture unit tests completed"

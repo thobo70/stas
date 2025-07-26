@@ -334,6 +334,67 @@ void test_x86_16_get_alignment(void)
 }
 
 // ========================================
+// AT&T SYNTAX SPECIFIC TESTS
+// ========================================
+
+void test_x86_16_att_register_prefix_support(void)
+{
+    asm_register_t reg;
+    
+    // Test registers with % prefix (AT&T style)
+    memset(&reg, 0, sizeof(asm_register_t));
+    int result = arch_ops->parse_register("%ax", &reg);
+    TEST_ASSERT_EQUAL(0, result);
+    TEST_ASSERT_EQUAL(0, reg.id);
+    TEST_ASSERT_EQUAL(2, reg.size);
+    
+    // Test 8-bit registers with % prefix
+    memset(&reg, 0, sizeof(asm_register_t));
+    result = arch_ops->parse_register("%al", &reg);
+    TEST_ASSERT_EQUAL(0, result);
+    TEST_ASSERT_EQUAL(0, reg.id);
+    TEST_ASSERT_EQUAL(1, reg.size);
+}
+
+void test_x86_16_att_rejects_32bit_64bit_registers(void)
+{
+    asm_register_t reg;
+    
+    // Should reject 32-bit registers even with % prefix
+    memset(&reg, 0, sizeof(asm_register_t));
+    int result = arch_ops->parse_register("%eax", &reg);
+    TEST_ASSERT_NOT_EQUAL(0, result);
+    
+    // Should reject 64-bit registers even with % prefix
+    memset(&reg, 0, sizeof(asm_register_t));
+    result = arch_ops->parse_register("%rax", &reg);
+    TEST_ASSERT_NOT_EQUAL(0, result);
+}
+
+void test_x86_16_att_instruction_operand_validation(void)
+{
+    operand_t operands[2];
+    instruction_t inst;
+    
+    // Test strict operand count validation (AT&T style)
+    memset(&inst, 0, sizeof(instruction_t));
+    memset(operands, 0, sizeof(operands));
+    
+    // Two-operand instruction with correct count should pass
+    int result = arch_ops->parse_instruction("mov", operands, 2, &inst);
+    TEST_ASSERT_EQUAL(0, result);
+    
+    // Two-operand instruction with wrong count should fail
+    memset(&inst, 0, sizeof(instruction_t));
+    result = arch_ops->parse_instruction("mov", operands, 1, &inst);
+    TEST_ASSERT_NOT_EQUAL(0, result);
+    
+    // Cleanup
+    if (inst.mnemonic) free((void*)inst.mnemonic);
+    if (inst.operands) free(inst.operands);
+}
+
+// ========================================
 // TEST RUNNER
 // ========================================
 
@@ -367,6 +428,11 @@ int main(void)
     // Encoding and sizing
     RUN_TEST(test_x86_16_instruction_encoding);
     RUN_TEST(test_x86_16_get_alignment);
+    
+    // AT&T Syntax tests
+    RUN_TEST(test_x86_16_att_register_prefix_support);
+    RUN_TEST(test_x86_16_att_rejects_32bit_64bit_registers);
+    RUN_TEST(test_x86_16_att_instruction_operand_validation);
     
     return UNITY_END();
 }
