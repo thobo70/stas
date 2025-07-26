@@ -1,0 +1,407 @@
+# ARM64 (AArch64) Instruction Set Reference
+# Based on ARM Architecture Reference Manual for A-profile architecture
+# AT&T-style syntax format: mnemonic source, destination
+
+## Data Processing - Immediate Instructions
+add         # Add immediate to register
+adds        # Add immediate and set flags
+sub         # Subtract immediate from register
+subs        # Subtract immediate and set flags
+cmp         # Compare register with immediate (alias for subs with XZR destination)
+cmn         # Compare negative (alias for adds with XZR destination)
+mov         # Move immediate to register (alias for various instructions)
+movz        # Move immediate with zero extension
+movn        # Move immediate with NOT
+movk        # Move immediate keeping other bits
+
+## Data Processing - Register Instructions
+add         # Add registers
+adds        # Add registers and set flags
+adc         # Add with carry
+adcs        # Add with carry and set flags
+sub         # Subtract registers
+subs        # Subtract registers and set flags
+sbc         # Subtract with carry
+sbcs        # Subtract with carry and set flags
+neg         # Negate register (alias for sub from XZR)
+negs        # Negate register and set flags
+cmp         # Compare registers (alias for subs with XZR destination)
+cmn         # Compare negative (alias for adds with XZR destination)
+mul         # Multiply
+madd        # Multiply-add
+msub        # Multiply-subtract
+smull       # Signed multiply long
+umull       # Unsigned multiply long
+smulh       # Signed multiply high
+umulh       # Unsigned multiply high
+sdiv        # Signed divide
+udiv        # Unsigned divide
+
+## Logical Instructions (Register)
+and         # Logical AND
+ands        # Logical AND and set flags
+orr         # Logical OR
+orn         # Logical OR NOT
+eor         # Logical exclusive OR
+eon         # Logical exclusive OR NOT
+bic         # Bit clear (AND NOT)
+bics        # Bit clear and set flags
+mvn         # Move NOT (alias for orn with XZR)
+tst         # Test (alias for ands with XZR destination)
+
+## Shift and Rotate Instructions
+lsl         # Logical shift left
+lsr         # Logical shift right
+asr         # Arithmetic shift right
+ror         # Rotate right
+rrx         # Rotate right with extend
+
+## Bit Field Instructions
+sbfm        # Signed bit field move
+ubfm        # Unsigned bit field move
+bfm         # Bit field move
+sbfiz       # Signed bit field insert in zero (alias)
+ubfiz       # Unsigned bit field insert in zero (alias)
+sbfx        # Signed bit field extract (alias)
+ubfx        # Unsigned bit field extract (alias)
+bfi         # Bit field insert (alias)
+bfxil       # Bit field extract and insert low (alias)
+sxtb        # Sign extend byte (alias)
+sxth        # Sign extend halfword (alias)
+sxtw        # Sign extend word (alias)
+uxtb        # Zero extend byte (alias)
+uxth        # Zero extend halfword (alias)
+
+## Extract Instructions
+extr        # Extract register
+
+## Conditional Instructions
+csel        # Conditional select
+csinc       # Conditional select increment
+csinv       # Conditional select invert
+csneg       # Conditional select negation
+cset        # Conditional set (alias)
+csetm       # Conditional set mask (alias)
+cinc        # Conditional increment (alias)
+cinv        # Conditional invert (alias)
+cneg        # Conditional negate (alias)
+
+## Data Processing - 3 Source Instructions
+madd        # Multiply-add
+msub        # Multiply-subtract
+smaddl      # Signed multiply-add long
+smsubl      # Signed multiply-subtract long
+umaddl      # Unsigned multiply-add long
+umsubl      # Unsigned multiply-subtract long
+
+## Load and Store Instructions
+ldr         # Load register
+ldur        # Load register unscaled immediate
+ldrb        # Load register byte
+ldurb       # Load register byte unscaled immediate
+ldrh        # Load register halfword
+ldurh       # Load register halfword unscaled immediate
+ldrsb       # Load register signed byte
+ldursb      # Load register signed byte unscaled immediate
+ldrsh       # Load register signed halfword
+ldursh      # Load register signed halfword unscaled immediate
+ldrsw       # Load register signed word
+ldursw      # Load register signed word unscaled immediate
+str         # Store register
+stur        # Store register unscaled immediate
+strb        # Store register byte
+sturb       # Store register byte unscaled immediate
+strh        # Store register halfword
+sturh       # Store register halfword unscaled immediate
+
+## Load/Store Pair Instructions
+ldp         # Load pair of registers
+stp         # Store pair of registers
+ldpsw       # Load pair of registers signed word
+ldnp        # Load pair of registers non-temporal
+stnp        # Store pair of registers non-temporal
+
+## Load/Store Exclusive Instructions
+ldxr        # Load exclusive register
+ldxrb       # Load exclusive register byte
+ldxrh       # Load exclusive register halfword
+ldxp        # Load exclusive pair of registers
+stxr        # Store exclusive register
+stxrb       # Store exclusive register byte
+stxrh       # Store exclusive register halfword
+stxp        # Store exclusive pair of registers
+ldaxr       # Load-acquire exclusive register
+ldaxrb      # Load-acquire exclusive register byte
+ldaxrh      # Load-acquire exclusive register halfword
+ldaxp       # Load-acquire exclusive pair of registers
+stlxr       # Store-release exclusive register
+stlxrb      # Store-release exclusive register byte
+stlxrh      # Store-release exclusive register halfword
+stlxp       # Store-release exclusive pair of registers
+clrex       # Clear exclusive
+
+## Load/Store Ordered Instructions
+ldar        # Load-acquire register
+ldarb       # Load-acquire register byte
+ldarh       # Load-acquire register halfword
+stlr        # Store-release register
+stlrb       # Store-release register byte
+stlrh       # Store-release register halfword
+
+## Atomic Memory Instructions
+ldadd       # Atomic add
+ldadda      # Atomic add, acquire
+ldaddal     # Atomic add, acquire and release
+ldaddl      # Atomic add, release
+ldclr       # Atomic clear
+ldclra      # Atomic clear, acquire
+ldclral     # Atomic clear, acquire and release
+ldclrl      # Atomic clear, release
+ldeor       # Atomic exclusive OR
+ldeora      # Atomic exclusive OR, acquire
+ldeoral     # Atomic exclusive OR, acquire and release
+ldeorl      # Atomic exclusive OR, release
+ldset       # Atomic set
+ldseta      # Atomic set, acquire
+ldsetal     # Atomic set, acquire and release
+ldsetl      # Atomic set, release
+ldsmax      # Atomic signed maximum
+ldsmaxa     # Atomic signed maximum, acquire
+ldsmaxal    # Atomic signed maximum, acquire and release
+ldsmaxl     # Atomic signed maximum, release
+ldsmin      # Atomic signed minimum
+ldsmina     # Atomic signed minimum, acquire
+ldsminal    # Atomic signed minimum, acquire and release
+ldsminl     # Atomic signed minimum, release
+ldumax      # Atomic unsigned maximum
+ldumaxa     # Atomic unsigned maximum, acquire
+ldumaxal    # Atomic unsigned maximum, acquire and release
+ldumaxl     # Atomic unsigned maximum, release
+ldumin      # Atomic unsigned minimum
+ldumina     # Atomic unsigned minimum, acquire
+lduminal    # Atomic unsigned minimum, acquire and release
+lduminl     # Atomic unsigned minimum, release
+swp         # Swap
+swpa        # Swap, acquire
+swpal       # Swap, acquire and release
+swpl        # Swap, release
+cas         # Compare and swap
+casa        # Compare and swap, acquire
+casal       # Compare and swap, acquire and release
+casl        # Compare and swap, release
+casb        # Compare and swap byte
+casab       # Compare and swap byte, acquire
+casalb      # Compare and swap byte, acquire and release
+caslb       # Compare and swap byte, release
+cash        # Compare and swap halfword
+casah       # Compare and swap halfword, acquire
+casalh      # Compare and swap halfword, acquire and release
+caslh       # Compare and swap halfword, release
+casp        # Compare and swap pair
+caspa       # Compare and swap pair, acquire
+caspal      # Compare and swap pair, acquire and release
+caspl       # Compare and swap pair, release
+
+## Branch Instructions
+b           # Branch
+bl          # Branch with link
+br          # Branch to register
+blr         # Branch with link to register
+ret         # Return from subroutine
+eret        # Exception return
+drps        # Debug restore process state
+
+## Conditional Branch Instructions
+b.eq        # Branch if equal (Z==1)
+b.ne        # Branch if not equal (Z==0)
+b.cs        # Branch if carry set (C==1)
+b.hs        # Branch if higher or same (C==1) - alias for b.cs
+b.cc        # Branch if carry clear (C==0)
+b.lo        # Branch if lower (C==0) - alias for b.cc
+b.mi        # Branch if minus (N==1)
+b.pl        # Branch if plus (N==0)
+b.vs        # Branch if overflow set (V==1)
+b.vc        # Branch if overflow clear (V==0)
+b.hi        # Branch if higher (C==1 && Z==0)
+b.ls        # Branch if lower or same (C==0 || Z==1)
+b.ge        # Branch if greater than or equal (N==V)
+b.lt        # Branch if less than (N!=V)
+b.gt        # Branch if greater than (Z==0 && N==V)
+b.le        # Branch if less than or equal (Z==1 || N!=V)
+b.al        # Branch always (default condition)
+b.nv        # Branch never
+
+## Compare and Branch Instructions
+cbz         # Compare and branch if zero
+cbnz        # Compare and branch if not zero
+tbz         # Test bit and branch if zero
+tbnz        # Test bit and branch if not zero
+
+## PC-relative Address Instructions
+adr         # Address relative to PC
+adrp        # Address relative to PC page
+
+## System Instructions
+msr         # Move to system register
+mrs         # Move from system register
+sys         # System instruction
+sysl        # System instruction with result
+ic          # Instruction cache maintenance
+dc          # Data cache maintenance
+at          # Address translation
+tlbi        # TLB invalidate
+hint        # Hint instruction
+clrex       # Clear exclusive
+dsb         # Data synchronization barrier
+dmb         # Data memory barrier
+isb         # Instruction synchronization barrier
+sev         # Send event
+sevl        # Send event local
+wfe         # Wait for event
+wfi         # Wait for interrupt
+yield       # Yield
+nop         # No operation
+svc         # Supervisor call
+hvc         # Hypervisor call
+smc         # Secure monitor call
+brk         # Breakpoint
+hlt         # Halt
+dcps1       # Debug change process state to EL1
+dcps2       # Debug change process state to EL2
+dcps3       # Debug change process state to EL3
+
+## Memory Barrier Instructions
+dsb         # Data synchronization barrier
+dmb         # Data memory barrier
+isb         # Instruction synchronization barrier
+
+## Synchronization Instructions
+sev         # Send event
+sevl        # Send event local
+wfe         # Wait for event
+wfi         # Wait for interrupt
+yield       # Yield processor
+esb         # Error synchronization barrier
+psb         # Profiling synchronization barrier
+
+## Pointer Authentication Instructions (ARMv8.3)
+pacia       # Pointer authentication code for instruction address, using key A
+pacib       # Pointer authentication code for instruction address, using key B
+pacda       # Pointer authentication code for data address, using key A
+pacdb       # Pointer authentication code for data address, using key B
+autia       # Authenticate instruction address, using key A
+autib       # Authenticate instruction address, using key B
+autda       # Authenticate data address, using key A
+autdb       # Authenticate data address, using key B
+paciza      # Pointer authentication code for instruction address, using key A and zero
+pacizb      # Pointer authentication code for instruction address, using key B and zero
+pacdza      # Pointer authentication code for data address, using key A and zero
+pacdzb      # Pointer authentication code for data address, using key B and zero
+autiza      # Authenticate instruction address, using key A and zero
+autizb      # Authenticate instruction address, using key B and zero
+autdza      # Authenticate data address, using key A and zero
+autdzb      # Authenticate data address, using key B and zero
+xpaci       # Strip pointer authentication code for instruction address
+xpacd       # Strip pointer authentication code for data address
+
+## CRC32 Instructions (ARMv8)
+crc32b      # CRC32 checksum on byte
+crc32h      # CRC32 checksum on halfword
+crc32w      # CRC32 checksum on word
+crc32x      # CRC32 checksum on doubleword
+crc32cb     # CRC32C checksum on byte
+crc32ch     # CRC32C checksum on halfword
+crc32cw     # CRC32C checksum on word
+crc32cx     # CRC32C checksum on doubleword
+
+## Advanced SIMD (NEON) and Floating-Point Instructions
+# Note: NEON/FP instructions are extensive - listing key ones
+fadd        # Floating-point add
+fsub        # Floating-point subtract
+fmul        # Floating-point multiply
+fdiv        # Floating-point divide
+fabs        # Floating-point absolute value
+fneg        # Floating-point negate
+fsqrt       # Floating-point square root
+fmadd       # Floating-point multiply-add
+fmsub       # Floating-point multiply-subtract
+fnmadd      # Floating-point negated multiply-add
+fnmsub      # Floating-point negated multiply-subtract
+fcmp        # Floating-point compare
+fcmpe       # Floating-point compare with exception on QNaN
+fcsel       # Floating-point conditional select
+fmov        # Floating-point move register or immediate
+fcvt        # Floating-point convert precision
+fcvtas      # Floating-point convert to signed integer, round to nearest with ties to away
+fcvtau      # Floating-point convert to unsigned integer, round to nearest with ties to away
+fcvtms      # Floating-point convert to signed integer, round towards minus infinity
+fcvtmu      # Floating-point convert to unsigned integer, round towards minus infinity
+fcvtns      # Floating-point convert to signed integer, round to nearest with ties to even
+fcvtnu      # Floating-point convert to unsigned integer, round to nearest with ties to even
+fcvtps      # Floating-point convert to signed integer, round towards plus infinity
+fcvtpu      # Floating-point convert to unsigned integer, round towards plus infinity
+fcvtzs      # Floating-point convert to signed integer, round towards zero
+fcvtzu      # Floating-point convert to unsigned integer, round towards zero
+scvtf       # Signed integer convert to floating-point
+ucvtf       # Unsigned integer convert to floating-point
+frintn      # Floating-point round to integral, to nearest with ties to even
+frintp      # Floating-point round to integral, towards plus infinity
+frintm      # Floating-point round to integral, towards minus infinity
+frintz      # Floating-point round to integral, towards zero
+frinta      # Floating-point round to integral, to nearest with ties to away
+frintx      # Floating-point round to integral exact, using current rounding mode
+frinti      # Floating-point round to integral, using current rounding mode
+
+## Vector (NEON) Arithmetic Instructions
+add         # Vector add
+sub         # Vector subtract
+mul         # Vector multiply
+mla         # Vector multiply-accumulate
+mls         # Vector multiply-subtract
+addp        # Vector add across lanes (pairwise)
+fmaxnm      # Floating-point maximum number (vector)
+fminnm      # Floating-point minimum number (vector)
+fmax        # Floating-point maximum (vector)
+fmin        # Floating-point minimum (vector)
+fmaxp       # Floating-point pairwise maximum (vector)
+fminp       # Floating-point pairwise minimum (vector)
+faddp       # Floating-point pairwise add (vector)
+smax        # Signed maximum (vector)
+smin        # Signed minimum (vector)
+umax        # Unsigned maximum (vector)
+umin        # Unsigned minimum (vector)
+smaxp       # Signed pairwise maximum (vector)
+sminp       # Signed pairwise minimum (vector)
+umaxp       # Unsigned pairwise maximum (vector)
+uminp       # Unsigned pairwise minimum (vector)
+
+## Crypto Instructions (ARMv8 Cryptographic Extension)
+aese        # AES single round encryption
+aesd        # AES single round decryption
+aesmc       # AES mix columns
+aesimc      # AES inverse mix columns
+sha1c       # SHA1 hash update (choose)
+sha1p       # SHA1 hash update (parity)
+sha1m       # SHA1 hash update (majority)
+sha1h       # SHA1 fixed rotate
+sha1su0     # SHA1 schedule update 0
+sha1su1     # SHA1 schedule update 1
+sha256h     # SHA256 hash update (part 1)
+sha256h2    # SHA256 hash update (part 2)
+sha256su0   # SHA256 schedule update 0
+sha256su1   # SHA256 schedule update 1
+pmull       # Polynomial multiply long
+pmull2      # Polynomial multiply long (second part)
+
+## Load/Store Multiple Instructions
+ldm         # Load multiple registers (ARMv7 compatibility)
+stm         # Store multiple registers (ARMv7 compatibility)
+
+## Unpredictable Instructions
+udf         # Permanently undefined
+
+## Debug Instructions
+dcps1       # Debug change to EL1
+dcps2       # Debug change to EL2
+dcps3       # Debug change to EL3
+drps        # Debug restore process state

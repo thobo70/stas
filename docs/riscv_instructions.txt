@@ -1,0 +1,529 @@
+# RISC-V Instruction Set Reference
+# Based on RISC-V Instruction Set Manual Volume I & II
+# AT&T-style syntax format: mnemonic source, destination
+
+## RV32I Base Integer Instruction Set
+# Arithmetic Instructions
+add         # Add
+addi        # Add immediate
+sub         # Subtract
+lui         # Load upper immediate
+auipc       # Add upper immediate to PC
+
+# Logical Instructions
+xor         # Exclusive OR
+xori        # Exclusive OR immediate
+or          # OR
+ori         # OR immediate
+and         # AND
+andi        # AND immediate
+
+# Shift Instructions
+sll         # Shift left logical
+slli        # Shift left logical immediate
+srl         # Shift right logical
+srli        # Shift right logical immediate
+sra         # Shift right arithmetic
+srai        # Shift right arithmetic immediate
+
+# Compare Instructions
+slt         # Set less than
+slti        # Set less than immediate
+sltu        # Set less than unsigned
+sltiu       # Set less than immediate unsigned
+
+# Branch Instructions
+beq         # Branch if equal
+bne         # Branch if not equal
+blt         # Branch if less than
+bge         # Branch if greater than or equal
+bltu        # Branch if less than unsigned
+bgeu        # Branch if greater than or equal unsigned
+
+# Jump Instructions
+jal         # Jump and link
+jalr        # Jump and link register
+
+# Load Instructions
+lb          # Load byte
+lh          # Load halfword
+lw          # Load word
+lbu         # Load byte unsigned
+lhu         # Load halfword unsigned
+
+# Store Instructions
+sb          # Store byte
+sh          # Store halfword
+sw          # Store word
+
+# Memory Ordering
+fence       # Fence instruction
+fence.i     # Fence instruction memory
+
+# Environment Instructions
+ecall       # Environment call
+ebreak      # Environment break
+
+## RV64I Base Integer Instruction Set (64-bit)
+# Additional 64-bit arithmetic
+addw        # Add word (32-bit operation)
+addiw       # Add immediate word (32-bit operation)
+subw        # Subtract word (32-bit operation)
+
+# Additional 64-bit shifts
+sllw        # Shift left logical word
+slliw       # Shift left logical immediate word
+srlw        # Shift right logical word
+srliw       # Shift right logical immediate word
+sraw        # Shift right arithmetic word
+sraiw       # Shift right arithmetic immediate word
+
+# Additional 64-bit loads/stores
+ld          # Load doubleword
+sd          # Store doubleword
+lwu         # Load word unsigned
+
+## RV32M Standard Extension for Integer Multiplication and Division
+mul         # Multiply
+mulh        # Multiply high signed-signed
+mulhsu      # Multiply high signed-unsigned
+mulhu       # Multiply high unsigned-unsigned
+div         # Divide signed
+divu        # Divide unsigned
+rem         # Remainder signed
+remu        # Remainder unsigned
+
+## RV64M Standard Extension (64-bit)
+mulw        # Multiply word
+divw        # Divide word signed
+divuw       # Divide word unsigned
+remw        # Remainder word signed
+remuw       # Remainder word unsigned
+
+## RV32A Standard Extension for Atomic Instructions
+lr.w        # Load reserved word
+sc.w        # Store conditional word
+amoswap.w   # Atomic swap word
+amoadd.w    # Atomic add word
+amoxor.w    # Atomic XOR word
+amoand.w    # Atomic AND word
+amoor.w     # Atomic OR word
+amomin.w    # Atomic minimum word
+amomax.w    # Atomic maximum word
+amominu.w   # Atomic minimum unsigned word
+amomaxu.w   # Atomic maximum unsigned word
+
+## RV64A Standard Extension (64-bit)
+lr.d        # Load reserved doubleword
+sc.d        # Store conditional doubleword
+amoswap.d   # Atomic swap doubleword
+amoadd.d    # Atomic add doubleword
+amoxor.d    # Atomic XOR doubleword
+amoand.d    # Atomic AND doubleword
+amoor.d     # Atomic OR doubleword
+amomin.d    # Atomic minimum doubleword
+amomax.d    # Atomic maximum doubleword
+amominu.d   # Atomic minimum unsigned doubleword
+amomaxu.d   # Atomic maximum unsigned doubleword
+
+## RV32F Standard Extension for Single-Precision Floating-Point
+# Floating-point arithmetic
+fadd.s      # Floating-point add single
+fsub.s      # Floating-point subtract single
+fmul.s      # Floating-point multiply single
+fdiv.s      # Floating-point divide single
+fsqrt.s     # Floating-point square root single
+
+# Floating-point fused multiply-add
+fmadd.s     # Floating-point fused multiply-add single
+fmsub.s     # Floating-point fused multiply-subtract single
+fnmadd.s    # Floating-point fused negate multiply-add single
+fnmsub.s    # Floating-point fused negate multiply-subtract single
+
+# Floating-point sign injection
+fsgnj.s     # Floating-point sign injection single
+fsgnjn.s    # Floating-point sign injection negate single
+fsgnjx.s    # Floating-point sign injection XOR single
+
+# Floating-point min/max
+fmin.s      # Floating-point minimum single
+fmax.s      # Floating-point maximum single
+
+# Floating-point compare
+feq.s       # Floating-point equal single
+flt.s       # Floating-point less than single
+fle.s       # Floating-point less than or equal single
+
+# Floating-point classify
+fclass.s    # Floating-point classify single
+
+# Floating-point conversion
+fcvt.w.s    # Convert float to word
+fcvt.wu.s   # Convert float to unsigned word
+fcvt.s.w    # Convert word to float
+fcvt.s.wu   # Convert unsigned word to float
+
+# Floating-point move
+fmv.x.s     # Move float to integer register
+fmv.s.x     # Move integer to float register
+
+# Floating-point load/store
+flw         # Floating-point load word
+fsw         # Floating-point store word
+
+## RV64F Standard Extension (64-bit)
+fcvt.l.s    # Convert float to long
+fcvt.lu.s   # Convert float to unsigned long
+fcvt.s.l    # Convert long to float
+fcvt.s.lu   # Convert unsigned long to float
+
+## RV32D Standard Extension for Double-Precision Floating-Point
+# Double-precision arithmetic
+fadd.d      # Floating-point add double
+fsub.d      # Floating-point subtract double
+fmul.d      # Floating-point multiply double
+fdiv.d      # Floating-point divide double
+fsqrt.d     # Floating-point square root double
+
+# Double-precision fused multiply-add
+fmadd.d     # Floating-point fused multiply-add double
+fmsub.d     # Floating-point fused multiply-subtract double
+fnmadd.d    # Floating-point fused negate multiply-add double
+fnmsub.d    # Floating-point fused negate multiply-subtract double
+
+# Double-precision sign injection
+fsgnj.d     # Floating-point sign injection double
+fsgnjn.d    # Floating-point sign injection negate double
+fsgnjx.d    # Floating-point sign injection XOR double
+
+# Double-precision min/max
+fmin.d      # Floating-point minimum double
+fmax.d      # Floating-point maximum double
+
+# Double-precision compare
+feq.d       # Floating-point equal double
+flt.d       # Floating-point less than double
+fle.d       # Floating-point less than or equal double
+
+# Double-precision classify
+fclass.d    # Floating-point classify double
+
+# Double-precision conversion
+fcvt.w.d    # Convert double to word
+fcvt.wu.d   # Convert double to unsigned word
+fcvt.d.w    # Convert word to double
+fcvt.d.wu   # Convert unsigned word to double
+fcvt.s.d    # Convert double to single
+fcvt.d.s    # Convert single to double
+
+# Double-precision load/store
+fld         # Floating-point load double
+fsd         # Floating-point store double
+
+## RV64D Standard Extension (64-bit)
+fcvt.l.d    # Convert double to long
+fcvt.lu.d   # Convert double to unsigned long
+fcvt.d.l    # Convert long to double
+fcvt.d.lu   # Convert unsigned long to double
+fmv.x.d     # Move double to integer register
+fmv.d.x     # Move integer to double register
+
+## RV32Q Standard Extension for Quad-Precision Floating-Point
+# Quad-precision arithmetic
+fadd.q      # Floating-point add quad
+fsub.q      # Floating-point subtract quad
+fmul.q      # Floating-point multiply quad
+fdiv.q      # Floating-point divide quad
+fsqrt.q     # Floating-point square root quad
+
+# Quad-precision fused multiply-add
+fmadd.q     # Floating-point fused multiply-add quad
+fmsub.q     # Floating-point fused multiply-subtract quad
+fnmadd.q    # Floating-point fused negate multiply-add quad
+fnmsub.q    # Floating-point fused negate multiply-subtract quad
+
+# Quad-precision sign injection
+fsgnj.q     # Floating-point sign injection quad
+fsgnjn.q    # Floating-point sign injection negate quad
+fsgnjx.q    # Floating-point sign injection XOR quad
+
+# Quad-precision min/max
+fmin.q      # Floating-point minimum quad
+fmax.q      # Floating-point maximum quad
+
+# Quad-precision compare
+feq.q       # Floating-point equal quad
+flt.q       # Floating-point less than quad
+fle.q       # Floating-point less than or equal quad
+
+# Quad-precision classify
+fclass.q    # Floating-point classify quad
+
+# Quad-precision conversion
+fcvt.w.q    # Convert quad to word
+fcvt.wu.q   # Convert quad to unsigned word
+fcvt.q.w    # Convert word to quad
+fcvt.q.wu   # Convert unsigned word to quad
+fcvt.s.q    # Convert quad to single
+fcvt.q.s    # Convert single to quad
+fcvt.d.q    # Convert quad to double
+fcvt.q.d    # Convert double to quad
+
+# Quad-precision load/store
+flq         # Floating-point load quad
+fsq         # Floating-point store quad
+
+## RV64Q Standard Extension (64-bit)
+fcvt.l.q    # Convert quad to long
+fcvt.lu.q   # Convert quad to unsigned long
+fcvt.q.l    # Convert long to quad
+fcvt.q.lu   # Convert unsigned long to quad
+
+## Zicsr Standard Extension for Control and Status Register (CSR)
+csrrw       # CSR read-write
+csrrs       # CSR read-set
+csrrc       # CSR read-clear
+csrrwi      # CSR read-write immediate
+csrrsi      # CSR read-set immediate
+csrrci      # CSR read-clear immediate
+
+## Zifencei Standard Extension for Instruction-Fetch Fence
+fence.i     # Instruction fence
+
+## Privileged Instructions
+# Trap-Return Instructions
+mret        # Machine-mode return
+sret        # Supervisor-mode return
+uret        # User-mode return
+
+# Interrupt Management
+wfi         # Wait for interrupt
+
+# Memory Management
+sfence.vma  # Supervisor fence for virtual memory
+
+## Hypervisor Extension (H)
+# Hypervisor instructions
+hfence.gvma # Hypervisor fence for guest virtual memory
+hfence.vvma # Hypervisor fence for virtual virtual memory
+hlv.b       # Hypervisor load virtual byte
+hlv.bu      # Hypervisor load virtual byte unsigned
+hlv.h       # Hypervisor load virtual halfword
+hlv.hu      # Hypervisor load virtual halfword unsigned
+hlv.w       # Hypervisor load virtual word
+hlv.wu      # Hypervisor load virtual word unsigned
+hlv.d       # Hypervisor load virtual doubleword
+hlvx.hu     # Hypervisor load virtual instruction halfword unsigned
+hlvx.wu     # Hypervisor load virtual instruction word unsigned
+hsv.b       # Hypervisor store virtual byte
+hsv.h       # Hypervisor store virtual halfword
+hsv.w       # Hypervisor store virtual word
+hsv.d       # Hypervisor store virtual doubleword
+
+## Bit Manipulation Extension (B)
+# Basic bit manipulation
+andn        # AND with NOT
+orn         # OR with NOT
+xnor        # XOR with NOT
+clz         # Count leading zeros
+ctz         # Count trailing zeros
+cpop        # Count population (number of set bits)
+max         # Maximum
+maxu        # Maximum unsigned
+min         # Minimum
+minu        # Minimum unsigned
+sext.b      # Sign-extend byte
+sext.h      # Sign-extend halfword
+zext.h      # Zero-extend halfword
+rol         # Rotate left
+ror         # Rotate right
+rori        # Rotate right immediate
+orc.b       # OR-combine byte
+rev8        # Reverse byte order
+
+# Address generation
+sh1add      # Shift left by 1 and add
+sh2add      # Shift left by 2 and add
+sh3add      # Shift left by 3 and add
+
+# Bit field/extract
+bext        # Bit extract
+bdep        # Bit deposit
+bfp         # Bit field place
+bclr        # Bit clear
+bclri       # Bit clear immediate
+binv        # Bit invert
+binvi       # Bit invert immediate
+bset        # Bit set
+bseti       # Bit set immediate
+
+## Packed SIMD Extension (P)
+# 8-bit operations
+add8        # SIMD 8-bit add
+sub8        # SIMD 8-bit subtract
+radd8       # SIMD 8-bit halving add
+rsub8       # SIMD 8-bit halving subtract
+uradd8      # SIMD 8-bit unsigned halving add
+ursub8      # SIMD 8-bit unsigned halving subtract
+kadd8       # SIMD 8-bit saturating add
+ksub8       # SIMD 8-bit saturating subtract
+ukadd8      # SIMD 8-bit unsigned saturating add
+uksub8      # SIMD 8-bit unsigned saturating subtract
+
+# 16-bit operations
+add16       # SIMD 16-bit add
+sub16       # SIMD 16-bit subtract
+radd16      # SIMD 16-bit halving add
+rsub16      # SIMD 16-bit halving subtract
+uradd16     # SIMD 16-bit unsigned halving add
+ursub16     # SIMD 16-bit unsigned halving subtract
+kadd16      # SIMD 16-bit saturating add
+ksub16      # SIMD 16-bit saturating subtract
+ukadd16     # SIMD 16-bit unsigned saturating add
+uksub16     # SIMD 16-bit unsigned saturating subtract
+
+# Cross operations
+radd64      # 64-bit halving add
+rsub64      # 64-bit halving subtract
+uradd64     # 64-bit unsigned halving add
+ursub64     # 64-bit unsigned halving subtract
+kadd64      # 64-bit saturating add
+ksub64      # 64-bit saturating subtract
+ukadd64     # 64-bit unsigned saturating add
+uksub64     # 64-bit unsigned saturating subtract
+
+## Vector Extension (V)
+# Vector configuration
+vsetvli     # Set vector length immediate
+vsetivli    # Set vector length immediate variant
+vsetvl      # Set vector length
+
+# Vector loads/stores
+vle8.v      # Vector load 8-bit elements
+vle16.v     # Vector load 16-bit elements
+vle32.v     # Vector load 32-bit elements
+vle64.v     # Vector load 64-bit elements
+vse8.v      # Vector store 8-bit elements
+vse16.v     # Vector store 16-bit elements
+vse32.v     # Vector store 32-bit elements
+vse64.v     # Vector store 64-bit elements
+
+# Vector arithmetic
+vadd.vv     # Vector add vector-vector
+vadd.vx     # Vector add vector-scalar
+vadd.vi     # Vector add vector-immediate
+vsub.vv     # Vector subtract vector-vector
+vsub.vx     # Vector subtract vector-scalar
+vrsub.vx    # Vector reverse subtract vector-scalar
+vrsub.vi    # Vector reverse subtract vector-immediate
+
+# Vector logical
+vand.vv     # Vector AND vector-vector
+vand.vx     # Vector AND vector-scalar
+vand.vi     # Vector AND vector-immediate
+vor.vv      # Vector OR vector-vector
+vor.vx      # Vector OR vector-scalar
+vor.vi      # Vector OR vector-immediate
+vxor.vv     # Vector XOR vector-vector
+vxor.vx     # Vector XOR vector-scalar
+vxor.vi     # Vector XOR vector-immediate
+
+# Vector shifts
+vsll.vv     # Vector shift left logical vector-vector
+vsll.vx     # Vector shift left logical vector-scalar
+vsll.vi     # Vector shift left logical vector-immediate
+vsrl.vv     # Vector shift right logical vector-vector
+vsrl.vx     # Vector shift right logical vector-scalar
+vsrl.vi     # Vector shift right logical vector-immediate
+vsra.vv     # Vector shift right arithmetic vector-vector
+vsra.vx     # Vector shift right arithmetic vector-scalar
+vsra.vi     # Vector shift right arithmetic vector-immediate
+
+## Pseudo-Instructions (Assembler convenience)
+nop         # No operation (addi x0, x0, 0)
+li          # Load immediate (various expansions)
+mv          # Move register (addi rd, rs, 0)
+not         # NOT (xori rd, rs, -1)
+neg         # Negate (sub rd, x0, rs)
+negw        # Negate word (subw rd, x0, rs)
+sext.w      # Sign-extend word (addiw rd, rs, 0)
+seqz        # Set equal to zero (sltiu rd, rs, 1)
+snez        # Set not equal to zero (sltu rd, x0, rs)
+sltz        # Set less than zero (slt rd, rs, x0)
+sgtz        # Set greater than zero (slt rd, x0, rs)
+fmv.s       # Floating-point move single (fsgnj.s rd, rs, rs)
+fabs.s      # Floating-point absolute single (fsgnjx.s rd, rs, rs)
+fneg.s      # Floating-point negate single (fsgnjn.s rd, rs, rs)
+fmv.d       # Floating-point move double (fsgnj.d rd, rs, rs)
+fabs.d      # Floating-point absolute double (fsgnjx.d rd, rs, rs)
+fneg.d      # Floating-point negate double (fsgnjn.d rd, rs, rs)
+beqz        # Branch if equal to zero (beq rs, x0, offset)
+bnez        # Branch if not equal to zero (bne rs, x0, offset)
+blez        # Branch if less than or equal to zero (bge x0, rs, offset)
+bgez        # Branch if greater than or equal to zero (bge rs, x0, offset)
+bltz        # Branch if less than zero (blt rs, x0, offset)
+bgtz        # Branch if greater than zero (blt x0, rs, offset)
+bgt         # Branch if greater than (blt rt, rs, offset)
+ble         # Branch if less than or equal (bge rt, rs, offset)
+bgtu        # Branch if greater than unsigned (bltu rt, rs, offset)
+bleu        # Branch if less than or equal unsigned (bgeu rt, rs, offset)
+j           # Jump (jal x0, offset)
+jal         # Jump and link (jal x1, offset when rd omitted)
+jr          # Jump register (jalr x0, rs, 0)
+jalr        # Jump and link register (jalr x1, rs, 0 when rd omitted)
+ret         # Return (jalr x0, x1, 0)
+call        # Call (combination of auipc and jalr)
+tail        # Tail call (combination of auipc and jalr to x0)
+
+## Standard CSR (Control and Status Register) Names
+# User-level CSRs
+ustatus     # User status register
+uie         # User interrupt-enable register
+utvec       # User trap handler base address
+uscratch    # User scratch register
+uepc        # User exception program counter
+ucause      # User trap cause
+utval       # User bad address or instruction
+uip         # User interrupt pending
+
+# Supervisor-level CSRs
+sstatus     # Supervisor status register
+sedeleg     # Supervisor exception delegation register
+sideleg     # Supervisor interrupt delegation register
+sie         # Supervisor interrupt-enable register
+stvec       # Supervisor trap handler base address
+scounteren  # Supervisor counter enable
+sscratch    # Supervisor scratch register
+sepc        # Supervisor exception program counter
+scause      # Supervisor trap cause
+stval       # Supervisor bad address or instruction
+sip         # Supervisor interrupt pending
+satp        # Supervisor address translation and protection
+
+# Machine-level CSRs
+mstatus     # Machine status register
+misa        # Machine ISA register
+medeleg     # Machine exception delegation register
+mideleg     # Machine interrupt delegation register
+mie         # Machine interrupt-enable register
+mtvec       # Machine trap-handler base address
+mcounteren  # Machine counter enable
+mscratch    # Machine scratch register
+mepc        # Machine exception program counter
+mcause      # Machine trap cause
+mtval       # Machine bad address or instruction
+mip         # Machine interrupt pending
+pmpcfg0     # Physical memory protection configuration register 0
+pmpcfg1     # Physical memory protection configuration register 1
+pmpcfg2     # Physical memory protection configuration register 2
+pmpcfg3     # Physical memory protection configuration register 3
+pmpaddr0    # Physical memory protection address register 0
+pmpaddr1    # Physical memory protection address register 1
+# ... (pmpaddr2-15 follow similar pattern)
+mcycle      # Machine cycle counter
+minstret    # Machine instructions-retired counter
+mhpmcounter3    # Machine performance-monitoring counter 3
+# ... (mhpmcounter4-31 follow similar pattern)
+mcountinhibit   # Machine counter-inhibit register
+mhpmevent3      # Machine performance-monitoring event selector 3
+# ... (mhpmevent4-31 follow similar pattern)

@@ -1,0 +1,539 @@
+# x86_64 Instruction Set Reference
+# Based on Intel 64 and IA-32 Architectures Software Developer's Manual
+# AT&T Syntax Format: mnemonic source, destination
+
+## Data Movement Instructions
+mov         # Move data between registers/memory
+movq        # Move quadword (64-bit)
+movl        # Move doubleword (32-bit) 
+movw        # Move word (16-bit)
+movb        # Move byte (8-bit)
+movzx       # Move with zero extension
+movzb       # Move byte with zero extension to 32-bit
+movzw       # Move word with zero extension to 32-bit
+movzbl      # Move byte with zero extension to 32-bit
+movzwl      # Move word with zero extension to 32-bit
+movzbq      # Move byte with zero extension to 64-bit
+movzwq      # Move word with zero extension to 64-bit
+movsx       # Move with sign extension
+movsb       # Move byte with sign extension to 32-bit
+movsw       # Move word with sign extension to 32-bit
+movsbl      # Move byte with sign extension to 32-bit
+movswl      # Move word with sign extension to 32-bit
+movsbq      # Move byte with sign extension to 64-bit
+movswq      # Move word with sign extension to 64-bit
+movsxd      # Move doubleword with sign extension to 64-bit
+lea         # Load effective address
+leaq        # Load effective address (64-bit)
+push        # Push onto stack
+pushq       # Push quadword onto stack
+pushw       # Push word onto stack
+pop         # Pop from stack
+popq        # Pop quadword from stack
+popw        # Pop word from stack
+xchg        # Exchange register/memory with register
+xchgq       # Exchange quadwords
+cmpxchg     # Compare and exchange
+cmpxchg8b   # Compare and exchange 8 bytes
+cmpxchg16b  # Compare and exchange 16 bytes
+xadd        # Exchange and add
+bswap       # Byte swap
+
+## Arithmetic Instructions
+add         # Add
+addq        # Add quadwords
+addl        # Add doublewords
+addw        # Add words
+addb        # Add bytes
+adc         # Add with carry
+adcq        # Add quadwords with carry
+adcl        # Add doublewords with carry
+adcw        # Add words with carry
+adcb        # Add bytes with carry
+sub         # Subtract
+subq        # Subtract quadwords
+subl        # Subtract doublewords
+subw        # Subtract words
+subb        # Subtract bytes
+sbb         # Subtract with borrow
+sbbq        # Subtract quadwords with borrow
+sbbl        # Subtract doublewords with borrow
+sbbw        # Subtract words with borrow
+sbbb        # Subtract bytes with borrow
+mul         # Unsigned multiply
+mulq        # Unsigned multiply quadwords
+mull        # Unsigned multiply doublewords
+mulw        # Unsigned multiply words
+mulb        # Unsigned multiply bytes
+imul        # Signed multiply
+imulq       # Signed multiply quadwords
+imull       # Signed multiply doublewords
+imulw       # Signed multiply words
+imulb       # Signed multiply bytes
+div         # Unsigned divide
+divq        # Unsigned divide quadwords
+divl        # Unsigned divide doublewords
+divw        # Unsigned divide words
+divb        # Unsigned divide bytes
+idiv        # Signed divide
+idivq       # Signed divide quadwords
+idivl       # Signed divide doublewords
+idivw       # Signed divide words
+idivb       # Signed divide bytes
+inc         # Increment by 1
+incq        # Increment quadword by 1
+incl        # Increment doubleword by 1
+incw        # Increment word by 1
+incb        # Increment byte by 1
+dec         # Decrement by 1
+decq        # Decrement quadword by 1
+decl        # Decrement doubleword by 1
+decw        # Decrement word by 1
+decb        # Decrement byte by 1
+neg         # Two's complement negation
+negq        # Negate quadword
+negl        # Negate doubleword
+negw        # Negate word
+negb        # Negate byte
+cmp         # Compare two operands
+cmpq        # Compare quadwords
+cmpl        # Compare doublewords
+cmpw        # Compare words
+cmpb        # Compare bytes
+
+## Logical Instructions
+and         # Logical AND
+andq        # Logical AND quadwords
+andl        # Logical AND doublewords
+andw        # Logical AND words
+andb        # Logical AND bytes
+or          # Logical OR
+orq         # Logical OR quadwords
+orl         # Logical OR doublewords
+orw         # Logical OR words
+orb         # Logical OR bytes
+xor         # Logical exclusive OR
+xorq        # Logical exclusive OR quadwords
+xorl        # Logical exclusive OR doublewords
+xorw        # Logical exclusive OR words
+xorb        # Logical exclusive OR bytes
+not         # One's complement negation
+notq        # One's complement negate quadword
+notl        # One's complement negate doubleword
+notw        # One's complement negate word
+notb        # One's complement negate byte
+test        # Logical compare
+testq       # Logical compare quadwords
+testl       # Logical compare doublewords
+testw       # Logical compare words
+testb       # Logical compare bytes
+
+## Shift and Rotate Instructions
+sal         # Shift arithmetic left (same as shl)
+salq        # Shift arithmetic left quadword
+sall        # Shift arithmetic left doubleword
+salw        # Shift arithmetic left word
+salb        # Shift arithmetic left byte
+shl         # Shift logical left
+shlq        # Shift logical left quadword
+shll        # Shift logical left doubleword
+shlw        # Shift logical left word
+shlb        # Shift logical left byte
+sar         # Shift arithmetic right
+sarq        # Shift arithmetic right quadword
+sarl        # Shift arithmetic right doubleword
+sarw        # Shift arithmetic right word
+sarb        # Shift arithmetic right byte
+shr         # Shift logical right
+shrq        # Shift logical right quadword
+shrl        # Shift logical right doubleword
+shrw        # Shift logical right word
+shrb        # Shift logical right byte
+rol         # Rotate left
+rolq        # Rotate left quadword
+roll        # Rotate left doubleword
+rolw        # Rotate left word
+rolb        # Rotate left byte
+ror         # Rotate right
+rorq        # Rotate right quadword
+rorl        # Rotate right doubleword
+rorw        # Rotate right word
+rorb        # Rotate right byte
+rcl         # Rotate through carry left
+rclq        # Rotate through carry left quadword
+rcll        # Rotate through carry left doubleword
+rclw        # Rotate through carry left word
+rclb        # Rotate through carry left byte
+rcr         # Rotate through carry right
+rcrq        # Rotate through carry right quadword
+rcrl        # Rotate through carry right doubleword
+rcrw        # Rotate through carry right word
+rcrb        # Rotate through carry right byte
+
+## Bit Manipulation Instructions (BMI/BMI2)
+andn        # Logical AND NOT
+andnq       # Logical AND NOT quadword
+andnl       # Logical AND NOT doubleword
+bextr       # Bit field extract
+bextrq      # Bit field extract quadword
+bextrl      # Bit field extract doubleword
+blsi        # Extract lowest set isolated bit
+blsiq       # Extract lowest set isolated bit quadword
+blsil       # Extract lowest set isolated bit doubleword
+blsmsk      # Get mask up to lowest set bit
+blsmskq     # Get mask up to lowest set bit quadword
+blsmskl     # Get mask up to lowest set bit doubleword
+blsr        # Reset lowest set bit
+blsrq       # Reset lowest set bit quadword
+blsrl       # Reset lowest set bit doubleword
+bzhi        # Zero high bits starting with specified bit position
+bzhiq       # Zero high bits starting with specified bit position quadword
+bzhil       # Zero high bits starting with specified bit position doubleword
+lzcnt       # Count the number of leading zero bits
+lzcntq      # Count the number of leading zero bits quadword
+lzcntl      # Count the number of leading zero bits doubleword
+lzcntw      # Count the number of leading zero bits word
+pdep        # Parallel bits deposit
+pdepq       # Parallel bits deposit quadword
+pdepl       # Parallel bits deposit doubleword
+pext        # Parallel bits extract
+pextq       # Parallel bits extract quadword
+pextl       # Parallel bits extract doubleword
+popcnt      # Return the count of number of bits set to 1
+popcntq     # Return the count of number of bits set to 1 quadword
+popcntl     # Return the count of number of bits set to 1 doubleword
+popcntw     # Return the count of number of bits set to 1 word
+rorx        # Rotate right logical without affecting flags
+rorxq       # Rotate right logical without affecting flags quadword
+rorxl       # Rotate right logical without affecting flags doubleword
+sarx        # Shift arithmetic right without affecting flags
+sarxq       # Shift arithmetic right without affecting flags quadword
+sarxl       # Shift arithmetic right without affecting flags doubleword
+shlx        # Shift logical left without affecting flags
+shlxq       # Shift logical left without affecting flags quadword
+shlxl       # Shift logical left without affecting flags doubleword
+shrx        # Shift logical right without affecting flags
+shrxq       # Shift logical right without affecting flags quadword
+shrxl       # Shift logical right without affecting flags doubleword
+tzcnt       # Count the number of trailing zero bits
+tzcntq      # Count the number of trailing zero bits quadword
+tzcntl      # Count the number of trailing zero bits doubleword
+tzcntw      # Count the number of trailing zero bits word
+
+## Bit Test Instructions
+bt          # Bit test
+btq         # Bit test quadword
+btl         # Bit test doubleword
+btw         # Bit test word
+btc         # Bit test and complement
+btcq        # Bit test and complement quadword
+btcl        # Bit test and complement doubleword
+btcw        # Bit test and complement word
+btr         # Bit test and reset
+btrq        # Bit test and reset quadword
+btrl        # Bit test and reset doubleword
+btrw        # Bit test and reset word
+bts         # Bit test and set
+btsq        # Bit test and set quadword
+btsl        # Bit test and set doubleword
+btsw        # Bit test and set word
+bsf         # Bit scan forward
+bsfq        # Bit scan forward quadword
+bsfl        # Bit scan forward doubleword
+bsfw        # Bit scan forward word
+bsr         # Bit scan reverse
+bsrq        # Bit scan reverse quadword
+bsrl        # Bit scan reverse doubleword
+bsrw        # Bit scan reverse word
+
+## Control Transfer Instructions
+jmp         # Unconditional jump
+call        # Call procedure
+callq       # Call procedure (64-bit)
+ret         # Return from procedure
+retq        # Return from procedure (64-bit)
+retw        # Return from procedure (16-bit)
+iret        # Return from interrupt
+iretq       # Return from interrupt (64-bit)
+iretw       # Return from interrupt (16-bit)
+
+## Conditional Jump Instructions
+je          # Jump if equal (ZF=1)
+jz          # Jump if zero (ZF=1) - same as je
+jne         # Jump if not equal (ZF=0)
+jnz         # Jump if not zero (ZF=0) - same as jne
+js          # Jump if sign (SF=1)
+jns         # Jump if not sign (SF=0)
+jc          # Jump if carry (CF=1)
+jb          # Jump if below (CF=1) - same as jc
+jnae        # Jump if not above or equal (CF=1) - same as jc
+jnc         # Jump if not carry (CF=0)
+jae         # Jump if above or equal (CF=0) - same as jnc
+jnb         # Jump if not below (CF=0) - same as jnc
+jo          # Jump if overflow (OF=1)
+jno         # Jump if not overflow (OF=0)
+jp          # Jump if parity (PF=1)
+jpe         # Jump if parity even (PF=1) - same as jp
+jnp         # Jump if not parity (PF=0)
+jpo         # Jump if parity odd (PF=0) - same as jnp
+jl          # Jump if less (SF≠OF)
+jnge        # Jump if not greater or equal (SF≠OF) - same as jl
+jge         # Jump if greater or equal (SF=OF)
+jnl         # Jump if not less (SF=OF) - same as jge
+jle         # Jump if less or equal (ZF=1 or SF≠OF)
+jng         # Jump if not greater (ZF=1 or SF≠OF) - same as jle
+jg          # Jump if greater (ZF=0 and SF=OF)
+jnle        # Jump if not less or equal (ZF=0 and SF=OF) - same as jg
+ja          # Jump if above (CF=0 and ZF=0)
+jnbe        # Jump if not below or equal (CF=0 and ZF=0) - same as ja
+jbe         # Jump if below or equal (CF=1 or ZF=1)
+jna         # Jump if not above (CF=1 or ZF=1) - same as jbe
+jrcxz       # Jump if RCX register is zero
+jecxz       # Jump if ECX register is zero (32-bit mode)
+
+## Loop Instructions
+loop        # Loop until CX/ECX/RCX=0
+loope       # Loop while equal and CX/ECX/RCX≠0
+loopz       # Loop while zero and CX/ECX/RCX≠0 - same as loope
+loopne      # Loop while not equal and CX/ECX/RCX≠0
+loopnz      # Loop while not zero and CX/ECX/RCX≠0 - same as loopne
+
+## String Instructions
+movsb       # Move string bytes
+movsw       # Move string words
+movsl       # Move string doublewords
+movsq       # Move string quadwords
+cmpsb       # Compare string bytes
+cmpsw       # Compare string words
+cmpsl       # Compare string doublewords
+cmpsq       # Compare string quadwords
+scasb       # Scan string bytes
+scasw       # Scan string words
+scasl       # Scan string doublewords
+scasq       # Scan string quadwords
+lodsb       # Load string bytes
+lodsw       # Load string words
+lodsl       # Load string doublewords
+lodsq       # Load string quadwords
+stosb       # Store string bytes
+stosw       # Store string words
+stosl       # Store string doublewords
+stosq       # Store string quadwords
+rep         # Repeat string operation prefix
+repe        # Repeat while equal prefix
+repz        # Repeat while zero prefix - same as repe
+repne       # Repeat while not equal prefix
+repnz       # Repeat while not zero prefix - same as repne
+
+## I/O Instructions
+in          # Input from port
+inb         # Input byte from port
+inw         # Input word from port
+inl         # Input doubleword from port
+out         # Output to port
+outb        # Output byte to port
+outw        # Output word to port
+outl        # Output doubleword to port
+ins         # Input string from port
+insb        # Input string bytes from port
+insw        # Input string words from port
+insl        # Input string doublewords from port
+outs        # Output string to port
+outsb       # Output string bytes to port
+outsw       # Output string words to port
+outsl       # Output string doublewords to port
+
+## Flag Control Instructions
+clc         # Clear carry flag
+cld         # Clear direction flag
+cli         # Clear interrupt flag
+clts        # Clear task-switched flag in CR0
+cmc         # Complement carry flag
+stc         # Set carry flag
+std         # Set direction flag
+sti         # Set interrupt flag
+lahf        # Load AH with flags
+sahf        # Store AH into flags
+pushfq      # Push RFLAGS onto stack
+popfq       # Pop RFLAGS from stack
+pushfw      # Push FLAGS onto stack (16-bit)
+popfw       # Pop FLAGS from stack (16-bit)
+
+## Segment Register Instructions
+lds         # Load DS with far pointer
+les         # Load ES with far pointer
+lfs         # Load FS with far pointer
+lgs         # Load GS with far pointer
+lss         # Load SS with far pointer
+
+## System Instructions
+lgdt        # Load global descriptor table register
+sgdt        # Store global descriptor table register
+lidt        # Load interrupt descriptor table register
+sidt        # Store interrupt descriptor table register
+lldt        # Load local descriptor table register
+sldt        # Store local descriptor table register
+ltr         # Load task register
+str         # Store task register
+lmsw        # Load machine status word
+smsw        # Store machine status word
+arpl        # Adjust RPL field of selector
+lar         # Load access rights byte
+lsl         # Load segment limit
+verr        # Verify segment for reading
+verw        # Verify segment for writing
+sgdt        # Store global descriptor table register
+sidt        # Store interrupt descriptor table register
+sldt        # Store local descriptor table register
+smsw        # Store machine status word
+str         # Store task register
+
+## Processor Control Instructions
+hlt         # Halt processor
+nop         # No operation
+wait        # Wait for coprocessor
+fwait       # Wait for coprocessor - same as wait
+lock        # Lock bus during next instruction
+pause       # Pause (for spin-wait loops)
+mfence      # Memory fence - serialize all memory operations
+lfence      # Load fence - serialize all load operations
+sfence      # Store fence - serialize all store operations
+
+## Privilege Control Instructions
+int         # Call interrupt procedure
+int3        # Call breakpoint interrupt
+into        # Call overflow interrupt
+iret        # Return from interrupt
+iretd       # Return from interrupt (32-bit)
+iretq       # Return from interrupt (64-bit)
+sysenter    # Fast system call (32-bit)
+sysexit     # Fast system call return (32-bit)
+syscall     # Fast system call (64-bit)
+sysret      # Fast system call return (64-bit)
+
+## CPU Identification and Control
+cpuid       # CPU identification
+rdtsc       # Read time-stamp counter
+rdtscp      # Read time-stamp counter and processor ID
+rdpmc       # Read performance monitoring counter
+rdmsr       # Read model-specific register
+wrmsr       # Write model-specific register
+swapgs      # Swap GS base register
+
+## Memory Management
+invd        # Invalidate cache without writeback
+wbinvd      # Writeback and invalidate cache
+invlpg      # Invalidate page in TLB
+clflush     # Flush cache line
+clflushopt  # Flush cache line optimized
+clwb        # Cache line write back
+prefetch    # Prefetch data into cache
+prefetchw   # Prefetch data into cache for write
+prefetcht0  # Prefetch data into all cache levels
+prefetcht1  # Prefetch data into level 2 cache and higher
+prefetcht2  # Prefetch data into level 3 cache and higher
+prefetchnta # Prefetch data into cache with non-temporal hint
+
+## Atomic Operations
+xchg        # Exchange register/memory with register
+cmpxchg     # Compare and exchange
+cmpxchg8b   # Compare and exchange 8 bytes
+cmpxchg16b  # Compare and exchange 16 bytes
+xadd        # Exchange and add
+
+## Conditional Move Instructions
+cmova       # Conditional move if above
+cmovae      # Conditional move if above or equal
+cmovb       # Conditional move if below
+cmovbe      # Conditional move if below or equal
+cmovc       # Conditional move if carry
+cmove       # Conditional move if equal
+cmovg       # Conditional move if greater
+cmovge      # Conditional move if greater or equal
+cmovl       # Conditional move if less
+cmovle      # Conditional move if less or equal
+cmovna      # Conditional move if not above
+cmovnae     # Conditional move if not above or equal
+cmovnb      # Conditional move if not below
+cmovnbe     # Conditional move if not below or equal
+cmovnc      # Conditional move if not carry
+cmovne      # Conditional move if not equal
+cmovng      # Conditional move if not greater
+cmovnge     # Conditional move if not greater or equal
+cmovnl      # Conditional move if not less
+cmovnle     # Conditional move if not less or equal
+cmovno      # Conditional move if not overflow
+cmovnp      # Conditional move if not parity
+cmovns      # Conditional move if not sign
+cmovnz      # Conditional move if not zero
+cmovo       # Conditional move if overflow
+cmovp       # Conditional move if parity
+cmovpe      # Conditional move if parity even
+cmovpo      # Conditional move if parity odd
+cmovs       # Conditional move if sign
+cmovz       # Conditional move if zero
+
+## Set Byte on Condition Instructions
+seta        # Set byte if above
+setae       # Set byte if above or equal
+setb        # Set byte if below
+setbe       # Set byte if below or equal
+setc        # Set byte if carry
+sete        # Set byte if equal
+setg        # Set byte if greater
+setge       # Set byte if greater or equal
+setl        # Set byte if less
+setle       # Set byte if less or equal
+setna       # Set byte if not above
+setnae      # Set byte if not above or equal
+setnb       # Set byte if not below
+setnbe      # Set byte if not below or equal
+setnc       # Set byte if not carry
+setne       # Set byte if not equal
+setng       # Set byte if not greater
+setnge      # Set byte if not greater or equal
+setnl       # Set byte if not less
+setnle      # Set byte if not less or equal
+setno       # Set byte if not overflow
+setnp       # Set byte if not parity
+setns       # Set byte if not sign
+setnz       # Set byte if not zero
+seto        # Set byte if overflow
+setp        # Set byte if parity
+setpe       # Set byte if parity even
+setpo       # Set byte if parity odd
+sets        # Set byte if sign
+setz        # Set byte if zero
+
+## Conversion Instructions
+cbw         # Convert byte to word (AL -> AX)
+cwde        # Convert word to doubleword (AX -> EAX)
+cdqe        # Convert doubleword to quadword (EAX -> RAX)
+cwd         # Convert word to doubleword (AX -> DX:AX)
+cdq         # Convert doubleword to quadword (EAX -> EDX:EAX)
+cqo         # Convert quadword to octword (RAX -> RDX:RAX)
+
+## Decimal Arithmetic Instructions
+daa         # Decimal adjust after addition
+das         # Decimal adjust after subtraction
+aaa         # ASCII adjust after addition
+aas         # ASCII adjust after subtraction
+aam         # ASCII adjust after multiplication
+aad         # ASCII adjust before division
+
+## Protection Control Instructions
+arpl        # Adjust RPL field of selector
+lar         # Load access rights byte
+lsl         # Load segment limit
+verr        # Verify segment for reading
+verw        # Verify segment for writing
+
+## Miscellaneous Instructions
+lea         # Load effective address
+nop         # No operation
+ud2         # Undefined instruction (generates exception)
+xlat        # Table lookup translation
+xlatb       # Table lookup translation - same as xlat
+bound       # Check array bounds
+enter       # Make stack frame for procedure parameters
+leave       # High level procedure exit
