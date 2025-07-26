@@ -89,7 +89,71 @@ typedef enum {
     OP_16_JE = 0x74,              // JE rel8
     OP_16_JNE = 0x75,             // JNE rel8
     OP_16_JL = 0x7C,              // JL rel8
-    OP_16_JG = 0x7F               // JG rel8
+    OP_16_JG = 0x7F,              // JG rel8
+    
+    // Logical operations - Phase 1 additions
+    OP_16_AND_REG_REG = 0x21,     // AND r/m16, r16
+    OP_16_AND_REG_IMM = 0x1081,   // AND r/m16, imm16 (with reg=4) - unique identifier
+    OP_16_OR_REG_REG = 0x09,      // OR r/m16, r16
+    OP_16_OR_REG_IMM = 0x1181,    // OR r/m16, imm16 (with reg=1) - unique identifier
+    OP_16_XOR_REG_REG = 0x31,     // XOR r/m16, r16
+    OP_16_XOR_REG_IMM = 0x1681,   // XOR r/m16, imm16 (with reg=6) - unique identifier
+    OP_16_NOT_REG = 0x1F7,        // NOT r/m16 (with reg=2) - unique identifier
+    OP_16_TEST_REG_REG = 0x85,    // TEST r/m16, r16
+    OP_16_TEST_REG_IMM = 0x10F7,  // TEST r/m16, imm16 (with reg=0) - unique identifier
+    
+    // Bit operations - Phase 1 additions
+    OP_16_SHL_REG_1 = 0x1D1,      // SHL r/m16, 1 (with reg=4) - unique identifier
+    OP_16_SHL_REG_CL = 0x1D3,     // SHL r/m16, CL (with reg=4) - unique identifier
+    OP_16_SHL_REG_IMM = 0x1C1,    // SHL r/m16, imm8 (with reg=4) - unique identifier
+    OP_16_SHR_REG_1 = 0x2D1,      // SHR r/m16, 1 (with reg=5) - unique identifier
+    OP_16_SHR_REG_CL = 0x2D3,     // SHR r/m16, CL (with reg=5) - unique identifier
+    OP_16_SHR_REG_IMM = 0x2C1,    // SHR r/m16, imm8 (with reg=5) - unique identifier
+    OP_16_SAR_REG_1 = 0x3D1,      // SAR r/m16, 1 (with reg=7) - unique identifier
+    OP_16_SAR_REG_CL = 0x3D3,     // SAR r/m16, CL (with reg=7) - unique identifier
+    OP_16_SAR_REG_IMM = 0x3C1,    // SAR r/m16, imm8 (with reg=7) - unique identifier
+    OP_16_ROL_REG_1 = 0x4D1,      // ROL r/m16, 1 (with reg=0) - unique identifier
+    OP_16_ROL_REG_CL = 0x4D3,     // ROL r/m16, CL (with reg=0) - unique identifier
+    OP_16_ROL_REG_IMM = 0x4C1,    // ROL r/m16, imm8 (with reg=0) - unique identifier
+    OP_16_ROR_REG_1 = 0x5D1,      // ROR r/m16, 1 (with reg=1) - unique identifier
+    OP_16_ROR_REG_CL = 0x5D3,     // ROR r/m16, CL (with reg=1) - unique identifier
+    OP_16_ROR_REG_IMM = 0x5C1,    // ROR r/m16, imm8 (with reg=1) - unique identifier
+    
+    // Advanced arithmetic - Phase 1 additions
+    OP_16_MUL_REG = 0x6F7,        // MUL r/m16 (with reg=4) - unique identifier
+    OP_16_IMUL_REG = 0x7F7,       // IMUL r/m16 (with reg=5) - unique identifier
+    OP_16_DIV_REG = 0x8F7,        // DIV r/m16 (with reg=6) - unique identifier
+    OP_16_IDIV_REG = 0x9F7,       // IDIV r/m16 (with reg=7) - unique identifier
+    OP_16_INC_REG = 0x40,         // INC r16 (base + reg)
+    OP_16_DEC_REG = 0x48,         // DEC r16 (base + reg)
+    OP_16_NEG_REG = 0xAF7,        // NEG r/m16 (with reg=3) - unique identifier
+    
+    // Additional conditional jumps - Phase 1 additions
+    OP_16_JA = 0x77,              // JA rel8
+    OP_16_JAE = 0x73,             // JAE rel8
+    OP_16_JB = 0x72,              // JB rel8
+    OP_16_JBE = 0x76,             // JBE rel8
+    OP_16_JC = 0x172,             // JC rel8 (alias for JB) - unique identifier
+    OP_16_JNC = 0x173,            // JNC rel8 (alias for JAE) - unique identifier
+    OP_16_JO = 0x70,              // JO rel8
+    OP_16_JNO = 0x71,             // JNO rel8
+    OP_16_JS = 0x78,              // JS rel8
+    OP_16_JNS = 0x79,             // JNS rel8
+    OP_16_JP = 0x7A,              // JP rel8
+    OP_16_JNP = 0x7B,             // JNP rel8
+    OP_16_JZ = 0x174,             // JZ rel8 (alias for JE) - unique identifier
+    OP_16_JNZ = 0x175,            // JNZ rel8 (alias for JNE) - unique identifier
+    OP_16_JLE = 0x7E,             // JLE rel8
+    OP_16_JGE = 0x7D,             // JGE rel8
+    
+    // Flag operations - Phase 1 additions
+    OP_16_CLC = 0xF8,             // CLC
+    OP_16_STC = 0xF9,             // STC
+    OP_16_CMC = 0xF5,             // CMC
+    OP_16_CLD = 0xFC,             // CLD
+    OP_16_STD = 0xFD,             // STD
+    OP_16_CLI = 0xFA,             // CLI
+    OP_16_STI = 0xFB              // STI
 } x86_16_opcode_t;
 
 // Function declarations

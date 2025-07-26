@@ -413,7 +413,12 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node) {
     
     // Try architecture-specific directive handler
     if (ctx->arch && ctx->arch->handle_directive) {
-        const char *args = NULL; // TODO: Extract args from AST if needed
+        // Extract first argument if available for simple directives
+        const char *args = NULL;
+        if (ast_dir->arg_count > 0 && ast_dir->args && ast_dir->args[0]) {
+            args = ast_dir->args[0];
+        }
+        
         if (ctx->arch->handle_directive(directive, args) == 0) {
             return 0; // Successfully handled by architecture
         }
