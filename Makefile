@@ -318,10 +318,10 @@ $(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity.c $(UNITY_EXTENSIO
 	@echo "Compiling unit test: $@"
 	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
-# Instruction completeness test
-$(TESTBIN_DIR)/instruction_completeness: tests/instruction_completeness/main.c tests/instruction_completeness/instruction_completeness.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling instruction completeness test: $@"
-	$(CC) $(TEST_CFLAGS_ENHANCED) -Itests/instruction_completeness tests/instruction_completeness/main.c tests/instruction_completeness/instruction_completeness.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+# Instruction completeness test (modular version)
+$(TESTBIN_DIR)/instruction_completeness: $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Building instruction completeness test: $@"
+	@$(MAKE) -C tests/instruction_completeness -f Makefile_modular BIN_DIR=../../$(TESTBIN_DIR) OBJ_BASE_DIR=../../$(OBJ_DIR) TARGET=../../$(TESTBIN_DIR)/instruction_completeness all
 
 # Core module unit tests
 test-unit-core:

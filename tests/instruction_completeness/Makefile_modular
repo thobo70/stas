@@ -1,0 +1,125 @@
+# Makefile for modular instruction completeness testing
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -g -I../../include
+LDFLAGS = 
+
+# Build directories (can be overridden from main Makefile)
+OBJ_BASE_DIR ?= ../../obj
+BIN_DIR ?= ../../testbin
+OBJ_DIR = $(OBJ_BASE_DIR)/tests/instruction_completeness
+
+# Source files for each module
+ARCH_SOURCES = arch_x86_16.c arch_x86_32.c arch_x86_64.c arch_arm64.c arch_riscv.c
+CORE_SOURCES = arch_registry.c testing_core.c reporting.c
+MAIN_SOURCES = main.c
+
+# Object files (in build directory)
+ARCH_OBJECTS = $(ARCH_SOURCES:%.c=$(OBJ_DIR)/%.o)
+CORE_OBJECTS = $(CORE_SOURCES:%.c=$(OBJ_DIR)/%.o)
+MAIN_OBJECTS = $(MAIN_SOURCES:%.c=$(OBJ_DIR)/%.o)
+ALL_OBJECTS = $(ARCH_OBJECTS) $(CORE_OBJECTS) $(MAIN_OBJECTS)
+
+# Target executable
+TARGET ?= $(BIN_DIR)/instruction_completeness_modular
+
+# External dependencies (from main STAS project) - All objects except main and test objects
+STAS_OBJS_PATTERN = $(shell find $(OBJ_BASE_DIR) -name "*.o" ! -name "main.o" ! -path "$(OBJ_BASE_DIR)/tests/*" 2>/dev/null)
+
+# Default target
+all: $(TARGET)
+
+# Create build directories
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
+
+$(BIN_DIR):
+	@mkdir -p $(BIN_DIR)
+
+# Build the main executable (using all STAS objects like the original)
+$(TARGET): $(ALL_OBJECTS) | $(BIN_DIR)
+	$(CC) $(ALL_OBJECTS) $(STAS_OBJS_PATTERN) -o $(TARGET) $(LDFLAGS)
+
+# Architecture module objects
+$(OBJ_DIR)/arch_x86_16.o: arch_x86_16.c arch_x86_16.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c arch_x86_16.c -o $(OBJ_DIR)/arch_x86_16.o
+
+$(OBJ_DIR)/arch_x86_32.o: arch_x86_32.c arch_x86_32.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c arch_x86_32.c -o $(OBJ_DIR)/arch_x86_32.o
+
+$(OBJ_DIR)/arch_x86_64.o: arch_x86_64.c arch_x86_64.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c arch_x86_64.c -o $(OBJ_DIR)/arch_x86_64.o
+
+$(OBJ_DIR)/arch_arm64.o: arch_arm64.c arch_arm64.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c arch_arm64.c -o $(OBJ_DIR)/arch_arm64.o
+
+$(OBJ_DIR)/arch_riscv.o: arch_riscv.c arch_riscv.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c arch_riscv.c -o $(OBJ_DIR)/arch_riscv.o
+
+# Core module objects
+$(OBJ_DIR)/arch_registry.o: arch_registry.c arch_registry.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c arch_registry.c -o $(OBJ_DIR)/arch_registry.o
+
+$(OBJ_DIR)/testing_core.o: testing_core.c testing_core.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c testing_core.c -o $(OBJ_DIR)/testing_core.o
+
+$(OBJ_DIR)/reporting.o: reporting.c reporting.h instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c reporting.c -o $(OBJ_DIR)/reporting.o
+
+# Main object
+$(OBJ_DIR)/main.o: main.c instruction_completeness.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c main.c -o $(OBJ_DIR)/main.o
+
+# Individual module targets for testing
+arch-modules: $(ARCH_OBJECTS)
+core-modules: $(CORE_OBJECTS)
+
+# Test individual architectures 
+$(BIN_DIR)/test_x86_16: $(OBJ_DIR)/arch_x86_16.o $(OBJ_DIR)/arch_registry.o $(OBJ_DIR)/testing_core.o $(OBJ_DIR)/reporting.o $(OBJ_DIR)/main.o | $(BIN_DIR)
+	$(CC) $^ $(STAS_OBJS_PATTERN) -DTEST_ARCH=\"x86_16\" -o $(BIN_DIR)/test_x86_16 $(LDFLAGS)
+
+$(BIN_DIR)/test_x86_32: $(OBJ_DIR)/arch_x86_32.o $(OBJ_DIR)/arch_registry.o $(OBJ_DIR)/testing_core.o $(OBJ_DIR)/reporting.o $(OBJ_DIR)/main.o | $(BIN_DIR)
+	$(CC) $^ $(STAS_OBJS_PATTERN) -DTEST_ARCH=\"x86_32\" -o $(BIN_DIR)/test_x86_32 $(LDFLAGS)
+
+$(BIN_DIR)/test_x86_64: $(OBJ_DIR)/arch_x86_64.o $(OBJ_DIR)/arch_registry.o $(OBJ_DIR)/testing_core.o $(OBJ_DIR)/reporting.o $(OBJ_DIR)/main.o | $(BIN_DIR)
+	$(CC) $^ $(STAS_OBJS_PATTERN) -DTEST_ARCH=\"x86_64\" -o $(BIN_DIR)/test_x86_64 $(LDFLAGS)
+
+$(BIN_DIR)/test_arm64: $(OBJ_DIR)/arch_arm64.o $(OBJ_DIR)/arch_registry.o $(OBJ_DIR)/testing_core.o $(OBJ_DIR)/reporting.o $(OBJ_DIR)/main.o | $(BIN_DIR)
+	$(CC) $^ $(STAS_OBJS_PATTERN) -DTEST_ARCH=\"arm64\" -o $(BIN_DIR)/test_arm64 $(LDFLAGS)
+
+$(BIN_DIR)/test_riscv: $(OBJ_DIR)/arch_riscv.o $(OBJ_DIR)/arch_registry.o $(OBJ_DIR)/testing_core.o $(OBJ_DIR)/reporting.o $(OBJ_DIR)/main.o | $(BIN_DIR)
+	$(CC) $^ $(STAS_OBJS_PATTERN) -DTEST_ARCH=\"riscv\" -o $(BIN_DIR)/test_riscv $(LDFLAGS)
+
+# Convenience targets for individual tests
+test-x86_16: $(BIN_DIR)/test_x86_16
+test-x86_32: $(BIN_DIR)/test_x86_32
+test-x86_64: $(BIN_DIR)/test_x86_64
+test-arm64: $(BIN_DIR)/test_arm64
+test-riscv: $(BIN_DIR)/test_riscv
+
+# Run the main modular test
+test: $(TARGET)
+	@echo "=== Running Modular Instruction Completeness Test ==="
+	@$(TARGET)
+	@echo "Modular instruction completeness test completed"
+
+# Clean targets
+clean:
+	rm -rf $(OBJ_DIR)
+	rm -f $(TARGET) $(BIN_DIR)/test_x86_16 $(BIN_DIR)/test_x86_32 $(BIN_DIR)/test_x86_64 $(BIN_DIR)/test_arm64 $(BIN_DIR)/test_riscv
+
+clean-objects:
+	rm -rf $(OBJ_DIR)
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all                 - Build modular instruction completeness tester"
+	@echo "  test                - Run the modular instruction completeness test"
+	@echo "  arch-modules        - Build architecture modules only"
+	@echo "  core-modules        - Build core modules only"
+	@echo "  test-<arch>         - Build individual architecture tests"
+	@echo "  clean               - Remove all build artifacts"
+	@echo "  clean-objects       - Remove object files only"
+	@echo "  help                - Show this help message"
+
+.PHONY: all arch-modules core-modules test test-x86_16 test-x86_32 test-x86_64 test-arm64 test-riscv clean clean-objects help
