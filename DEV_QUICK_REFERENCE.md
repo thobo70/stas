@@ -6,12 +6,12 @@
 
 ## 🎯 Core Rules (FROM MANIFEST)
 
-### **1. CPU ACCURACY ### **Architecture Completeness**
-- x86_16: **100%** functional ✅
-- x86_32: **94.6%** functional (88/93) 🚀💥 **98.9% recognized** (92/93) - **210% improvement from original!**
+### **1. CPU ACCURACY & Architecture Completeness**
+- x86_16: **100%** functional ✅ COMPLETE
+- x86_32: **52.1%** functional (112/215) **85.1% recognized** (183/215) 🚀💥 **PHASE 2 COMPLETE** - Intel i386 documentation validated!
 - x86_64: **28.1%** functional 
 - ARM64: **13.8%** functional
-- RISC-V: **15.7%** functionalAMOUNT**
+- RISC-V: **15.7%** functional
 - ✅ Real CPU behavior takes absolute precedence
 - ✅ Hardware documentation is the ultimate authority
 - ✅ If tests are wrong, fix the tests
@@ -173,8 +173,8 @@ parse_operand(inst->operands[1]);  // destination
 ## 🏆 Success Metrics
 
 ### **Architecture Completeness**
-- x86_16: **100%** functional ✅
-- x86_32: **94.6%** functional (88/93) 🚀� 
+- x86_16: **100%** functional ✅ COMPLETE
+- x86_32: **52.1%** functional (112/215) **85.1% recognized** (183/215) 🚀💥 **PHASE 2 COMPLETE** - Intel i386 documentation validated!
 - x86_64: **28.1%** functional 
 - ARM64: **13.8%** functional
 - RISC-V: **15.7%** functional
