@@ -681,7 +681,14 @@ static void setup_dummy_operands(operand_t* operands, size_t operand_count, cons
                            strcmp(mnemonic, "jo") == 0 || strcmp(mnemonic, "jno") == 0 ||
                            strcmp(mnemonic, "js") == 0 || strcmp(mnemonic, "jns") == 0 ||
                            strcmp(mnemonic, "loop") == 0 || strcmp(mnemonic, "loope") == 0 ||
-                           strcmp(mnemonic, "loopne") == 0 || strcmp(mnemonic, "jecxz") == 0);
+                           strcmp(mnemonic, "loopne") == 0 || strcmp(mnemonic, "jecxz") == 0 ||
+                           // Jump aliases
+                           strcmp(mnemonic, "jna") == 0 || strcmp(mnemonic, "jnae") == 0 ||
+                           strcmp(mnemonic, "jnb") == 0 || strcmp(mnemonic, "jnbe") == 0 ||
+                           strcmp(mnemonic, "jng") == 0 || strcmp(mnemonic, "jnge") == 0 ||
+                           strcmp(mnemonic, "jnl") == 0 || strcmp(mnemonic, "jnle") == 0 ||
+                           strcmp(mnemonic, "jnp") == 0 || strcmp(mnemonic, "jp") == 0 ||
+                           strcmp(mnemonic, "jpe") == 0 || strcmp(mnemonic, "jpo") == 0);
     
     // Check if this is a set instruction that needs 8-bit register
     bool is_set_instr = (strncmp(mnemonic, "set", 3) == 0);
@@ -689,6 +696,25 @@ static void setup_dummy_operands(operand_t* operands, size_t operand_count, cons
     // Check if this is a bit manipulation instruction needing immediate + register
     bool is_bit_manip = (strcmp(mnemonic, "bt") == 0 || strcmp(mnemonic, "btc") == 0 ||
                         strcmp(mnemonic, "btr") == 0 || strcmp(mnemonic, "bts") == 0);
+    
+    // Check if this is LEA instruction that needs memory operand
+    bool is_lea = (strcmp(mnemonic, "lea") == 0 || strcmp(mnemonic, "leal") == 0 ||
+                   strcmp(mnemonic, "leaw") == 0 || strcmp(mnemonic, "leaq") == 0);
+    
+    // Check if this is MOVZX/MOVSX instruction that needs different sized operands
+    bool is_extend = (strcmp(mnemonic, "movzx") == 0 || strcmp(mnemonic, "movsx") == 0);
+    
+    // Check if this is a segment load instruction (LDS, LES, LFS, LGS, LSS)
+    bool is_segment_load = (strcmp(mnemonic, "lds") == 0 || strcmp(mnemonic, "les") == 0 ||
+                           strcmp(mnemonic, "lfs") == 0 || strcmp(mnemonic, "lgs") == 0 ||
+                           strcmp(mnemonic, "lss") == 0);
+    
+    // Check if this is ENTER instruction that needs two immediate operands
+    bool is_enter = (strcmp(mnemonic, "enter") == 0);
+    
+    // Check if this is a descriptor table instruction (LGDT, SGDT, LIDT, SIDT)
+    bool is_descriptor_table = (strcmp(mnemonic, "lgdt") == 0 || strcmp(mnemonic, "sgdt") == 0 ||
+                               strcmp(mnemonic, "lidt") == 0 || strcmp(mnemonic, "sidt") == 0);
     
     // Set up appropriate dummy operands based on architecture
     for (size_t i = 0; i < operand_count && i < 4; i++) {
@@ -724,6 +750,86 @@ static void setup_dummy_operands(operand_t* operands, size_t operand_count, cons
                     operands[i].value.reg.encoding = 0;
                     operands[i].size = 4;
                 }
+            }
+            // Special handling for LEA instruction
+            else if (is_lea && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: memory address (AT&T: source memory comes first)
+                    operands[i].type = OPERAND_MEMORY;
+                    operands[i].value.memory.base.name = "ebx";
+                    operands[i].value.memory.base.size = 4;
+                    operands[i].value.memory.base.encoding = 3;
+                    operands[i].value.memory.offset = 8;  // 8(%ebx)
+                    operands[i].size = 4;
+                } else {
+                    // Second operand: destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "eax";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 4;
+                }
+            }
+            // Special handling for MOVZX/MOVSX extension instructions
+            else if (is_extend && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: smaller source register (AT&T: source comes first)
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "bl";
+                    operands[i].value.reg.size = 1;
+                    operands[i].value.reg.encoding = 3;
+                    operands[i].size = 1;
+                } else {
+                    // Second operand: larger destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "eax";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 4;
+                }
+            }
+            // Special handling for segment load instructions (LDS, LES, LFS, LGS, LSS)
+            else if (is_segment_load && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: memory address for segment:offset (AT&T: source memory comes first)
+                    operands[i].type = OPERAND_MEMORY;
+                    operands[i].value.memory.base.name = "ebx";
+                    operands[i].value.memory.base.size = 4;
+                    operands[i].value.memory.base.encoding = 3;
+                    operands[i].value.memory.offset = 0;  // (%ebx)
+                    operands[i].size = 6; // 6 bytes: 4-byte offset + 2-byte segment
+                } else {
+                    // Second operand: destination register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "eax";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 4;
+                }
+            }
+            // Special handling for ENTER instruction
+            else if (is_enter && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: frame size (16-bit immediate)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 16; // 16 bytes frame size
+                    operands[i].size = 2;
+                } else {
+                    // Second operand: nesting level (8-bit immediate)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 0; // nesting level 0
+                    operands[i].size = 1;
+                }
+            }
+            // Special handling for descriptor table instructions (LGDT, SGDT, LIDT, SIDT)
+            else if (is_descriptor_table && operand_count == 1) {
+                // Single operand: memory address for descriptor table
+                operands[i].type = OPERAND_MEMORY;
+                operands[i].value.memory.base.name = "ebx";
+                operands[i].value.memory.base.size = 4;
+                operands[i].value.memory.base.encoding = 3;
+                operands[i].value.memory.offset = 0;  // (%ebx)
+                operands[i].size = 6; // 6 bytes: base + limit
             }
             // Special handling for shift operations with AT&T syntax
             else if (is_shift_op && operand_count == 2) {
@@ -909,12 +1015,29 @@ static bool test_instruction_functional(arch_ops_t* arch_ops, const instruction_
 
 instruction_test_result_t test_instruction_category(const char *arch_name, 
                                                    const instruction_category_t *category) {
+    return test_instruction_category_verbose(arch_name, category, false);
+}
+
+instruction_test_result_t test_instruction_category_verbose(const char *arch_name, 
+                                                           const instruction_category_t *category,
+                                                           bool verbose_mode) {
     instruction_test_result_t result = {0};
     arch_ops_t* arch_ops = get_arch_ops_by_name(arch_name);
     
     if (!arch_ops || !category) return result;
     
     result.total = category->instruction_count;
+    
+    // Arrays to track failed instructions for verbose reporting
+    const instruction_def_t **unrecognized = NULL;
+    const instruction_def_t **nonfunctional = NULL;
+    size_t unrecognized_count = 0;
+    size_t nonfunctional_count = 0;
+    
+    if (verbose_mode) {
+        unrecognized = malloc(category->instruction_count * sizeof(instruction_def_t*));
+        nonfunctional = malloc(category->instruction_count * sizeof(instruction_def_t*));
+    }
     
     for (size_t i = 0; i < category->instruction_count; i++) {
         const instruction_def_t* instr = &category->instructions[i];
@@ -924,7 +1047,11 @@ instruction_test_result_t test_instruction_category(const char *arch_name,
             
             if (test_instruction_functional(arch_ops, instr)) {
                 result.functional++;
+            } else if (verbose_mode) {
+                nonfunctional[nonfunctional_count++] = instr;
             }
+        } else if (verbose_mode) {
+            unrecognized[unrecognized_count++] = instr;
         }
     }
     
@@ -932,6 +1059,34 @@ instruction_test_result_t test_instruction_category(const char *arch_name,
         (double)result.recognized / result.total * 100.0 : 0.0;
     result.functional_percent = result.total > 0 ? 
         (double)result.functional / result.total * 100.0 : 0.0;
+    
+    // Print verbose failure reports
+    if (verbose_mode) {
+        if (unrecognized_count > 0) {
+            printf("      ❌ UNRECOGNIZED (%zu instructions):\n", unrecognized_count);
+            for (size_t i = 0; i < unrecognized_count; i++) {
+                printf("         • %s", unrecognized[i]->mnemonic);
+                if (unrecognized[i]->is_extension) {
+                    printf(" (extension)");
+                }
+                printf("\n");
+            }
+        }
+        
+        if (nonfunctional_count > 0) {
+            printf("      ⚠️  NON-FUNCTIONAL (%zu instructions):\n", nonfunctional_count);
+            for (size_t i = 0; i < nonfunctional_count; i++) {
+                printf("         • %s", nonfunctional[i]->mnemonic);
+                if (nonfunctional[i]->is_extension) {
+                    printf(" (extension)");
+                }
+                printf(" - parsing OK, encoding failed\n");
+            }
+        }
+        
+        free(unrecognized);
+        free(nonfunctional);
+    }
     
     return result;
 }
@@ -1073,11 +1228,36 @@ void print_instruction_completeness_report_with_config(arch_test_result_t *resul
 void run_instruction_completeness_tests_with_config(const report_config_t *config) {
     printf("🚀 Starting STAS Instruction Set Completeness Analysis...\n");
     
-    arch_test_result_t *results = malloc(architecture_count * sizeof(arch_test_result_t));
+    // Determine which architectures to test
+    size_t test_arch_count = 0;
+    size_t start_idx = 0;
+    size_t end_idx = architecture_count;
     
-    for (size_t i = 0; i < architecture_count; i++) {
+    if (config && config->target_arch) {
+        // Find the specific architecture
+        for (size_t i = 0; i < architecture_count; i++) {
+            if (strcmp(architectures[i].arch_name, config->target_arch) == 0) {
+                start_idx = i;
+                end_idx = i + 1;
+                test_arch_count = 1;
+                break;
+            }
+        }
+        if (test_arch_count == 0) {
+            printf("❌ Error: Architecture '%s' not found!\n", config->target_arch);
+            return;
+        }
+        printf("🎯 Testing only %s architecture...\n", config->target_arch);
+    } else {
+        test_arch_count = architecture_count;
+        printf("📊 Testing all %zu architectures...\n", architecture_count);
+    }
+    
+    arch_test_result_t *results = malloc(test_arch_count * sizeof(arch_test_result_t));
+    
+    for (size_t i = start_idx, result_idx = 0; i < end_idx; i++, result_idx++) {
         const arch_instruction_set_t *arch = &architectures[i];
-        arch_test_result_t *result = &results[i];
+        arch_test_result_t *result = &results[result_idx];
         
         result->arch_name = arch->arch_name;
         result->category_count = arch->category_count;
@@ -1095,7 +1275,8 @@ void run_instruction_completeness_tests_with_config(const report_config_t *confi
             category_result_t *cat_result = &result->category_results[j];
             
             cat_result->category_name = category->category_name;
-            cat_result->result = test_instruction_category(arch->arch_name, category);
+            cat_result->result = test_instruction_category_verbose(arch->arch_name, category, 
+                                                                 config ? config->verbose_mode : false);
             
             // Add to overall totals
             result->overall.total += cat_result->result.total;
@@ -1115,10 +1296,10 @@ void run_instruction_completeness_tests_with_config(const report_config_t *confi
             (double)result->overall.functional / result->overall.total * 100.0 : 0.0;
     }
     
-    print_instruction_completeness_report_with_config(results, architecture_count, config);
+    print_instruction_completeness_report_with_config(results, test_arch_count, config);
     
     // Cleanup
-    for (size_t i = 0; i < architecture_count; i++) {
+    for (size_t i = 0; i < test_arch_count; i++) {
         free(results[i].category_results);
     }
     free(results);

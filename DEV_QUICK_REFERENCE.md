@@ -53,6 +53,28 @@ mov eax, ebx        # Missing % prefix ❌
 
 **Golden Rule**: Fix tests, not implementations (unless implementation is wrong)
 
+## 🔬 Instruction Completeness Testing
+
+**Basic Usage:**
+```bash
+# Test all architectures
+./testbin/instruction_completeness
+
+# Test specific architecture  
+./testbin/instruction_completeness x86_32
+
+# Get detailed failure reports
+./testbin/instruction_completeness x86_32 -v
+
+# Compact output for CI
+./testbin/instruction_completeness x86_32 -c
+```
+
+**Verbose Mode Output:**
+- ❌ **UNRECOGNIZED**: Instructions not parsed at all
+- ⚠️ **NON-FUNCTIONAL**: Parsed but encoding fails
+- Focus on UNRECOGNIZED first, then NON-FUNCTIONAL
+
 ---
 
 ## 🚨 Error Message Standards
@@ -174,7 +196,7 @@ parse_operand(inst->operands[1]);  // destination
 
 ### **Architecture Completeness**
 - x86_16: **100%** functional ✅ COMPLETE
-- x86_32: **70.2%** functional (151/215) **85.1% recognized** (183/215) 🚀💥 **PUSHING TO 100%** - **Arithmetic: 100% ✅** String: 66.7%, Logical: 93.8%, I/O & Advanced Data Movement Added
+- x86_32: **69.8%** functional (150/215) **85.1% recognized** (183/215) 🚀💥 **PUSHING TO 100%** - **Arithmetic: 100% ✅** String: 66.7%, Logical: 93.8%, I/O & Advanced Data Movement Added
 - x86_64: **28.1%** functional 
 - ARM64: **13.8%** functional
 - RISC-V: **15.7%** functional

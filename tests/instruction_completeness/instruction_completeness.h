@@ -49,6 +49,8 @@ typedef struct {
     int max_line_width;    // Maximum characters per line (default: 80)
     bool compact_mode;     // Use compact formatting
     bool show_progress_bars; // Show visual progress bars
+    bool verbose_mode;     // Show detailed failure reports
+    const char *target_arch; // Test only specific architecture (NULL for all)
 } report_config_t;
 
 // Function declarations
@@ -58,5 +60,8 @@ void print_instruction_completeness_report(arch_test_result_t *results, size_t a
 void print_instruction_completeness_report_with_config(arch_test_result_t *results, size_t arch_count, const report_config_t *config);
 instruction_test_result_t test_instruction_category(const char *arch_name, 
                                                    const instruction_category_t *category);
+instruction_test_result_t test_instruction_category_verbose(const char *arch_name, 
+                                                           const instruction_category_t *category,
+                                                           bool verbose_mode);
 
 #endif // INSTRUCTION_SET_COMPLETENESS_H
