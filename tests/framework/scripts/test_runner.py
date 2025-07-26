@@ -240,6 +240,66 @@ class STASTestRunner:
         
         return success
     
+    def run_instruction_completeness_tests(self) -> bool:
+        """Run instruction completeness tests"""
+        print(f"\n{Colors.PURPLE}=== Running Instruction Completeness Tests ==={Colors.NC}")
+        
+        success, stdout, stderr = self.run_command("make test-instruction-completeness")
+        
+        self.results['instruction_completeness'] = {
+            'passed': success,
+            'output': stdout,
+            'errors': stderr
+        }
+        
+        if success:
+            self.log_success("Instruction completeness tests passed")
+        else:
+            self.log_error("Instruction completeness tests failed")
+            print(f"Error details:\n{stderr}")
+        
+        return success
+    
+    def extract_instruction_completeness_percentage(self, output: str) -> str:
+        """Extract overall instruction completeness percentage from output"""
+        import re
+        
+        # Find all OVERALL lines with pattern: | OVERALL  |  XX/YY  [########] [########] |
+        overall_matches = re.findall(r'OVERALL\s+\|\s+(\d+)/(\d+)', output)
+        
+        if overall_matches:
+            total_implemented = 0
+            total_instructions = 0
+            
+            # Sum up all architectures
+            for implemented_str, total_str in overall_matches:
+                implemented = int(implemented_str)
+                total = int(total_str)
+                total_implemented += implemented
+                total_instructions += total
+            
+            if total_instructions > 0:
+                percentage = (total_implemented / total_instructions) * 100
+                return f"{percentage:.1f}%"
+        
+        # Fallback: look for any percentage pattern if OVERALL format not found
+        percentage_match = re.search(r'(\d+\.\d+)%.*?functional', output)
+        if percentage_match:
+            return f"{percentage_match.group(1)}%"
+        
+        return "N/A"
+    
+    def extract_coverage_percentage(self, output: str) -> str:
+        """Extract overall line coverage percentage from output"""
+        import re
+        
+        # Look for lcov output pattern: "lines......: XX.X% (xxx of xxx lines)"
+        coverage_match = re.search(r'lines\.+:\s*(\d+\.\d+)%', output)
+        if coverage_match:
+            return f"{coverage_match.group(1)}%"
+        
+        return "N/A"
+    
     def generate_coverage(self) -> bool:
         """Generate code coverage report"""
         print(f"\n{Colors.PURPLE}=== Generating Code Coverage ==={Colors.NC}")
@@ -304,6 +364,7 @@ class STASTestRunner:
             'build_tests': 'unknown',
             'execution_tests': 'unknown',
             'integration_tests': 'unknown',
+            'instruction_completeness': 'unknown',
             'coverage': 'unknown'
         }
         
@@ -341,6 +402,13 @@ class STASTestRunner:
             summary['integration_tests'] = 'passed' if self.results['integration_tests']['passed'] else 'failed'
             summary['total_categories'] += 1
             if self.results['integration_tests']['passed']:
+                summary['passed_categories'] += 1
+        
+        # Instruction completeness
+        if self.results['instruction_completeness']:
+            summary['instruction_completeness'] = 'passed' if self.results['instruction_completeness']['passed'] else 'failed'
+            summary['total_categories'] += 1
+            if self.results['instruction_completeness']['passed']:
                 summary['passed_categories'] += 1
         
         # Coverage
@@ -383,7 +451,8 @@ class STASTestRunner:
         print(f"Build Tests:      {self.format_status(summary['build_tests'])}")
         print(f"Execution Tests:  {self.format_status(summary['execution_tests'])}")
         print(f"Integration Tests:{self.format_status(summary['integration_tests'])}")
-        print(f"Code Coverage:    {self.format_status(summary.get('coverage', 'unknown'))}")
+        print(f"Instruction Completeness:{self.format_status_with_percentage('instruction_completeness', summary)}")
+        print(f"Code Coverage:    {self.format_status_with_percentage('coverage', summary)}")
         
         print(f"\nOverall: {summary['passed_categories']}/{summary['total_categories']} categories passed")
         
@@ -397,6 +466,31 @@ class STASTestRunner:
     
     def format_status(self, status: str) -> str:
         if status == 'passed':
+            return f"{Colors.GREEN}✅ PASSED{Colors.NC}"
+        elif status == 'failed':
+            return f"{Colors.RED}❌ FAILED{Colors.NC}"
+        else:
+            return f"{Colors.YELLOW}⚠️  UNKNOWN{Colors.NC}"
+    
+    def format_status_with_percentage(self, test_type: str, summary: Dict[str, Any]) -> str:
+        """Format status with percentage for instruction completeness and coverage"""
+        status = summary.get(test_type, 'unknown')
+        
+        if status == 'passed':
+            if test_type == 'instruction_completeness':
+                # Extract percentage from instruction completeness results
+                if 'instruction_completeness' in self.results and self.results['instruction_completeness']:
+                    output = self.results['instruction_completeness'].get('output', '')
+                    percentage = self.extract_instruction_completeness_percentage(output)
+                    return f"{Colors.GREEN}✅ PASSED ({percentage}){Colors.NC}"
+            elif test_type == 'coverage':
+                # Extract percentage from coverage results
+                if 'coverage' in self.results and self.results['coverage']:
+                    output = self.results['coverage'].get('output', '')
+                    percentage = self.extract_coverage_percentage(output)
+                    return f"{Colors.GREEN}✅ PASSED ({percentage}){Colors.NC}"
+            
+            # Fallback to regular PASSED if percentage extraction fails
             return f"{Colors.GREEN}✅ PASSED{Colors.NC}"
         elif status == 'failed':
             return f"{Colors.RED}❌ FAILED{Colors.NC}"
@@ -422,6 +516,7 @@ def main():
             ("Build Tests", runner.run_build_tests),
             ("Execution Tests", runner.run_execution_tests),
             ("Integration Tests", runner.run_integration_tests),
+            ("Instruction Completeness", runner.run_instruction_completeness_tests),
         ]
         
         for category_name, test_func in test_categories:
