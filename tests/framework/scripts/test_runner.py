@@ -343,6 +343,10 @@ class STASTestRunner:
             if self.results['integration_tests']['passed']:
                 summary['passed_categories'] += 1
         
+        # Coverage
+        if self.results['coverage']:
+            summary['coverage'] = 'passed' if self.results['coverage']['generated'] else 'failed'
+        
         return summary
     
     def generate_report(self):

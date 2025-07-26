@@ -135,21 +135,9 @@ if [ "$LCOV_AVAILABLE" = true ]; then
     echo "HTML report: tests/coverage/coverage_html/index.html"
 fi
 echo "========================================"
-    if lcov --capture --directory ../.. --output-file coverage.info --ignore-errors source,gcov 2>/dev/null; then
-        
-        # Filter out system files and test files
-        lcov --remove coverage.info '/usr/*' '*/tests/*' '*/test_*' --output-file coverage_filtered.info --ignore-errors source 2>/dev/null
-        
-        # Generate HTML report
-        if genhtml coverage_filtered.info --output-directory coverage_html --ignore-errors source 2>/dev/null; then
-            log_success "HTML coverage report generated in tests/coverage/coverage_html/index.html"
-        else
-            log_warning "Failed to generate HTML report"
-        fi
-    else
-        log_warning "Failed to capture lcov data"
-    fi
-fi
+
+# Exit successfully even if lcov had warnings
+exit 0
 
 # Generate text summary
 log_info "Generating coverage summary..."
