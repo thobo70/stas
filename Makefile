@@ -318,6 +318,11 @@ $(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity.c $(UNITY_EXTENSIO
 	@echo "Compiling unit test: $@"
 	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
+# Instruction completeness test
+$(TESTBIN_DIR)/instruction_completeness: tests/instruction_completeness/main.c tests/instruction_completeness/instruction_completeness.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling instruction completeness test: $@"
+	$(CC) $(TEST_CFLAGS_ENHANCED) -Itests/instruction_completeness tests/instruction_completeness/main.c tests/instruction_completeness/instruction_completeness.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+
 # Core module unit tests
 test-unit-core:
 	@echo "=== Running Core Module Unit Tests ==="
@@ -483,6 +488,14 @@ test-coverage:
 		gcov src/*.c src/*/*.c || true; \
 	fi
 
+# === INSTRUCTION SET COMPLETENESS TESTING ===
+
+# Instruction completeness analysis
+test-instruction-completeness: $(TESTBIN_DIR)/instruction_completeness
+	@echo "=== Running Instruction Set Completeness Analysis ==="
+	@./$(TESTBIN_DIR)/instruction_completeness
+	@echo "Instruction completeness analysis completed"
+
 # === COMPREHENSIVE TESTING ===
 
 # Complete test suite with Python orchestration
@@ -497,6 +510,7 @@ test-comprehensive:
 		$(MAKE) test-build-variants || true; \
 		$(MAKE) test-execution-all || true; \
 		$(MAKE) test-integration || true; \
+		$(MAKE) test-instruction-completeness || true; \
 		$(MAKE) test-phase7-advanced || true; \
 		$(MAKE) test-coverage || true; \
 	fi

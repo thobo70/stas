@@ -333,6 +333,22 @@ make test-unit-formats
 # - Motorola S-Record: 24 tests (embedded bootloader format)
 ```
 
+### Instruction Set Completeness Analysis ✅
+```bash
+# Run comprehensive instruction set coverage analysis
+make test-instruction-completeness
+
+# Configurable output formats:
+./testbin/instruction_completeness --width 80    # Standard format
+./testbin/instruction_completeness --compact     # Ultra-compact
+./testbin/instruction_completeness --no-bars     # Text-only percentages
+
+# Results: Recognition vs Functional Support Analysis
+# - ARM64: 100.0% recognition, 13.8% functional encoding
+# - x86_32: 80.6% recognition, 12.9% functional encoding
+# - RISC-V: 68.6% recognition, 15.7% functional encoding
+```
+
 ### CPU Execution Testing ✅
 ```bash
 # Run architecture-specific execution tests

@@ -1,0 +1,863 @@
+#include "instruction_completeness.h"
+#include "../../include/arch_interface.h"
+#include "../../src/arch/x86_16/x86_16.h"
+#include "../../include/x86_32.h"
+#include "../../include/x86_64.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+// Forward declarations for architecture operations
+extern arch_ops_t *get_arch_ops_x86_16(void);
+extern arch_ops_t *get_arch_ops_x86_32(void);
+extern arch_ops_t *get_arch_ops_x86_64(void);
+extern arch_ops_t *get_arch_ops_arm64(void);
+extern arch_ops_t *get_riscv_arch_ops(void);
+
+// ========================================
+// x86_16 INSTRUCTION SET DEFINITIONS
+// ========================================
+
+static const instruction_def_t x86_16_arithmetic[] = {
+    {"add", "Arithmetic", 2, false},
+    {"sub", "Arithmetic", 2, false},
+    {"mul", "Arithmetic", 1, false},
+    {"div", "Arithmetic", 1, false},
+    {"inc", "Arithmetic", 1, false},
+    {"dec", "Arithmetic", 1, false},
+    {"neg", "Arithmetic", 1, false},
+    {"cmp", "Arithmetic", 2, false},
+    {"adc", "Arithmetic", 2, false},
+    {"sbb", "Arithmetic", 2, false},
+    {"imul", "Arithmetic", 1, false},
+    {"idiv", "Arithmetic", 1, false}
+};
+
+static const instruction_def_t x86_16_logical[] = {
+    {"and", "Logical", 2, false},
+    {"or", "Logical", 2, false},
+    {"xor", "Logical", 2, false},
+    {"not", "Logical", 1, false},
+    {"test", "Logical", 2, false},
+    {"shl", "Logical", 2, false},
+    {"shr", "Logical", 2, false},
+    {"sal", "Logical", 2, false},
+    {"sar", "Logical", 2, false},
+    {"rol", "Logical", 2, false},
+    {"ror", "Logical", 2, false},
+    {"rcl", "Logical", 2, false},
+    {"rcr", "Logical", 2, false}
+};
+
+static const instruction_def_t x86_16_data_movement[] = {
+    {"mov", "Data Movement", 2, false},
+    {"push", "Data Movement", 1, false},
+    {"pop", "Data Movement", 1, false},
+    {"xchg", "Data Movement", 2, false},
+    {"lea", "Data Movement", 2, false},
+    {"lds", "Data Movement", 2, false},
+    {"les", "Data Movement", 2, false},
+    {"lahf", "Data Movement", 0, false},
+    {"sahf", "Data Movement", 0, false},
+    {"pushf", "Data Movement", 0, false},
+    {"popf", "Data Movement", 0, false}
+};
+
+static const instruction_def_t x86_16_control_flow[] = {
+    {"jmp", "Control Flow", 1, false},
+    {"call", "Control Flow", 1, false},
+    {"ret", "Control Flow", 0, false},
+    {"retf", "Control Flow", 0, false},
+    {"je", "Control Flow", 1, false},
+    {"jne", "Control Flow", 1, false},
+    {"jz", "Control Flow", 1, false},
+    {"jnz", "Control Flow", 1, false},
+    {"jl", "Control Flow", 1, false},
+    {"jle", "Control Flow", 1, false},
+    {"jg", "Control Flow", 1, false},
+    {"jge", "Control Flow", 1, false},
+    {"ja", "Control Flow", 1, false},
+    {"jae", "Control Flow", 1, false},
+    {"jb", "Control Flow", 1, false},
+    {"jbe", "Control Flow", 1, false},
+    {"jc", "Control Flow", 1, false},
+    {"jnc", "Control Flow", 1, false},
+    {"jo", "Control Flow", 1, false},
+    {"jno", "Control Flow", 1, false},
+    {"js", "Control Flow", 1, false},
+    {"jns", "Control Flow", 1, false},
+    {"loop", "Control Flow", 1, false},
+    {"loope", "Control Flow", 1, false},
+    {"loopne", "Control Flow", 1, false}
+};
+
+static const instruction_def_t x86_16_system[] = {
+    {"int", "System", 1, false},
+    {"iret", "System", 0, false},
+    {"cli", "System", 0, false},
+    {"sti", "System", 0, false},
+    {"clc", "System", 0, false},
+    {"stc", "System", 0, false},
+    {"cld", "System", 0, false},
+    {"std", "System", 0, false},
+    {"nop", "System", 0, false},
+    {"hlt", "System", 0, false},
+    {"wait", "System", 0, false}
+};
+
+static const instruction_def_t x86_16_string[] = {
+    {"movs", "String", 0, false},
+    {"movsb", "String", 0, false},
+    {"movsw", "String", 0, false},
+    {"cmps", "String", 0, false},
+    {"cmpsb", "String", 0, false},
+    {"cmpsw", "String", 0, false},
+    {"scas", "String", 0, false},
+    {"scasb", "String", 0, false},
+    {"scasw", "String", 0, false},
+    {"lods", "String", 0, false},
+    {"lodsb", "String", 0, false},
+    {"lodsw", "String", 0, false},
+    {"stos", "String", 0, false},
+    {"stosb", "String", 0, false},
+    {"stosw", "String", 0, false},
+    {"rep", "String", 0, false},
+    {"repe", "String", 0, false},
+    {"repne", "String", 0, false}
+};
+
+static const instruction_category_t x86_16_categories[] = {
+    {"Arithmetic", x86_16_arithmetic, sizeof(x86_16_arithmetic)/sizeof(instruction_def_t)},
+    {"Logical", x86_16_logical, sizeof(x86_16_logical)/sizeof(instruction_def_t)},
+    {"Data Movement", x86_16_data_movement, sizeof(x86_16_data_movement)/sizeof(instruction_def_t)},
+    {"Control Flow", x86_16_control_flow, sizeof(x86_16_control_flow)/sizeof(instruction_def_t)},
+    {"System", x86_16_system, sizeof(x86_16_system)/sizeof(instruction_def_t)},
+    {"String", x86_16_string, sizeof(x86_16_string)/sizeof(instruction_def_t)}
+};
+
+// ========================================
+// x86_32 INSTRUCTION SET DEFINITIONS
+// ========================================
+
+static const instruction_def_t x86_32_arithmetic[] = {
+    {"add", "Arithmetic", 2, false},
+    {"sub", "Arithmetic", 2, false},
+    {"mul", "Arithmetic", 1, false},
+    {"div", "Arithmetic", 1, false},
+    {"inc", "Arithmetic", 1, false},
+    {"dec", "Arithmetic", 1, false},
+    {"neg", "Arithmetic", 1, false},
+    {"cmp", "Arithmetic", 2, false},
+    {"adc", "Arithmetic", 2, false},
+    {"sbb", "Arithmetic", 2, false},
+    {"imul", "Arithmetic", 2, false},
+    {"idiv", "Arithmetic", 1, false},
+    {"bsf", "Arithmetic", 2, true},
+    {"bsr", "Arithmetic", 2, true},
+    {"bt", "Arithmetic", 2, true},
+    {"btc", "Arithmetic", 2, true},
+    {"btr", "Arithmetic", 2, true},
+    {"bts", "Arithmetic", 2, true}
+};
+
+static const instruction_def_t x86_32_logical[] = {
+    {"and", "Logical", 2, false},
+    {"or", "Logical", 2, false},
+    {"xor", "Logical", 2, false},
+    {"not", "Logical", 1, false},
+    {"test", "Logical", 2, false},
+    {"shl", "Logical", 2, false},
+    {"shr", "Logical", 2, false},
+    {"sal", "Logical", 2, false},
+    {"sar", "Logical", 2, false},
+    {"rol", "Logical", 2, false},
+    {"ror", "Logical", 2, false},
+    {"rcl", "Logical", 2, false},
+    {"rcr", "Logical", 2, false},
+    {"shld", "Logical", 3, true},
+    {"shrd", "Logical", 3, true}
+};
+
+static const instruction_def_t x86_32_data_movement[] = {
+    {"mov", "Data Movement", 2, false},
+    {"push", "Data Movement", 1, false},
+    {"pop", "Data Movement", 1, false},
+    {"xchg", "Data Movement", 2, false},
+    {"lea", "Data Movement", 2, false},
+    {"pushad", "Data Movement", 0, false},
+    {"popad", "Data Movement", 0, false},
+    {"pushfd", "Data Movement", 0, false},
+    {"popfd", "Data Movement", 0, false},
+    {"movzx", "Data Movement", 2, true},
+    {"movsx", "Data Movement", 2, true},
+    {"bswap", "Data Movement", 1, true},
+    {"xadd", "Data Movement", 2, true},
+    {"cmpxchg", "Data Movement", 2, true}
+};
+
+static const instruction_def_t x86_32_control_flow[] = {
+    {"jmp", "Control Flow", 1, false},
+    {"call", "Control Flow", 1, false},
+    {"ret", "Control Flow", 0, false},
+    {"retf", "Control Flow", 0, false},
+    {"je", "Control Flow", 1, false},
+    {"jne", "Control Flow", 1, false},
+    {"jz", "Control Flow", 1, false},
+    {"jnz", "Control Flow", 1, false},
+    {"jl", "Control Flow", 1, false},
+    {"jle", "Control Flow", 1, false},
+    {"jg", "Control Flow", 1, false},
+    {"jge", "Control Flow", 1, false},
+    {"ja", "Control Flow", 1, false},
+    {"jae", "Control Flow", 1, false},
+    {"jb", "Control Flow", 1, false},
+    {"jbe", "Control Flow", 1, false},
+    {"jc", "Control Flow", 1, false},
+    {"jnc", "Control Flow", 1, false},
+    {"jo", "Control Flow", 1, false},
+    {"jno", "Control Flow", 1, false},
+    {"js", "Control Flow", 1, false},
+    {"jns", "Control Flow", 1, false},
+    {"loop", "Control Flow", 1, false},
+    {"loope", "Control Flow", 1, false},
+    {"loopne", "Control Flow", 1, false},
+    {"jecxz", "Control Flow", 1, false},
+    {"sete", "Control Flow", 1, true},
+    {"setne", "Control Flow", 1, true},
+    {"setl", "Control Flow", 1, true},
+    {"setg", "Control Flow", 1, true}
+};
+
+static const instruction_def_t x86_32_system[] = {
+    {"int", "System", 1, false},
+    {"iret", "System", 0, false},
+    {"iretd", "System", 0, false},
+    {"cli", "System", 0, false},
+    {"sti", "System", 0, false},
+    {"clc", "System", 0, false},
+    {"stc", "System", 0, false},
+    {"cld", "System", 0, false},
+    {"std", "System", 0, false},
+    {"nop", "System", 0, false},
+    {"hlt", "System", 0, false},
+    {"wait", "System", 0, false},
+    {"cpuid", "System", 0, true},
+    {"rdtsc", "System", 0, true},
+    {"wrmsr", "System", 0, true},
+    {"rdmsr", "System", 0, true}
+};
+
+static const instruction_category_t x86_32_categories[] = {
+    {"Arithmetic", x86_32_arithmetic, sizeof(x86_32_arithmetic)/sizeof(instruction_def_t)},
+    {"Logical", x86_32_logical, sizeof(x86_32_logical)/sizeof(instruction_def_t)},
+    {"Data Movement", x86_32_data_movement, sizeof(x86_32_data_movement)/sizeof(instruction_def_t)},
+    {"Control Flow", x86_32_control_flow, sizeof(x86_32_control_flow)/sizeof(instruction_def_t)},
+    {"System", x86_32_system, sizeof(x86_32_system)/sizeof(instruction_def_t)}
+};
+
+// ========================================
+// x86_64 INSTRUCTION SET DEFINITIONS
+// ========================================
+
+static const instruction_def_t x86_64_arithmetic[] = {
+    {"add", "Arithmetic", 2, false},
+    {"addq", "Arithmetic", 2, false},
+    {"sub", "Arithmetic", 2, false},
+    {"subq", "Arithmetic", 2, false},
+    {"mul", "Arithmetic", 1, false},
+    {"div", "Arithmetic", 1, false},
+    {"inc", "Arithmetic", 1, false},
+    {"dec", "Arithmetic", 1, false},
+    {"neg", "Arithmetic", 1, false},
+    {"cmp", "Arithmetic", 2, false},
+    {"cmpq", "Arithmetic", 2, false},
+    {"adc", "Arithmetic", 2, false},
+    {"sbb", "Arithmetic", 2, false},
+    {"imul", "Arithmetic", 2, false},
+    {"idiv", "Arithmetic", 1, false},
+    {"bsf", "Arithmetic", 2, true},
+    {"bsr", "Arithmetic", 2, true},
+    {"bt", "Arithmetic", 2, true},
+    {"btc", "Arithmetic", 2, true},
+    {"btr", "Arithmetic", 2, true},
+    {"bts", "Arithmetic", 2, true},
+    {"popcnt", "Arithmetic", 2, true},
+    {"lzcnt", "Arithmetic", 2, true}
+};
+
+static const instruction_def_t x86_64_data_movement[] = {
+    {"mov", "Data Movement", 2, false},
+    {"movq", "Data Movement", 2, false},
+    {"push", "Data Movement", 1, false},
+    {"pushq", "Data Movement", 1, false},
+    {"pop", "Data Movement", 1, false},
+    {"popq", "Data Movement", 1, false},
+    {"xchg", "Data Movement", 2, false},
+    {"lea", "Data Movement", 2, false},
+    {"leaq", "Data Movement", 2, false},
+    {"movzx", "Data Movement", 2, true},
+    {"movsx", "Data Movement", 2, true},
+    {"movsxd", "Data Movement", 2, false},
+    {"bswap", "Data Movement", 1, true},
+    {"xadd", "Data Movement", 2, true},
+    {"cmpxchg", "Data Movement", 2, true},
+    {"cmpxchg16b", "Data Movement", 1, true}
+};
+
+static const instruction_def_t x86_64_system[] = {
+    {"syscall", "System", 0, false},
+    {"sysret", "System", 0, false},
+    {"int", "System", 1, false},
+    {"iretq", "System", 0, false},
+    {"cli", "System", 0, false},
+    {"sti", "System", 0, false},
+    {"clc", "System", 0, false},
+    {"stc", "System", 0, false},
+    {"cld", "System", 0, false},
+    {"std", "System", 0, false},
+    {"nop", "System", 0, false},
+    {"hlt", "System", 0, false},
+    {"cpuid", "System", 0, true},
+    {"rdtsc", "System", 0, true},
+    {"rdtscp", "System", 0, true},
+    {"wrmsr", "System", 0, true},
+    {"rdmsr", "System", 0, true},
+    {"swapgs", "System", 0, true}
+};
+
+static const instruction_category_t x86_64_categories[] = {
+    {"Arithmetic", x86_64_arithmetic, sizeof(x86_64_arithmetic)/sizeof(instruction_def_t)},
+    {"Data Movement", x86_64_data_movement, sizeof(x86_64_data_movement)/sizeof(instruction_def_t)},
+    {"System", x86_64_system, sizeof(x86_64_system)/sizeof(instruction_def_t)}
+};
+
+// ========================================
+// ARM64 INSTRUCTION SET DEFINITIONS
+// ========================================
+
+static const instruction_def_t arm64_arithmetic[] = {
+    {"add", "Arithmetic", 3, false},
+    {"sub", "Arithmetic", 3, false},
+    {"mul", "Arithmetic", 3, false},
+    {"div", "Arithmetic", 3, false},
+    {"udiv", "Arithmetic", 3, false},
+    {"madd", "Arithmetic", 4, false},
+    {"msub", "Arithmetic", 4, false},
+    {"neg", "Arithmetic", 2, false},
+    {"cmp", "Arithmetic", 2, false},
+    {"cmn", "Arithmetic", 2, false},
+    {"adc", "Arithmetic", 3, false},
+    {"sbc", "Arithmetic", 3, false},
+    {"abs", "Arithmetic", 2, false}
+};
+
+static const instruction_def_t arm64_logical[] = {
+    {"and", "Logical", 3, false},
+    {"orr", "Logical", 3, false},
+    {"eor", "Logical", 3, false},
+    {"orn", "Logical", 3, false},
+    {"bic", "Logical", 3, false},
+    {"tst", "Logical", 2, false},
+    {"lsl", "Logical", 3, false},
+    {"lsr", "Logical", 3, false},
+    {"asr", "Logical", 3, false},
+    {"ror", "Logical", 3, false},
+    {"clz", "Logical", 2, false},
+    {"rbit", "Logical", 2, false},
+    {"rev", "Logical", 2, false}
+};
+
+static const instruction_def_t arm64_data_movement[] = {
+    {"mov", "Data Movement", 2, false},
+    {"mvn", "Data Movement", 2, false},
+    {"ldr", "Data Movement", 2, false},
+    {"str", "Data Movement", 2, false},
+    {"ldp", "Data Movement", 3, false},
+    {"stp", "Data Movement", 3, false},
+    {"ldrb", "Data Movement", 2, false},
+    {"strb", "Data Movement", 2, false},
+    {"ldrh", "Data Movement", 2, false},
+    {"strh", "Data Movement", 2, false},
+    {"ldrsb", "Data Movement", 2, false},
+    {"ldrsh", "Data Movement", 2, false},
+    {"ldrsw", "Data Movement", 2, false}
+};
+
+static const instruction_def_t arm64_control_flow[] = {
+    {"b", "Control Flow", 1, false},
+    {"bl", "Control Flow", 1, false},
+    {"br", "Control Flow", 1, false},
+    {"blr", "Control Flow", 1, false},
+    {"ret", "Control Flow", 0, false},
+    {"beq", "Control Flow", 1, false},
+    {"bne", "Control Flow", 1, false},
+    {"blt", "Control Flow", 1, false},
+    {"ble", "Control Flow", 1, false},
+    {"bgt", "Control Flow", 1, false},
+    {"bge", "Control Flow", 1, false},
+    {"blo", "Control Flow", 1, false},
+    {"bls", "Control Flow", 1, false},
+    {"bhi", "Control Flow", 1, false},
+    {"bhs", "Control Flow", 1, false},
+    {"cbz", "Control Flow", 2, false},
+    {"cbnz", "Control Flow", 2, false},
+    {"tbz", "Control Flow", 3, false},
+    {"tbnz", "Control Flow", 3, false}
+};
+
+static const instruction_category_t arm64_categories[] = {
+    {"Arithmetic", arm64_arithmetic, sizeof(arm64_arithmetic)/sizeof(instruction_def_t)},
+    {"Logical", arm64_logical, sizeof(arm64_logical)/sizeof(instruction_def_t)},
+    {"Data Movement", arm64_data_movement, sizeof(arm64_data_movement)/sizeof(instruction_def_t)},
+    {"Control Flow", arm64_control_flow, sizeof(arm64_control_flow)/sizeof(instruction_def_t)}
+};
+
+// ========================================
+// RISC-V INSTRUCTION SET DEFINITIONS
+// ========================================
+
+static const instruction_def_t riscv_arithmetic[] = {
+    {"add", "Arithmetic", 3, false},
+    {"sub", "Arithmetic", 3, false},
+    {"addi", "Arithmetic", 3, false},
+    {"mul", "Arithmetic", 3, true},
+    {"div", "Arithmetic", 3, true},
+    {"rem", "Arithmetic", 3, true},
+    {"neg", "Arithmetic", 2, false},
+    {"lui", "Arithmetic", 2, false},
+    {"auipc", "Arithmetic", 2, false}
+};
+
+static const instruction_def_t riscv_logical[] = {
+    {"and", "Logical", 3, false},
+    {"or", "Logical", 3, false},
+    {"xor", "Logical", 3, false},
+    {"andi", "Logical", 3, false},
+    {"ori", "Logical", 3, false},
+    {"xori", "Logical", 3, false},
+    {"sll", "Logical", 3, false},
+    {"srl", "Logical", 3, false},
+    {"sra", "Logical", 3, false},
+    {"slli", "Logical", 3, false},
+    {"srli", "Logical", 3, false},
+    {"srai", "Logical", 3, false}
+};
+
+static const instruction_def_t riscv_data_movement[] = {
+    {"mv", "Data Movement", 2, false},
+    {"li", "Data Movement", 2, false},
+    {"lw", "Data Movement", 2, false},
+    {"sw", "Data Movement", 2, false},
+    {"lb", "Data Movement", 2, false},
+    {"sb", "Data Movement", 2, false},
+    {"lh", "Data Movement", 2, false},
+    {"sh", "Data Movement", 2, false},
+    {"lbu", "Data Movement", 2, false},
+    {"lhu", "Data Movement", 2, false}
+};
+
+static const instruction_def_t riscv_control_flow[] = {
+    {"jal", "Control Flow", 2, false},
+    {"jalr", "Control Flow", 3, false},
+    {"j", "Control Flow", 1, false},
+    {"jr", "Control Flow", 1, false},
+    {"ret", "Control Flow", 0, false},
+    {"beq", "Control Flow", 3, false},
+    {"bne", "Control Flow", 3, false},
+    {"blt", "Control Flow", 3, false},
+    {"ble", "Control Flow", 3, false},
+    {"bgt", "Control Flow", 3, false},
+    {"bge", "Control Flow", 3, false},
+    {"bltu", "Control Flow", 3, false},
+    {"bgeu", "Control Flow", 3, false}
+};
+
+static const instruction_def_t riscv_system[] = {
+    {"ecall", "System", 0, false},
+    {"ebreak", "System", 0, false},
+    {"fence", "System", 0, false},
+    {"fence.i", "System", 0, false},
+    {"csrrw", "System", 3, true},
+    {"csrrs", "System", 3, true},
+    {"csrrc", "System", 3, true}
+};
+
+static const instruction_category_t riscv_categories[] = {
+    {"Arithmetic", riscv_arithmetic, sizeof(riscv_arithmetic)/sizeof(instruction_def_t)},
+    {"Logical", riscv_logical, sizeof(riscv_logical)/sizeof(instruction_def_t)},
+    {"Data Movement", riscv_data_movement, sizeof(riscv_data_movement)/sizeof(instruction_def_t)},
+    {"Control Flow", riscv_control_flow, sizeof(riscv_control_flow)/sizeof(instruction_def_t)},
+    {"System", riscv_system, sizeof(riscv_system)/sizeof(instruction_def_t)}
+};
+
+// ========================================
+// ARCHITECTURE DEFINITIONS
+// ========================================
+
+static const arch_instruction_set_t architectures[] = {
+    {"x86_16", x86_16_categories, sizeof(x86_16_categories)/sizeof(instruction_category_t)},
+    {"x86_32", x86_32_categories, sizeof(x86_32_categories)/sizeof(instruction_category_t)},
+    {"x86_64", x86_64_categories, sizeof(x86_64_categories)/sizeof(instruction_category_t)},
+    {"arm64", arm64_categories, sizeof(arm64_categories)/sizeof(instruction_category_t)},
+    {"riscv", riscv_categories, sizeof(riscv_categories)/sizeof(instruction_category_t)}
+};
+
+static const size_t architecture_count = sizeof(architectures)/sizeof(arch_instruction_set_t);
+
+// ========================================
+// HELPER FUNCTIONS
+// ========================================
+
+static arch_ops_t* get_arch_ops_by_name(const char* arch_name) {
+    if (strcmp(arch_name, "x86_16") == 0) return get_arch_ops_x86_16();
+    if (strcmp(arch_name, "x86_32") == 0) return get_arch_ops_x86_32();
+    if (strcmp(arch_name, "x86_64") == 0) return get_arch_ops_x86_64();
+    if (strcmp(arch_name, "arm64") == 0) return get_arch_ops_arm64();
+    if (strcmp(arch_name, "riscv") == 0) return get_riscv_arch_ops();
+    return NULL;
+}
+
+static bool test_instruction_recognition(arch_ops_t* arch_ops, const instruction_def_t* instr) {
+    if (!arch_ops || !arch_ops->parse_instruction || !instr) return false;
+    
+    operand_t dummy_operands[4] = {0};
+    instruction_t test_instr = {0};
+    
+    int result = arch_ops->parse_instruction(instr->mnemonic, dummy_operands, 
+                                           instr->operand_count, &test_instr);
+    
+    // Note: Don't free the instruction fields as they may not be heap-allocated
+    
+    return result == 0;
+}
+
+static bool test_instruction_functional(arch_ops_t* arch_ops, const instruction_def_t* instr) {
+    if (!test_instruction_recognition(arch_ops, instr)) return false;
+    
+    // Test encoding capability for functional support
+    if (!arch_ops->encode_instruction) return false;
+    
+    operand_t dummy_operands[4] = {0};
+    instruction_t test_instr = {0};
+    
+    int parse_result = arch_ops->parse_instruction(instr->mnemonic, dummy_operands, 
+                                                 instr->operand_count, &test_instr);
+    
+    if (parse_result != 0) return false;
+    
+    uint8_t buffer[16] = {0};
+    size_t length = 0;
+    
+    int encode_result = arch_ops->encode_instruction(&test_instr, buffer, &length);
+    
+    // Note: Don't free the instruction fields as they may not be heap-allocated
+    
+    return encode_result == 0 && length > 0;
+}
+
+instruction_test_result_t test_instruction_category(const char *arch_name, 
+                                                   const instruction_category_t *category) {
+    instruction_test_result_t result = {0};
+    arch_ops_t* arch_ops = get_arch_ops_by_name(arch_name);
+    
+    if (!arch_ops || !category) return result;
+    
+    result.total = category->instruction_count;
+    
+    for (size_t i = 0; i < category->instruction_count; i++) {
+        const instruction_def_t* instr = &category->instructions[i];
+        
+        if (test_instruction_recognition(arch_ops, instr)) {
+            result.recognized++;
+            
+            if (test_instruction_functional(arch_ops, instr)) {
+                result.functional++;
+            }
+        }
+    }
+    
+    result.recognition_percent = result.total > 0 ? 
+        (double)result.recognized / result.total * 100.0 : 0.0;
+    result.functional_percent = result.total > 0 ? 
+        (double)result.functional / result.total * 100.0 : 0.0;
+    
+    return result;
+}
+
+void print_progress_bar(double percent, int width, bool compact) {
+    if (compact) {
+        // Ultra-compact: just percentage
+        printf("%5.1f%%", percent);
+        return;
+    }
+    
+    if (width < 5) width = 5;
+    if (width > 20) width = 20;
+    
+    int bars = (int)(percent * width / 100.0);
+    printf("[");
+    for (int i = 0; i < width; i++) {
+        if (i < bars) printf("#");
+        else printf(".");
+    }
+    printf("]");
+}
+
+void print_instruction_completeness_report_compact(arch_test_result_t *results, size_t arch_count, const report_config_t *config) {
+    int max_width = config ? config->max_line_width : 80;
+    bool compact = config ? config->compact_mode : false;
+    bool show_bars = config ? config->show_progress_bars : true;
+    
+    printf("\n");
+    if (compact) {
+        // Ultra-compact format
+        printf("+============================================================================+\n");
+        printf("|                    STAS INSTRUCTION SET COMPLETENESS                      |\n");
+        printf("+============================================================================+\n");
+        
+        for (size_t i = 0; i < arch_count; i++) {
+            arch_test_result_t *arch = &results[i];
+            printf("| %-8s | Overall: ", arch->arch_name);
+            print_progress_bar(arch->overall.recognition_percent, 0, true);
+            printf(" rec, ");
+            print_progress_bar(arch->overall.functional_percent, 0, true);
+            printf(" func");
+            
+            // Pad to line width
+            int used = 25 + 12; // approx used chars
+            for (int j = used; j < max_width - 3; j++) printf(" ");
+            printf("|\n");
+            
+            // Show top categories briefly
+            for (size_t j = 0; j < arch->category_count && j < 3; j++) {
+                category_result_t *cat = &arch->category_results[j];
+                printf("|   %-12s | ", cat->category_name);
+                print_progress_bar(cat->result.recognition_percent, 0, true);
+                printf("/");
+                print_progress_bar(cat->result.functional_percent, 0, true);
+                
+                int used = 20 + 12; // approx used chars  
+                for (int k = used; k < max_width - 3; k++) printf(" ");
+                printf("|\n");
+            }
+            
+            if (i < arch_count - 1) {
+                printf("+----------------------------------------------------------------------------+\n");
+            }
+        }
+        printf("+============================================================================+\n");
+    } else {
+        // Standard width format (≤80 chars)
+        printf("+==============================================================================+\n");
+        printf("|                        STAS INSTRUCTION COMPLETENESS REPORT                 |\n");
+        printf("+==============================================================================+\n");
+        
+        for (size_t i = 0; i < arch_count; i++) {
+            arch_test_result_t *arch = &results[i];
+            
+            printf("| %-8s | Category Analysis                                            |\n", arch->arch_name);
+            printf("+----------+--------------------------------------------------------------+\n");
+            
+            for (size_t j = 0; j < arch->category_count; j++) {
+                category_result_t *cat = &arch->category_results[j];
+                printf("| %-12s | %3zu/%-3zu ", 
+                       cat->category_name, 
+                       cat->result.recognized, 
+                       cat->result.total);
+                
+                if (show_bars) {
+                    print_progress_bar(cat->result.recognition_percent, 8, false);
+                    printf(" ");
+                    print_progress_bar(cat->result.functional_percent, 8, false);
+                } else {
+                    printf("(%5.1f%% / %5.1f%%)", 
+                           cat->result.recognition_percent,
+                           cat->result.functional_percent);
+                }
+                printf(" |\n");
+            }
+            
+            printf("+----------+--------------------------------------------------------------+\n");
+            printf("| OVERALL  | %3zu/%-3zu ", 
+                   arch->overall.recognized, 
+                   arch->overall.total);
+            
+            if (show_bars) {
+                print_progress_bar(arch->overall.recognition_percent, 8, false);
+                printf(" ");
+                print_progress_bar(arch->overall.functional_percent, 8, false);
+            } else {
+                printf("(%5.1f%% / %5.1f%%)", 
+                       arch->overall.recognition_percent,
+                       arch->overall.functional_percent);
+            }
+            printf(" |\n");
+            
+            if (i < arch_count - 1) {
+                printf("+==============================================================================+\n");
+            }
+        }
+        printf("+==============================================================================+\n");
+    }
+    
+    printf("\n    Legend: ");
+    if (show_bars && !compact) {
+        printf("# = ~12.5%% per char, . = remaining\n");
+    } else {
+        printf("Recognition%% / Functional%%\n");
+    }
+    printf("    Recognition: Instruction parsing successful\n");
+    printf("    Functional: Instruction encoding successful\n\n");
+}
+
+void print_instruction_completeness_report_with_config(arch_test_result_t *results, size_t arch_count, const report_config_t *config) {
+    if (config && (config->compact_mode || config->max_line_width <= 80)) {
+        print_instruction_completeness_report_compact(results, arch_count, config);
+    } else {
+        print_instruction_completeness_report(results, arch_count);
+    }
+}
+
+void run_instruction_completeness_tests_with_config(const report_config_t *config) {
+    printf("🚀 Starting STAS Instruction Set Completeness Analysis...\n");
+    
+    arch_test_result_t *results = malloc(architecture_count * sizeof(arch_test_result_t));
+    
+    for (size_t i = 0; i < architecture_count; i++) {
+        const arch_instruction_set_t *arch = &architectures[i];
+        arch_test_result_t *result = &results[i];
+        
+        result->arch_name = arch->arch_name;
+        result->category_count = arch->category_count;
+        result->category_results = malloc(arch->category_count * sizeof(category_result_t));
+        
+        // Initialize overall counters
+        result->overall.total = 0;
+        result->overall.recognized = 0;
+        result->overall.functional = 0;
+        
+        printf("📋 Testing %s instruction set...\n", arch->arch_name);
+        
+        for (size_t j = 0; j < arch->category_count; j++) {
+            const instruction_category_t *category = &arch->categories[j];
+            category_result_t *cat_result = &result->category_results[j];
+            
+            cat_result->category_name = category->category_name;
+            cat_result->result = test_instruction_category(arch->arch_name, category);
+            
+            // Add to overall totals
+            result->overall.total += cat_result->result.total;
+            result->overall.recognized += cat_result->result.recognized;
+            result->overall.functional += cat_result->result.functional;
+            
+            printf("   ✓ %s: %zu/%zu recognized (%.1f%%), %zu/%zu functional (%.1f%%)\n",
+                   category->category_name,
+                   cat_result->result.recognized, cat_result->result.total, cat_result->result.recognition_percent,
+                   cat_result->result.functional, cat_result->result.total, cat_result->result.functional_percent);
+        }
+        
+        // Calculate overall percentages
+        result->overall.recognition_percent = result->overall.total > 0 ? 
+            (double)result->overall.recognized / result->overall.total * 100.0 : 0.0;
+        result->overall.functional_percent = result->overall.total > 0 ? 
+            (double)result->overall.functional / result->overall.total * 100.0 : 0.0;
+    }
+    
+    print_instruction_completeness_report_with_config(results, architecture_count, config);
+    
+    // Cleanup
+    for (size_t i = 0; i < architecture_count; i++) {
+        free(results[i].category_results);
+    }
+    free(results);
+    
+    printf("✅ Instruction set completeness analysis completed!\n");
+}
+
+void print_instruction_completeness_report(arch_test_result_t *results, size_t arch_count) {
+    printf("\n");
+    printf("+==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+\n");
+    printf("|                                                                   STAS INSTRUCTION SET COMPLETENESS REPORT                                                                                  |\n");
+    printf("+==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+\n");
+    
+    for (size_t i = 0; i < arch_count; i++) {
+        arch_test_result_t *arch = &results[i];
+        
+        printf("| %-12s | Category Breakdown                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |\n", arch->arch_name);
+        printf("+--------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n");
+        
+        for (size_t j = 0; j < arch->category_count; j++) {
+            category_result_t *cat = &arch->category_results[j];
+            printf("|              | %-18s | Total: %3zu | Recognized: %3zu (%5.1f%%) | Functional: %3zu (%5.1f%%) | Recognition: ", 
+                   cat->category_name, 
+                   cat->result.total,
+                   cat->result.recognized, 
+                   cat->result.recognition_percent,
+                   cat->result.functional, 
+                   cat->result.functional_percent);
+            
+            // Recognition progress bar
+            int rec_bars = (int)(cat->result.recognition_percent / 5);
+            printf("[");
+            for (int k = 0; k < 20; k++) {
+                if (k < rec_bars) printf("#");
+                else printf(".");
+            }
+            printf("] Functional: [");
+            
+            // Functional progress bar
+            int func_bars = (int)(cat->result.functional_percent / 5);
+            for (int k = 0; k < 20; k++) {
+                if (k < func_bars) printf("#");
+                else printf(".");
+            }
+            printf("]\t|\n");
+        }
+        
+        printf("+--------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n");
+        printf("| OVERALL      | %-18s | Total: %3zu | Recognized: %3zu (%5.1f%%) | Functional: %3zu (%5.1f%%) | Recognition: ", 
+               "Summary",
+               arch->overall.total,
+               arch->overall.recognized, 
+               arch->overall.recognition_percent,
+               arch->overall.functional, 
+               arch->overall.functional_percent);
+        
+        // Overall recognition progress bar
+        int overall_rec_bars = (int)(arch->overall.recognition_percent / 5);
+        printf("[");
+        for (int k = 0; k < 20; k++) {
+            if (k < overall_rec_bars) printf("#");
+            else printf(".");
+        }
+        printf("] Functional: [");
+        
+        // Overall functional progress bar
+        int overall_func_bars = (int)(arch->overall.functional_percent / 5);
+        for (int k = 0; k < 20; k++) {
+            if (k < overall_func_bars) printf("#");
+            else printf(".");
+        }
+        printf("]\t|\n");
+        
+        if (i < arch_count - 1) {
+            printf("+==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+\n");
+        }
+    }
+    
+    printf("+==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+\n");
+    
+    printf("\n    Legend: # = 5%% completion per char, . = remaining\n");
+    printf("    Recognition: Instruction parsing successful\n");
+    printf("    Functional: Instruction encoding successful\n\n");
+}
+
+void run_instruction_completeness_tests(void) {
+    // Use compact format by default
+    report_config_t config = {
+        .max_line_width = 80,
+        .compact_mode = false,  // Standard format within 80 chars
+        .show_progress_bars = true
+    };
+    run_instruction_completeness_tests_with_config(&config);
+}
