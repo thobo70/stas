@@ -446,6 +446,12 @@ bool is_instruction_token(const char *str) {
         "push", "pushw", "pushl", "pushq",
         "pop", "popw", "popl", "popq",
         "lea", "leaw", "leal", "leaq",
+        "xchg", "xchgb", "xchgw", "xchgl",
+        "movzx", "movsx", "movzbl", "movzwl", "movzbw",
+        "movsbl", "movswl", "movsbw",
+        "bswap", "bswapl", "xadd", "xaddl", "xaddw", "xaddb",
+        "cmpxchg", "cmpxchgl", "cmpxchgw", "cmpxchgb",
+        "pushad", "popad", "pushfd", "popfd",
         
         // Arithmetic
         "add", "addb", "addw", "addl", "addq",
@@ -454,6 +460,11 @@ bool is_instruction_token(const char *str) {
         "div", "divb", "divw", "divl", "divq",
         "inc", "incb", "incw", "incl", "incq",
         "dec", "decb", "decw", "decl", "decq",
+        "imul", "idiv", "adc", "sbb", "neg", "negb", "negw", "negl",
+        "daa", "das", "aaa", "aas", "aam", "aad",
+        "bsf", "bsr", "bt", "btc", "btr", "bts",
+        "bsfl", "bsfw", "bsrl", "bsrw", "btl", "btw", "btcl", "btcw", 
+        "btrl", "btrw", "btsl", "btsw",
         
         // Logical
         "and", "andb", "andw", "andl", "andq",
@@ -469,11 +480,16 @@ bool is_instruction_token(const char *str) {
         "jmp", "je", "jne", "jz", "jnz", "jl", "jle", "jg", "jge",
         "ja", "jae", "jb", "jbe", "jc", "jnc", "jo", "jno",
         "js", "jns", "jp", "jnp", "call", "ret", "retf",
+        "jna", "jnae", "jnb", "jnbe", "jng", "jnge", "jnl", "jnle",
+        "loop", "loope", "loopne", "jecxz", "retn", "iret", "iretd",
         
         // String operations
-        "movs", "movsb", "movsw", "movsl", "movsq",
+        "movs", "movsb", "movsw", "movsl", "movsq", "movsd",
         "stos", "stosb", "stosw", "stosl", "stosq",
         "lods", "lodsb", "lodsw", "lodsl", "lodsq",
+        "cmps", "cmpsb", "cmpsw", "cmpsl", "cmpsd",
+        "scas", "scasb", "scasw", "scasl", "scasd",
+        "rep", "repe", "repne",
         
         // Stack operations (32-bit specific)
         "pushad", "popad", "pushfd", "popfd",
@@ -481,6 +497,27 @@ bool is_instruction_token(const char *str) {
         // System
         "int", "iret", "hlt", "nop", "syscall", "sysenter", "sysexit",
         "cli", "sti", "cld", "std", "clc", "stc", "cmc",
+        "wait", "cpuid", "rdtsc", "rdmsr", "wrmsr",
+        "lahf", "sahf", "pushf", "popf", "into", "bound",
+        "enter", "leave", "pusha", "popa",
+        
+        // Additional x86_32 i386 instructions
+        "arpl", "verr", "verw", "clts", "lmsw", "smsw",
+        "lgdt", "sgdt", "lidt", "sidt", "lldt", "sldt",
+        "ltr", "str", "lar", "lsl", "lock", "esc",
+        "in", "out", "ins", "insb", "insw", "insd",
+        "outs", "outsb", "outsw", "outsd",
+        "cbw", "cwde", "cwd", "cdq", "cmc",
+        "lds", "les", "lfs", "lgs", "lss",
+        "jcxz", "jpe", "jpo", "jp", "jnp",
+        "jna", "jnae", "jnb", "jnbe", "jng", "jnge", "jnl", "jnle",
+        "loopz", "loopnz", "repz", "repnz",
+        "seta", "setae", "setb", "setbe", "setc", "setge", "setle",
+        "setna", "setnae", "setnb", "setnbe", "setnc", "setng", "setnge",
+        "setnl", "setnle", "setno", "setnp", "setns", "setnz", "seto",
+        "setp", "setpe", "setpo", "sets", "setz",
+        "lodsd", "stosd", "scasd",
+        "xlat", "xlatb",
         
         // Bit manipulation
         "shl", "shlb", "shlw", "shll", "shlq",
@@ -488,6 +525,8 @@ bool is_instruction_token(const char *str) {
         "sar", "sarb", "sarw", "sarl", "sarq",
         "rol", "rolb", "rolw", "roll", "rolq",
         "ror", "rorb", "rorw", "rorl", "rorq",
+        "shld", "shldl", "shldw", "shrd", "shrdl", "shrdw",
+        "rcl", "rcr", "sal",
         
         // Phase 6.1: SSE/AVX floating-point instructions
         // SSE scalar single-precision
@@ -508,6 +547,10 @@ bool is_instruction_token(const char *str) {
         // Advanced control flow
         "cmove", "cmovne", "cmovl", "cmovge", "cmovle", "cmovg",
         "sete", "setne", "setl", "setge", "setle", "setg",
+        "setz", "setnz", "setnge", "setnl", "setnle", "setng",
+        "seta", "setnbe", "setae", "setnb", "setnc",
+        "setb", "setnae", "setc", "setbe", "setna", "seto", "setno",
+        "setp", "setpe", "setnp", "setpo", "sets", "setns",
         "loop", "loope", "loopne",
         
         // Phase 6.2: ARM64 (AArch64) instructions

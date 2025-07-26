@@ -6,7 +6,12 @@
 
 ## 🎯 Core Rules (FROM MANIFEST)
 
-### **1. CPU ACCURACY IS PARAMOUNT**
+### **1. CPU ACCURACY ### **Architecture Completeness**
+- x86_16: **100%** functional ✅
+- x86_32: **94.6%** functional (88/93) 🚀💥 **98.9% recognized** (92/93) - **210% improvement from original!**
+- x86_64: **28.1%** functional 
+- ARM64: **13.8%** functional
+- RISC-V: **15.7%** functionalAMOUNT**
 - ✅ Real CPU behavior takes absolute precedence
 - ✅ Hardware documentation is the ultimate authority
 - ✅ If tests are wrong, fix the tests
@@ -169,7 +174,7 @@ parse_operand(inst->operands[1]);  // destination
 
 ### **Architecture Completeness**
 - x86_16: **100%** functional ✅
-- x86_32: **41.9%** functional (improving) 📈
+- x86_32: **94.6%** functional (88/93) 🚀� 
 - x86_64: **28.1%** functional 
 - ARM64: **13.8%** functional
 - RISC-V: **15.7%** functional

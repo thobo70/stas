@@ -157,7 +157,13 @@ static const instruction_def_t x86_32_arithmetic[] = {
     {"bt", "Arithmetic", 2, true},
     {"btc", "Arithmetic", 2, true},
     {"btr", "Arithmetic", 2, true},
-    {"bts", "Arithmetic", 2, true}
+    {"bts", "Arithmetic", 2, true},
+    {"daa", "Arithmetic", 0, true},
+    {"das", "Arithmetic", 0, true},
+    {"aaa", "Arithmetic", 0, true},
+    {"aas", "Arithmetic", 0, true},
+    {"aam", "Arithmetic", 0, true},
+    {"aad", "Arithmetic", 0, true}
 };
 
 static const instruction_def_t x86_32_logical[] = {
@@ -175,7 +181,8 @@ static const instruction_def_t x86_32_logical[] = {
     {"rcl", "Logical", 2, false},
     {"rcr", "Logical", 2, false},
     {"shld", "Logical", 3, true},
-    {"shrd", "Logical", 3, true}
+    {"shrd", "Logical", 3, true},
+    {"cmc", "Logical", 0, true}
 };
 
 static const instruction_def_t x86_32_data_movement[] = {
@@ -192,7 +199,20 @@ static const instruction_def_t x86_32_data_movement[] = {
     {"movsx", "Data Movement", 2, true},
     {"bswap", "Data Movement", 1, true},
     {"xadd", "Data Movement", 2, true},
-    {"cmpxchg", "Data Movement", 2, true}
+    {"cmpxchg", "Data Movement", 2, true},
+    {"lahf", "Data Movement", 0, true},
+    {"sahf", "Data Movement", 0, true},
+    {"cbw", "Data Movement", 0, true},
+    {"cwde", "Data Movement", 0, true},
+    {"cwd", "Data Movement", 0, true},
+    {"cdq", "Data Movement", 0, true},
+    {"lds", "Data Movement", 2, true},
+    {"les", "Data Movement", 2, true},
+    {"lfs", "Data Movement", 2, true},
+    {"lgs", "Data Movement", 2, true},
+    {"lss", "Data Movement", 2, true},
+    {"pushf", "Data Movement", 0, true},
+    {"popf", "Data Movement", 0, true}
 };
 
 static const instruction_def_t x86_32_control_flow[] = {
@@ -222,10 +242,51 @@ static const instruction_def_t x86_32_control_flow[] = {
     {"loope", "Control Flow", 1, false},
     {"loopne", "Control Flow", 1, false},
     {"jecxz", "Control Flow", 1, false},
+    {"jcxz", "Control Flow", 1, true},
+    {"jna", "Control Flow", 1, true},
+    {"jnae", "Control Flow", 1, true},
+    {"jnb", "Control Flow", 1, true},
+    {"jnbe", "Control Flow", 1, true},
+    {"jng", "Control Flow", 1, true},
+    {"jnge", "Control Flow", 1, true},
+    {"jnl", "Control Flow", 1, true},
+    {"jnle", "Control Flow", 1, true},
+    {"jnp", "Control Flow", 1, true},
+    {"jp", "Control Flow", 1, true},
+    {"jpe", "Control Flow", 1, true},
+    {"jpo", "Control Flow", 1, true},
+    {"loopz", "Control Flow", 1, true},
+    {"loopnz", "Control Flow", 1, true},
     {"sete", "Control Flow", 1, true},
     {"setne", "Control Flow", 1, true},
     {"setl", "Control Flow", 1, true},
-    {"setg", "Control Flow", 1, true}
+    {"setg", "Control Flow", 1, true},
+    {"seta", "Control Flow", 1, true},
+    {"setae", "Control Flow", 1, true},
+    {"setb", "Control Flow", 1, true},
+    {"setbe", "Control Flow", 1, true},
+    {"setc", "Control Flow", 1, true},
+    {"setge", "Control Flow", 1, true},
+    {"setle", "Control Flow", 1, true},
+    {"setna", "Control Flow", 1, true},
+    {"setnae", "Control Flow", 1, true},
+    {"setnb", "Control Flow", 1, true},
+    {"setnbe", "Control Flow", 1, true},
+    {"setnc", "Control Flow", 1, true},
+    {"setng", "Control Flow", 1, true},
+    {"setnge", "Control Flow", 1, true},
+    {"setnl", "Control Flow", 1, true},
+    {"setnle", "Control Flow", 1, true},
+    {"setno", "Control Flow", 1, true},
+    {"setnp", "Control Flow", 1, true},
+    {"setns", "Control Flow", 1, true},
+    {"setnz", "Control Flow", 1, true},
+    {"seto", "Control Flow", 1, true},
+    {"setp", "Control Flow", 1, true},
+    {"setpe", "Control Flow", 1, true},
+    {"setpo", "Control Flow", 1, true},
+    {"sets", "Control Flow", 1, true},
+    {"setz", "Control Flow", 1, true}
 };
 
 static const instruction_def_t x86_32_system[] = {
@@ -244,7 +305,71 @@ static const instruction_def_t x86_32_system[] = {
     {"cpuid", "System", 0, true},
     {"rdtsc", "System", 0, true},
     {"wrmsr", "System", 0, true},
-    {"rdmsr", "System", 0, true}
+    {"rdmsr", "System", 0, true},
+    {"into", "System", 0, true},
+    {"bound", "System", 2, true},
+    {"enter", "System", 2, true},
+    {"leave", "System", 0, true},
+    {"pusha", "System", 0, true},
+    {"popa", "System", 0, true},
+    {"arpl", "System", 2, true},
+    {"verr", "System", 1, true},
+    {"verw", "System", 1, true},
+    {"clts", "System", 0, true},
+    {"lmsw", "System", 1, true},
+    {"smsw", "System", 1, true},
+    {"lgdt", "System", 1, true},
+    {"sgdt", "System", 1, true},
+    {"lidt", "System", 1, true},
+    {"sidt", "System", 1, true},
+    {"lldt", "System", 1, true},
+    {"sldt", "System", 1, true},
+    {"ltr", "System", 1, true},
+    {"str", "System", 1, true},
+    {"lar", "System", 2, true},
+    {"lsl", "System", 2, true},
+    {"lock", "System", 0, true},
+    {"in", "System", 2, true},
+    {"out", "System", 2, true},
+    {"ins", "System", 0, true},
+    {"insb", "System", 0, true},
+    {"insw", "System", 0, true},
+    {"insd", "System", 0, true},
+    {"outs", "System", 0, true},
+    {"outsb", "System", 0, true},
+    {"outsw", "System", 0, true},
+    {"outsd", "System", 0, true},
+    {"esc", "System", 1, true}
+};
+
+static const instruction_def_t x86_32_string[] = {
+    {"movs", "String", 0, true},
+    {"movsb", "String", 0, true},
+    {"movsw", "String", 0, true},
+    {"movsd", "String", 0, true},
+    {"lods", "String", 0, true},
+    {"lodsb", "String", 0, true},
+    {"lodsw", "String", 0, true},
+    {"lodsd", "String", 0, true},
+    {"stos", "String", 0, true},
+    {"stosb", "String", 0, true},
+    {"stosw", "String", 0, true},
+    {"stosd", "String", 0, true},
+    {"scas", "String", 0, true},
+    {"scasb", "String", 0, true},
+    {"scasw", "String", 0, true},
+    {"scasd", "String", 0, true},
+    {"cmps", "String", 0, true},
+    {"cmpsb", "String", 0, true},
+    {"cmpsw", "String", 0, true},
+    {"cmpsd", "String", 0, true},
+    {"rep", "String", 0, true},
+    {"repe", "String", 0, true},
+    {"repne", "String", 0, true},
+    {"repz", "String", 0, true},
+    {"repnz", "String", 0, true},
+    {"xlat", "String", 0, true},
+    {"xlatb", "String", 0, true}
 };
 
 static const instruction_category_t x86_32_categories[] = {
@@ -252,7 +377,8 @@ static const instruction_category_t x86_32_categories[] = {
     {"Logical", x86_32_logical, sizeof(x86_32_logical)/sizeof(instruction_def_t)},
     {"Data Movement", x86_32_data_movement, sizeof(x86_32_data_movement)/sizeof(instruction_def_t)},
     {"Control Flow", x86_32_control_flow, sizeof(x86_32_control_flow)/sizeof(instruction_def_t)},
-    {"System", x86_32_system, sizeof(x86_32_system)/sizeof(instruction_def_t)}
+    {"System", x86_32_system, sizeof(x86_32_system)/sizeof(instruction_def_t)},
+    {"String", x86_32_string, sizeof(x86_32_string)/sizeof(instruction_def_t)}
 };
 
 // ========================================
@@ -543,11 +669,64 @@ static void setup_dummy_operands(operand_t* operands, size_t operand_count, cons
     
     bool is_3op_shift = (strcmp(mnemonic, "shld") == 0 || strcmp(mnemonic, "shrd") == 0);
     
+    // Check if this is a control flow instruction that needs immediate operands
+    bool is_control_flow = (strcmp(mnemonic, "jmp") == 0 || strcmp(mnemonic, "call") == 0 ||
+                           strcmp(mnemonic, "je") == 0 || strcmp(mnemonic, "jne") == 0 ||
+                           strcmp(mnemonic, "jz") == 0 || strcmp(mnemonic, "jnz") == 0 ||
+                           strcmp(mnemonic, "jl") == 0 || strcmp(mnemonic, "jle") == 0 ||
+                           strcmp(mnemonic, "jg") == 0 || strcmp(mnemonic, "jge") == 0 ||
+                           strcmp(mnemonic, "ja") == 0 || strcmp(mnemonic, "jae") == 0 ||
+                           strcmp(mnemonic, "jb") == 0 || strcmp(mnemonic, "jbe") == 0 ||
+                           strcmp(mnemonic, "jc") == 0 || strcmp(mnemonic, "jnc") == 0 ||
+                           strcmp(mnemonic, "jo") == 0 || strcmp(mnemonic, "jno") == 0 ||
+                           strcmp(mnemonic, "js") == 0 || strcmp(mnemonic, "jns") == 0 ||
+                           strcmp(mnemonic, "loop") == 0 || strcmp(mnemonic, "loope") == 0 ||
+                           strcmp(mnemonic, "loopne") == 0 || strcmp(mnemonic, "jecxz") == 0);
+    
+    // Check if this is a set instruction that needs 8-bit register
+    bool is_set_instr = (strncmp(mnemonic, "set", 3) == 0);
+    
+    // Check if this is a bit manipulation instruction needing immediate + register
+    bool is_bit_manip = (strcmp(mnemonic, "bt") == 0 || strcmp(mnemonic, "btc") == 0 ||
+                        strcmp(mnemonic, "btr") == 0 || strcmp(mnemonic, "bts") == 0);
+    
     // Set up appropriate dummy operands based on architecture
     for (size_t i = 0; i < operand_count && i < 4; i++) {
         if (strcmp(arch_name, "x86_32") == 0) {
+            // Special handling for control flow instructions
+            if (is_control_flow && operand_count == 1) {
+                // Control flow instructions need immediate relative offsets
+                operands[i].type = OPERAND_IMMEDIATE;
+                operands[i].value.immediate = 10; // Short relative jump
+                operands[i].size = 1;
+            }
+            // Special handling for set instructions
+            else if (is_set_instr && operand_count == 1) {
+                // Set instructions need 8-bit register
+                operands[i].type = OPERAND_REGISTER;
+                operands[i].value.reg.name = "al";
+                operands[i].value.reg.size = 1;
+                operands[i].value.reg.encoding = 0;
+                operands[i].size = 1;
+            }
+            // Special handling for bit manipulation instructions
+            else if (is_bit_manip && operand_count == 2) {
+                if (i == 0) {
+                    // First operand: immediate bit index (AT&T: source comes first)
+                    operands[i].type = OPERAND_IMMEDIATE;
+                    operands[i].value.immediate = 5;
+                    operands[i].size = 1;
+                } else {
+                    // Second operand: register
+                    operands[i].type = OPERAND_REGISTER;
+                    operands[i].value.reg.name = "eax";
+                    operands[i].value.reg.size = 4;
+                    operands[i].value.reg.encoding = 0;
+                    operands[i].size = 4;
+                }
+            }
             // Special handling for shift operations with AT&T syntax
-            if (is_shift_op && operand_count == 2) {
+            else if (is_shift_op && operand_count == 2) {
                 if (i == 0) {
                     // First operand: immediate count (AT&T: source comes first)
                     operands[i].type = OPERAND_IMMEDIATE;
@@ -591,8 +770,24 @@ static void setup_dummy_operands(operand_t* operands, size_t operand_count, cons
                 operands[i].size = 4;
             }
         } else if (strcmp(arch_name, "x86_16") == 0) {
+            // Special handling for control flow instructions
+            if (is_control_flow && operand_count == 1) {
+                // Control flow instructions need immediate relative offsets
+                operands[i].type = OPERAND_IMMEDIATE;
+                operands[i].value.immediate = 10; // Short relative jump
+                operands[i].size = 1;
+            }
+            // Special handling for set instructions (not available in x86_16, but keeping structure)
+            else if (is_set_instr && operand_count == 1) {
+                // Set instructions need 8-bit register
+                operands[i].type = OPERAND_REGISTER;
+                operands[i].value.reg.name = "al";
+                operands[i].value.reg.size = 1;
+                operands[i].value.reg.encoding = 0;
+                operands[i].size = 1;
+            }
             // Special handling for shift operations with AT&T syntax
-            if (is_shift_op && operand_count == 2) {
+            else if (is_shift_op && operand_count == 2) {
                 if (i == 0) {
                     // First operand: immediate count (AT&T: source comes first)
                     operands[i].type = OPERAND_IMMEDIATE;
