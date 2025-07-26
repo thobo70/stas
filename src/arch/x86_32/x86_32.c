@@ -2468,6 +2468,61 @@ int x86_32_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         }
     }
 
+    // ===== RETURN INSTRUCTIONS =====
+    
+    if (strcmp(lower_mnemonic, "ret") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xC3; // RET (near return)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        } else if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_IMMEDIATE) {
+            int64_t stack_adjust = inst->operands[0].value.immediate;
+            if (stack_adjust >= 0 && stack_adjust <= 0xFFFF && pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0xC2; // RET imm16
+                buffer[pos++] = (uint8_t)(stack_adjust & 0xFF);
+                buffer[pos++] = (uint8_t)((stack_adjust >> 8) & 0xFF);
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "retf") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xCB; // RETF (far return)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        } else if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_IMMEDIATE) {
+            int64_t stack_adjust = inst->operands[0].value.immediate;
+            if (stack_adjust >= 0 && stack_adjust <= 0xFFFF && pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0xCA; // RETF imm16
+                buffer[pos++] = (uint8_t)(stack_adjust & 0xFF);
+                buffer[pos++] = (uint8_t)((stack_adjust >> 8) & 0xFF);
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    // JCXZ (Jump if CX is Zero - 16-bit version)
+    if (strcmp(lower_mnemonic, "jcxz") == 0) {
+        if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_IMMEDIATE) {
+            int64_t offset = inst->operands[0].value.immediate;
+            if (offset >= -128 && offset <= 127 && pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0x66; // Address size prefix for 16-bit CX
+                buffer[pos++] = 0xE3; // JCXZ rel8
+                x86_32_encode_immediate(buffer, &pos, offset, 1);
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+
     // ===== SET INSTRUCTIONS =====
     
     struct {
@@ -2577,6 +2632,1496 @@ int x86_32_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
                     return 0;
                 }
             }
+        }
+    }
+
+    // ===== ADDITIONAL DATA MOVEMENT INSTRUCTIONS =====
+    
+    // Bit Scan Forward/Reverse (BSF/BSR)
+    if (strcmp(lower_mnemonic, "bsf") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBC; // BSF r32, r/m32
+                    buffer[pos++] = x86_32_make_modrm(3, dst_encoding, src_encoding);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "bsr") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBD; // BSR r32, r/m32
+                    buffer[pos++] = x86_32_make_modrm(3, dst_encoding, src_encoding);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // Bit Test instructions (BT/BTC/BTR/BTS)
+    if (strcmp(lower_mnemonic, "bt") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                int64_t bit_offset = inst->operands[0].value.immediate;
+                if (bit_offset >= 0 && bit_offset <= 255 && pos + 4 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBA; // BT r/m32, imm8
+                    buffer[pos++] = x86_32_make_modrm(3, 4, reg_encoding); // opcode extension 4 for BT
+                    buffer[pos++] = (uint8_t)bit_offset;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "btc") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                int64_t bit_offset = inst->operands[0].value.immediate;
+                if (bit_offset >= 0 && bit_offset <= 255 && pos + 4 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBA; // BTC r/m32, imm8
+                    buffer[pos++] = x86_32_make_modrm(3, 7, reg_encoding); // opcode extension 7 for BTC
+                    buffer[pos++] = (uint8_t)bit_offset;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "btr") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                int64_t bit_offset = inst->operands[0].value.immediate;
+                if (bit_offset >= 0 && bit_offset <= 255 && pos + 4 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBA; // BTR r/m32, imm8
+                    buffer[pos++] = x86_32_make_modrm(3, 6, reg_encoding); // opcode extension 6 for BTR
+                    buffer[pos++] = (uint8_t)bit_offset;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "bts") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                int64_t bit_offset = inst->operands[0].value.immediate;
+                if (bit_offset >= 0 && bit_offset <= 255 && pos + 4 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBA; // BTS r/m32, imm8
+                    buffer[pos++] = x86_32_make_modrm(3, 5, reg_encoding); // opcode extension 5 for BTS
+                    buffer[pos++] = (uint8_t)bit_offset;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // Bit Scan Forward (BSF) and Bit Scan Reverse (BSR)
+    if (strcmp(lower_mnemonic, "bsf") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBC; // BSF opcode
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "bsr") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xBD; // BSR opcode
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // MOVZX (Move with Zero Extension) and MOVSX (Move with Sign Extension)
+    if (strcmp(lower_mnemonic, "movzx") == 0 || strcmp(lower_mnemonic, "movzbl") == 0 ||
+        strcmp(lower_mnemonic, "movzwl") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    // MOVZX byte to 32-bit
+                    if (src_size == 1 && dst_size == 4) {
+                        buffer[pos++] = 0xB6; // MOVZX r32, r/m8
+                    }
+                    // MOVZX word to 32-bit  
+                    else if (src_size == 2 && dst_size == 4) {
+                        buffer[pos++] = 0xB7; // MOVZX r32, r/m16
+                    } else {
+                        pos -= 1; // Back out if invalid combination
+                        goto movzx_next;
+                    }
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+        movzx_next:;
+    }
+    
+    if (strcmp(lower_mnemonic, "movsx") == 0 || strcmp(lower_mnemonic, "movsbl") == 0 ||
+        strcmp(lower_mnemonic, "movswl") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    // MOVSX byte to 32-bit
+                    if (src_size == 1 && dst_size == 4) {
+                        buffer[pos++] = 0xBE; // MOVSX r32, r/m8
+                    }
+                    // MOVSX word to 32-bit
+                    else if (src_size == 2 && dst_size == 4) {
+                        buffer[pos++] = 0xBF; // MOVSX r32, r/m16
+                    } else {
+                        pos -= 1; // Back out if invalid combination
+                        goto movsx_next;
+                    }
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+        movsx_next:;
+    }
+    
+    // Additional String operations with REP prefix
+    if (strcmp(lower_mnemonic, "repz") == 0 || strcmp(lower_mnemonic, "repe") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF3; // REPZ/REPE prefix
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "repnz") == 0 || strcmp(lower_mnemonic, "repne") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF2; // REPNZ/REPNE prefix
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // String comparison instructions
+    if (strcmp(lower_mnemonic, "cmpsb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA6; // CMPSB (Compare String Bytes)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmpsw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0xA7; // CMPSW (Compare String Words)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmpsl") == 0 || strcmp(lower_mnemonic, "cmpsd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA7; // CMPSL/CMPSD (Compare String Doublewords)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Conditional Move instructions (CMOVcc)
+    if (strcmp(lower_mnemonic, "cmova") == 0 || strcmp(lower_mnemonic, "cmovnbe") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0x47; // CMOVA/CMOVNBE
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmovae") == 0 || strcmp(lower_mnemonic, "cmovnb") == 0 ||
+        strcmp(lower_mnemonic, "cmovnc") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0x43; // CMOVAE/CMOVNB/CMOVNC
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmovb") == 0 || strcmp(lower_mnemonic, "cmovnae") == 0 ||
+        strcmp(lower_mnemonic, "cmovc") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0x42; // CMOVB/CMOVNAE/CMOVC
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmove") == 0 || strcmp(lower_mnemonic, "cmovz") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0x44; // CMOVE/CMOVZ
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmovne") == 0 || strcmp(lower_mnemonic, "cmovnz") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_reg, &dst_size) == 0) {
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0x45; // CMOVNE/CMOVNZ
+                    buffer[pos++] = x86_32_make_modrm(3, dst_reg, src_reg);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // Double Precision Shift instructions (SHLD/SHRD)
+    if (strcmp(lower_mnemonic, "shld") == 0) {
+        if (inst->operand_count == 3 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE &&
+            inst->operands[1].type == OPERAND_REGISTER && 
+            inst->operands[2].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[2].value.reg.name, &dst_reg, &dst_size) == 0) {
+                int64_t shift_count = inst->operands[0].value.immediate;
+                if (shift_count >= 0 && shift_count <= 255 && pos + 4 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xA4; // SHLD r/m32, r32, imm8
+                    buffer[pos++] = x86_32_make_modrm(3, src_reg, dst_reg);
+                    buffer[pos++] = (uint8_t)shift_count;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "shrd") == 0) {
+        if (inst->operand_count == 3 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE &&
+            inst->operands[1].type == OPERAND_REGISTER && 
+            inst->operands[2].type == OPERAND_REGISTER) {
+            uint8_t src_reg, dst_reg, src_size, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &src_reg, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[2].value.reg.name, &dst_reg, &dst_size) == 0) {
+                int64_t shift_count = inst->operands[0].value.immediate;
+                if (shift_count >= 0 && shift_count <= 255 && pos + 4 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xAC; // SHRD r/m32, r32, imm8
+                    buffer[pos++] = x86_32_make_modrm(3, src_reg, dst_reg);
+                    buffer[pos++] = (uint8_t)shift_count;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // Complement Carry Flag (CMC)
+    if (strcmp(lower_mnemonic, "cmc") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF5; // CMC (Complement Carry Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // BCD (Binary Coded Decimal) arithmetic
+    if (strcmp(lower_mnemonic, "daa") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x27; // DAA (Decimal Adjust AL after Addition)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "das") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x2F; // DAS (Decimal Adjust AL after Subtraction)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "aaa") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x37; // AAA (ASCII Adjust AL after Addition)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "aas") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x3F; // AAS (ASCII Adjust AL after Subtraction)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "aam") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xD4; // AAM (ASCII Adjust AX after Multiply)
+            buffer[pos++] = 0x0A; // Default base 10
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "aad") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xD5; // AAD (ASCII Adjust AX before Division)
+            buffer[pos++] = 0x0A; // Default base 10
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // ===== ADDITIONAL DATA MOVEMENT INSTRUCTIONS =====
+    
+    // MOVZX (Move with Zero Extension)
+    if (strcmp(lower_mnemonic, "movzx") == 0 || strcmp(lower_mnemonic, "movzxb") == 0 || 
+        strcmp(lower_mnemonic, "movzxw") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    if (src_size == 1) {
+                        buffer[pos++] = 0xB6; // MOVZX r32, r/m8
+                    } else if (src_size == 2) {
+                        buffer[pos++] = 0xB7; // MOVZX r32, r/m16
+                    } else {
+                        free(lower_mnemonic);
+                        return -1; // Invalid source size for MOVZX
+                    }
+                    buffer[pos++] = x86_32_make_modrm(3, dst_encoding, src_encoding);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // MOVSX (Move with Sign Extension)
+    if (strcmp(lower_mnemonic, "movsx") == 0 || strcmp(lower_mnemonic, "movsxb") == 0 || 
+        strcmp(lower_mnemonic, "movsxw") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    if (src_size == 1) {
+                        buffer[pos++] = 0xBE; // MOVSX r32, r/m8
+                    } else if (src_size == 2) {
+                        buffer[pos++] = 0xBF; // MOVSX r32, r/m16
+                    } else {
+                        free(lower_mnemonic);
+                        return -1; // Invalid source size for MOVSX
+                    }
+                    buffer[pos++] = x86_32_make_modrm(3, dst_encoding, src_encoding);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // BSWAP (Byte Swap)
+    if (strcmp(lower_mnemonic, "bswap") == 0) {
+        if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                if (reg_size == 4 && pos + 2 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xC8 + reg_encoding; // BSWAP r32
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // LAHF (Load AH with Flags)
+    if (strcmp(lower_mnemonic, "lahf") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x9F; // LAHF
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // SAHF (Store AH into Flags)
+    if (strcmp(lower_mnemonic, "sahf") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x9E; // SAHF
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // CBW/CWDE (Convert Byte to Word / Convert Word to Doubleword Extended)
+    if (strcmp(lower_mnemonic, "cbw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0x98; // CBW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cwde") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x98; // CWDE
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // CWD/CDQ (Convert Word to Doubleword / Convert Doubleword to Quadword)
+    if (strcmp(lower_mnemonic, "cwd") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0x99; // CWD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cdq") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x99; // CDQ
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // PUSHF/POPF (Push/Pop Flags - 16-bit versions)
+    if (strcmp(lower_mnemonic, "pushf") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0x9C; // PUSHF
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "popf") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0x9D; // POPF
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // XCHG (Exchange Register/Memory with Register)
+    if (strcmp(lower_mnemonic, "xchg") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg1_encoding, reg1_size, reg2_encoding, reg2_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &reg1_encoding, &reg1_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &reg2_encoding, &reg2_size) == 0) {
+                
+                if (reg1_size == reg2_size) {
+                    // Special single-byte encoding for XCHG reg, EAX
+                    if ((reg1_encoding == 0 || reg2_encoding == 0) && reg1_size == 4) {
+                        uint8_t other_reg = (reg1_encoding == 0) ? reg2_encoding : reg1_encoding;
+                        if (pos + 1 <= MAX_BUFFER_SIZE && other_reg != 0) {
+                            buffer[pos++] = 0x90 + other_reg; // XCHG r32, EAX
+                            *length = pos;
+                            free(lower_mnemonic);
+                            return 0;
+                        }
+                    }
+                    
+                    // General two-operand form
+                    if (pos + 2 <= MAX_BUFFER_SIZE) {
+                        if (reg1_size == 4) {
+                            buffer[pos++] = 0x87; // XCHG r/m32, r32
+                        } else if (reg1_size == 2) {
+                            buffer[pos++] = 0x66; // Operand size prefix
+                            buffer[pos++] = 0x87; // XCHG r/m16, r16
+                        } else if (reg1_size == 1) {
+                            buffer[pos++] = 0x86; // XCHG r/m8, r8
+                        }
+                        buffer[pos++] = x86_32_make_modrm(3, reg1_encoding, reg2_encoding);
+                        *length = pos;
+                        free(lower_mnemonic);
+                        return 0;
+                    }
+                }
+            }
+        }
+    }
+    
+    // LEA (Load Effective Address) - simplified register-only version for now
+    if (strcmp(lower_mnemonic, "lea") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_MEMORY && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                // For now, implement simple base register form: LEA (%reg), %dst
+                if (inst->operands[0].value.memory.base.name && dst_size == 4) {
+                    uint8_t base_encoding, base_size;
+                    if (x86_32_find_register(inst->operands[0].value.memory.base.name, &base_encoding, &base_size) == 0) {
+                        if (pos + 2 <= MAX_BUFFER_SIZE) {
+                            buffer[pos++] = 0x8D; // LEA r32, m
+                            buffer[pos++] = x86_32_make_modrm(0, dst_encoding, base_encoding); // mod=00 for [reg]
+                            *length = pos;
+                            free(lower_mnemonic);
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // XADD (Exchange and Add)
+    if (strcmp(lower_mnemonic, "xadd") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (src_size == dst_size && pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    if (src_size == 4) {
+                        buffer[pos++] = 0xC1; // XADD r/m32, r32
+                    } else if (src_size == 2) {
+                        buffer[pos++] = 0x66; // Operand size prefix
+                        buffer[pos++] = 0xC1; // XADD r/m16, r16
+                    } else if (src_size == 1) {
+                        buffer[pos++] = 0xC0; // XADD r/m8, r8
+                    }
+                    buffer[pos++] = x86_32_make_modrm(3, src_encoding, dst_encoding);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // CMPXCHG (Compare and Exchange)
+    if (strcmp(lower_mnemonic, "cmpxchg") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (src_size == dst_size && pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    if (src_size == 4) {
+                        buffer[pos++] = 0xB1; // CMPXCHG r/m32, r32
+                    } else if (src_size == 2) {
+                        buffer[pos++] = 0x66; // Operand size prefix
+                        buffer[pos++] = 0xB1; // CMPXCHG r/m16, r16
+                    } else if (src_size == 1) {
+                        buffer[pos++] = 0xB0; // CMPXCHG r/m8, r8
+                    }
+                    buffer[pos++] = x86_32_make_modrm(3, src_encoding, dst_encoding);
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // Segment Load Instructions (simplified register-to-register versions)
+    if (strcmp(lower_mnemonic, "lds") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_MEMORY && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                // Simplified implementation for basic memory addressing
+                if (dst_size == 4 && pos + 2 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0xC5; // LDS r32, m16:32
+                    buffer[pos++] = x86_32_make_modrm(0, dst_encoding, 0); // Simplified ModR/M
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "les") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_MEMORY && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (dst_size == 4 && pos + 2 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0xC4; // LES r32, m16:32
+                    buffer[pos++] = x86_32_make_modrm(0, dst_encoding, 0); // Simplified ModR/M
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lfs") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_MEMORY && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (dst_size == 4 && pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xB4; // LFS r32, m16:32
+                    buffer[pos++] = x86_32_make_modrm(0, dst_encoding, 0); // Simplified ModR/M
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lgs") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_MEMORY && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (dst_size == 4 && pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xB5; // LGS r32, m16:32
+                    buffer[pos++] = x86_32_make_modrm(0, dst_encoding, 0); // Simplified ModR/M
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lss") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_MEMORY && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t dst_encoding, dst_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                if (dst_size == 4 && pos + 3 <= MAX_BUFFER_SIZE) {
+                    buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                    buffer[pos++] = 0xB2; // LSS r32, m16:32
+                    buffer[pos++] = x86_32_make_modrm(0, dst_encoding, 0); // Simplified ModR/M
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+
+    // ===== ADDITIONAL SYSTEM INSTRUCTIONS =====
+    
+    // Flag manipulation instructions
+    if (strcmp(lower_mnemonic, "cli") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xFA; // CLI (Clear Interrupt Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "sti") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xFB; // STI (Set Interrupt Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "clc") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF8; // CLC (Clear Carry Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "stc") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF9; // STC (Set Carry Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cld") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xFC; // CLD (Clear Direction Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "std") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xFD; // STD (Set Direction Flag)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // CMC (Complement Carry Flag)
+    if (strcmp(lower_mnemonic, "cmc") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF5; // CMC
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Control instructions
+    if (strcmp(lower_mnemonic, "nop") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x90; // NOP
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "hlt") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF4; // HLT (Halt)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "wait") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x9B; // WAIT/FWAIT
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Return instructions
+    if (strcmp(lower_mnemonic, "iret") == 0 || strcmp(lower_mnemonic, "iretd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xCF; // IRET/IRETD (Interrupt Return)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Stack frame instructions
+    if (strcmp(lower_mnemonic, "enter") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE && 
+            inst->operands[1].type == OPERAND_IMMEDIATE) {
+            int64_t frame_size = inst->operands[0].value.immediate;
+            int64_t nest_level = inst->operands[1].value.immediate;
+            if (frame_size >= 0 && frame_size <= 0xFFFF && 
+                nest_level >= 0 && nest_level <= 0xFF && pos + 4 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0xC8; // ENTER
+                buffer[pos++] = (uint8_t)(frame_size & 0xFF);
+                buffer[pos++] = (uint8_t)((frame_size >> 8) & 0xFF);
+                buffer[pos++] = (uint8_t)nest_level;
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "leave") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xC9; // LEAVE
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Push/Pop all registers
+    if (strcmp(lower_mnemonic, "pusha") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x60; // PUSHA (already implemented but ensure consistency)
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "popa") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x61; // POPA
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // INTO (Interrupt on Overflow)
+    if (strcmp(lower_mnemonic, "into") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xCE; // INTO
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Advanced CPU instructions
+    if (strcmp(lower_mnemonic, "cpuid") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x0F; // Two-byte opcode prefix
+            buffer[pos++] = 0xA2; // CPUID
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "rdtsc") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x0F; // Two-byte opcode prefix
+            buffer[pos++] = 0x31; // RDTSC
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // I/O Instructions
+    if (strcmp(lower_mnemonic, "in") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_IMMEDIATE && 
+            inst->operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                int64_t port = inst->operands[0].value.immediate;
+                if (reg_encoding == 0 && port >= 0 && port <= 255 && pos + 2 <= MAX_BUFFER_SIZE) { // AL/AX/EAX only
+                    if (reg_size == 1) {
+                        buffer[pos++] = 0xE4; // IN AL, imm8
+                    } else if (reg_size == 2) {
+                        buffer[pos++] = 0x66; // Operand size prefix
+                        buffer[pos++] = 0xE5; // IN AX, imm8
+                    } else if (reg_size == 4) {
+                        buffer[pos++] = 0xE5; // IN EAX, imm8
+                    }
+                    buffer[pos++] = (uint8_t)port;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "out") == 0) {
+        if (inst->operand_count == 2 && 
+            inst->operands[0].type == OPERAND_REGISTER && 
+            inst->operands[1].type == OPERAND_IMMEDIATE) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_32_find_register(inst->operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                int64_t port = inst->operands[1].value.immediate;
+                if (reg_encoding == 0 && port >= 0 && port <= 255 && pos + 2 <= MAX_BUFFER_SIZE) { // AL/AX/EAX only
+                    if (reg_size == 1) {
+                        buffer[pos++] = 0xE6; // OUT imm8, AL
+                    } else if (reg_size == 2) {
+                        buffer[pos++] = 0x66; // Operand size prefix
+                        buffer[pos++] = 0xE7; // OUT imm8, AX
+                    } else if (reg_size == 4) {
+                        buffer[pos++] = 0xE7; // OUT imm8, EAX
+                    }
+                    buffer[pos++] = (uint8_t)port;
+                    *length = pos;
+                    free(lower_mnemonic);
+                    return 0;
+                }
+            }
+        }
+    }
+    
+    // String I/O Instructions
+    if (strcmp(lower_mnemonic, "insb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x6C; // INSB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "insw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0x6D; // INSW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "insd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x6D; // INSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "ins") == 0) {
+        // Default to INSD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x6D; // INSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "outsb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x6E; // OUTSB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "outsw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0x6F; // OUTSW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "outsd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x6F; // OUTSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "outs") == 0) {
+        // Default to OUTSD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x6F; // OUTSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // LOCK prefix
+    if (strcmp(lower_mnemonic, "lock") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF0; // LOCK prefix
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Advanced MSR instructions
+    if (strcmp(lower_mnemonic, "wrmsr") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x0F; // Two-byte opcode prefix
+            buffer[pos++] = 0x30; // WRMSR
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "rdmsr") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x0F; // Two-byte opcode prefix
+            buffer[pos++] = 0x32; // RDMSR
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Memory management instructions
+    if (strcmp(lower_mnemonic, "clts") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x0F; // Two-byte opcode prefix
+            buffer[pos++] = 0x06; // CLTS
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // Descriptor table instructions (simplified)
+    if (strcmp(lower_mnemonic, "lgdt") == 0) {
+        if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_MEMORY) {
+            if (pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                buffer[pos++] = 0x01; // LGDT m16&32
+                buffer[pos++] = x86_32_make_modrm(0, 2, 0); // opcode extension 2, simplified addressing
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "sgdt") == 0) {
+        if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_MEMORY) {
+            if (pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                buffer[pos++] = 0x01; // SGDT m16&32
+                buffer[pos++] = x86_32_make_modrm(0, 0, 0); // opcode extension 0, simplified addressing
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lidt") == 0) {
+        if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_MEMORY) {
+            if (pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                buffer[pos++] = 0x01; // LIDT m16&32
+                buffer[pos++] = x86_32_make_modrm(0, 3, 0); // opcode extension 3, simplified addressing
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "sidt") == 0) {
+        if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_MEMORY) {
+            if (pos + 3 <= MAX_BUFFER_SIZE) {
+                buffer[pos++] = 0x0F; // Two-byte opcode prefix
+                buffer[pos++] = 0x01; // SIDT m16&32
+                buffer[pos++] = x86_32_make_modrm(0, 1, 0); // opcode extension 1, simplified addressing
+                *length = pos;
+                free(lower_mnemonic);
+                return 0;
+            }
+        }
+    }
+
+    // ===== STRING OPERATIONS =====
+    
+    // MOVSB/MOVSW/MOVSD (Move String Byte/Word/Doubleword)
+    if (strcmp(lower_mnemonic, "movsb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA4; // MOVSB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "movsw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0xA5; // MOVSW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "movsd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA5; // MOVSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "movs") == 0) {
+        // Default to MOVSD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA5; // MOVSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // LODSB/LODSW/LODSD (Load String Byte/Word/Doubleword)
+    if (strcmp(lower_mnemonic, "lodsb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAC; // LODSB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lodsw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0xAD; // LODSW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lodsd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAD; // LODSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "lods") == 0) {
+        // Default to LODSD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAD; // LODSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // STOSB/STOSW/STOSD (Store String Byte/Word/Doubleword)
+    if (strcmp(lower_mnemonic, "stosb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAA; // STOSB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "stosw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0xAB; // STOSW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "stosd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAB; // STOSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "stos") == 0) {
+        // Default to STOSD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAB; // STOSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // SCASB/SCASW/SCASD (Scan String Byte/Word/Doubleword)
+    if (strcmp(lower_mnemonic, "scasb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAE; // SCASB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "scasw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0xAF; // SCASW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "scasd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAF; // SCASD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "scas") == 0) {
+        // Default to SCASD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xAF; // SCASD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // CMPSB/CMPSW/CMPSD (Compare String Byte/Word/Doubleword)
+    if (strcmp(lower_mnemonic, "cmpsb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA6; // CMPSB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmpsw") == 0) {
+        if (inst->operand_count == 0 && pos + 2 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0x66; // Operand size prefix for 16-bit
+            buffer[pos++] = 0xA7; // CMPSW
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmpsd") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA7; // CMPSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "cmps") == 0) {
+        // Default to CMPSD for x86_32
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xA7; // CMPSD
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // REP/REPE/REPNE/REPZ/REPNZ prefixes
+    if (strcmp(lower_mnemonic, "rep") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF3; // REP prefix
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "repe") == 0 || strcmp(lower_mnemonic, "repz") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF3; // REPE/REPZ prefix
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    if (strcmp(lower_mnemonic, "repne") == 0 || strcmp(lower_mnemonic, "repnz") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xF2; // REPNE/REPNZ prefix
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
+        }
+    }
+    
+    // XLAT/XLATB (Table Look-up Translation)
+    if (strcmp(lower_mnemonic, "xlat") == 0 || strcmp(lower_mnemonic, "xlatb") == 0) {
+        if (inst->operand_count == 0 && pos + 1 <= MAX_BUFFER_SIZE) {
+            buffer[pos++] = 0xD7; // XLAT/XLATB
+            *length = pos;
+            free(lower_mnemonic);
+            return 0;
         }
     }
     

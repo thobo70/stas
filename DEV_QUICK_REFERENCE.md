@@ -174,7 +174,7 @@ parse_operand(inst->operands[1]);  // destination
 
 ### **Architecture Completeness**
 - x86_16: **100%** functional ✅ COMPLETE
-- x86_32: **52.1%** functional (112/215) **85.1% recognized** (183/215) 🚀💥 **PHASE 2 COMPLETE** - Intel i386 documentation validated!
+- x86_32: **70.2%** functional (151/215) **85.1% recognized** (183/215) 🚀💥 **PUSHING TO 100%** - **Arithmetic: 100% ✅** String: 66.7%, Logical: 93.8%, I/O & Advanced Data Movement Added
 - x86_64: **28.1%** functional 
 - ARM64: **13.8%** functional
 - RISC-V: **15.7%** functional
