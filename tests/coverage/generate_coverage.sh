@@ -53,105 +53,88 @@ log_info "Cleaning previous builds and coverage data..."
 
 # Clean previous builds and coverage data
 make -C ../.. clean > /dev/null 2>&1
-rm -f *.gcda *.gcno *.gcov coverage.info coverage_filtered.info
+rm -f *.gcda *.gcno *.gcov *.info
 rm -rf coverage_html
 
 log_info "Building with coverage instrumentation..."
 
-# Build with coverage flags
-export CFLAGS="$CFLAGS --coverage -fprofile-arcs -ftest-coverage -O0 -g"
-export LDFLAGS="$LDFLAGS --coverage"
-
-# Build all variants with coverage
-if ! make -C ../.. all; then
-    log_error "Failed to build with coverage instrumentation"
-    exit 1
-fi
-
-log_success "Build with coverage completed"
-
-log_info "Running comprehensive test suite for coverage..."
-
-# Function to run tests and capture coverage
-run_test_category() {
-    local category=$1
-    local make_target=$2
-    
-    log_info "Running $category tests..."
-    
-    if make -C ../.. $make_target > "${category}_coverage.log" 2>&1; then
-        log_success "$category tests completed"
-        return 0
-    else
-        log_warning "$category tests failed - some coverage may be missing"
-        return 1
-    fi
-}
-
-# Run all test categories for maximum coverage
-TEST_SUCCESS=true
-
-# Unit tests (if available)
-if make -C ../.. -n test-unit-all > /dev/null 2>&1; then
-    run_test_category "Unit" "test-unit-all" || TEST_SUCCESS=false
-else
-    log_warning "No unit tests found - using legacy Unity tests"
-    run_test_category "Unity" "test-unity" || TEST_SUCCESS=false
-fi
-
-# Integration tests
-if make -C ../.. -n test-integration > /dev/null 2>&1; then
-    run_test_category "Integration" "test-integration" || TEST_SUCCESS=false
-else
-    log_warning "No integration tests found"
-fi
-
-# Execution tests (if available)
-if make -C ../.. -n test-execution-all > /dev/null 2>&1; then
-    run_test_category "Execution" "test-execution-all" || TEST_SUCCESS=false
-elif make -C ../.. -n test-unicorn > /dev/null 2>&1; then
-    run_test_category "Unicorn" "test-unicorn" || TEST_SUCCESS=false
-fi
-
-# Legacy tests for maximum coverage
-run_test_category "Legacy" "test-all" || TEST_SUCCESS=false
-
-log_info "Generating coverage data..."
-
-# Find and process coverage files
-COVERAGE_FILES=$(find ../.. -name "*.gcda" -o -name "*.gcno" 2>/dev/null)
-
-if [ -z "$COVERAGE_FILES" ]; then
-    log_error "No coverage data found. Tests may not have executed properly."
-    exit 1
-fi
-
-log_info "Found coverage data files:"
-echo "$COVERAGE_FILES" | head -10
-if [ $(echo "$COVERAGE_FILES" | wc -l) -gt 10 ]; then
-    echo "... and $(echo "$COVERAGE_FILES" | wc -l | awk '{print $1-10}') more files"
-fi
-
-# Generate basic gcov reports
-log_info "Generating gcov reports..."
-
+# Build and run tests with coverage in a single step
 cd ../..
-gcov src/*.c src/*/*.c src/*/*/*.c 2>/dev/null || true
 
-# Move gcov files to coverage directory
-mv *.gcov tests/coverage/ 2>/dev/null || true
+# Build with coverage flags and run tests
+COVERAGE_CFLAGS="--coverage -fprofile-arcs -ftest-coverage -O0 -g"
+COVERAGE_LDFLAGS="--coverage"
+
+log_info "Building main application with coverage..."
+if ! make CFLAGS="$CFLAGS $COVERAGE_CFLAGS" LDFLAGS="$LDFLAGS $COVERAGE_LDFLAGS" all; then
+    log_error "Failed to build application with coverage"
+    exit 1
+fi
+
+log_info "Building and running unit tests with coverage..."
+if ! make CFLAGS="$CFLAGS $COVERAGE_CFLAGS" LDFLAGS="$LDFLAGS $COVERAGE_LDFLAGS" test-unit-all; then
+    log_warning "Unit tests failed - some coverage may be missing"
+fi
+
+log_info "Building and running execution tests with coverage..."
+if ! make CFLAGS="$CFLAGS $COVERAGE_CFLAGS" LDFLAGS="$LDFLAGS $COVERAGE_LDFLAGS" test-execution-all; then
+    log_warning "Execution tests failed - some coverage may be missing"
+fi
+
+log_success "Tests completed with coverage data collection"
+
+log_info "Generating coverage reports..."
+
+# Find coverage data files
+GCDA_FILES=$(find . -name "*.gcda" 2>/dev/null | wc -l)
+GCNO_FILES=$(find . -name "*.gcno" 2>/dev/null | wc -l)
+
+if [ "$GCDA_FILES" -eq 0 ] || [ "$GCNO_FILES" -eq 0 ]; then
+    log_error "No coverage data found. Tests may not have executed properly."
+    log_info "Found $GCDA_FILES .gcda files and $GCNO_FILES .gcno files"
+    exit 1
+fi
+
+log_info "Found $GCDA_FILES .gcda files and $GCNO_FILES .gcno files"
 
 cd tests/coverage
 
-# Count coverage files
+# Generate gcov reports
+log_info "Generating gcov reports..."
+find ../.. -name "*.gcda" -exec gcov {} \; > /dev/null 2>&1 || true
+
+# Count generated gcov files
 GCOV_FILES=$(ls *.gcov 2>/dev/null | wc -l)
 log_info "Generated $GCOV_FILES gcov files"
 
-# Generate lcov report if available
 if [ "$LCOV_AVAILABLE" = true ]; then
     log_info "Generating lcov HTML report..."
     
     # Capture coverage data
+    lcov --capture --directory ../.. --output-file coverage.info --quiet
+    
+    # Filter out system headers and test files
+    lcov --remove coverage.info '/usr/*' '*/tests/*' '*/test*' --output-file coverage_filtered.info --ignore-errors unused --quiet
+    
+    # Generate HTML report
+    genhtml coverage_filtered.info --output-directory coverage_html --quiet
+    
+    log_success "HTML coverage report generated in tests/coverage/coverage_html/"
+    
+    # Extract overall coverage percentage
+    COVERAGE_PERCENT=$(lcov --summary coverage_filtered.info 2>&1 | grep "lines" | grep -o '[0-9.]*%' | head -1)
+    log_info "Overall line coverage: ${COVERAGE_PERCENT:-Unknown}"
+else
+    log_warning "lcov not available - only gcov reports generated"
+fi
+
+log_success "Coverage analysis completed!"
+echo "========================================"
+echo "Reports available in: tests/coverage/"
+if [ "$LCOV_AVAILABLE" = true ]; then
+    echo "HTML report: tests/coverage/coverage_html/index.html"
+fi
+echo "========================================"
     if lcov --capture --directory ../.. --output-file coverage.info --ignore-errors source,gcov 2>/dev/null; then
         
         # Filter out system files and test files

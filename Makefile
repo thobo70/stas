@@ -475,6 +475,8 @@ coverage-build:
 	@echo "=== Building with Coverage Support ==="
 	$(MAKE) clean
 	$(MAKE) CFLAGS="$(CFLAGS) $(COVERAGE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(COVERAGE_LDFLAGS)" all
+	@echo "=== Building tests with Coverage Support ==="
+	$(MAKE) CFLAGS="$(CFLAGS) $(COVERAGE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(COVERAGE_LDFLAGS)" test-unit-all test-execution-all
 
 # Coverage testing
 test-coverage:
