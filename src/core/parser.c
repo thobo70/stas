@@ -571,10 +571,16 @@ ast_node_t *parse_directive(parser_t *parser) {
     size_t arg_count = 0;
     char **args = NULL;
     
-    while (!parser_match(parser, TOKEN_NEWLINE) && !parser_match(parser, TOKEN_EOF)) {
+    while (!parser_match(parser, TOKEN_NEWLINE) && !parser_match(parser, TOKEN_EOF) && !parser->error) {
         if (parser_match(parser, TOKEN_COMMA) || parser_match(parser, TOKEN_COMMENT)) {
             parser_advance(parser);
             continue;
+        }
+        
+        // Handle error tokens
+        if (parser_match(parser, TOKEN_ERROR)) {
+            parser_error(parser, "Invalid character in directive arguments");
+            break;
         }
         
         // Collect argument as string
