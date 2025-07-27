@@ -247,6 +247,21 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     
     // CMP instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "cmp") == 0 && operand_count == 2) {
+        // CMP immediate with register
+        if (operands[0].type == OPERAND_IMMEDIATE && operands[1].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_16_find_register(operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                if (reg_size == 2) { // 16-bit register
+                    output[pos++] = 0x81; // CMP r/m16, imm16
+                    output[pos++] = 0xF8 | reg_encoding; // ModR/M: 11 111 reg (subfunction 7 for CMP)
+                    output[pos++] = operands[0].value.immediate & 0xFF; // Low byte
+                    output[pos++] = (operands[0].value.immediate >> 8) & 0xFF; // High byte
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
         // CMP register with register
         if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
             uint8_t src_encoding, src_size, dst_encoding, dst_size;
@@ -271,6 +286,16 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     
     // MUL instruction
     if (strcasecmp_c99(mnemonic, "mul") == 0 && operand_count == 1) {
+        if (operands[0].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                output[pos++] = 0xF7; // MUL r/m16
+                output[pos++] = 0xE0 | reg_encoding; // ModR/M byte: 11 100 reg
+                *output_size = pos;
+                return true;
+            }
+        }
+        // Default fallback for %ax if operand not recognized
         output[pos++] = 0xF7; // MUL r/m16
         output[pos++] = 0xE0; // ModR/M for %ax (reg=4 for MUL)
         *output_size = pos;
@@ -279,6 +304,16 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     
     // DIV instruction
     if (strcasecmp_c99(mnemonic, "div") == 0 && operand_count == 1) {
+        if (operands[0].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                output[pos++] = 0xF7; // DIV r/m16
+                output[pos++] = 0xF0 | reg_encoding; // ModR/M byte: 11 110 reg
+                *output_size = pos;
+                return true;
+            }
+        }
+        // Default fallback for %ax if operand not recognized
         output[pos++] = 0xF7; // DIV r/m16
         output[pos++] = 0xF0; // ModR/M for %ax (reg=6 for DIV)
         *output_size = pos;
@@ -287,6 +322,16 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     
     // IMUL instruction
     if (strcasecmp_c99(mnemonic, "imul") == 0 && operand_count == 1) {
+        if (operands[0].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                output[pos++] = 0xF7; // IMUL r/m16
+                output[pos++] = 0xE8 | reg_encoding; // ModR/M byte: 11 101 reg
+                *output_size = pos;
+                return true;
+            }
+        }
+        // Default fallback for %ax if operand not recognized
         output[pos++] = 0xF7; // IMUL r/m16
         output[pos++] = 0xE8; // ModR/M for %ax (reg=5 for IMUL)
         *output_size = pos;

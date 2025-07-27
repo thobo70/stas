@@ -390,7 +390,7 @@ static int codegen_process_instruction(codegen_ctx_t *ctx, ast_node_t *inst_node
             for (size_t i = 0; i < jump_symbol_count; i++) {
                 const char *symbol_name = jump_symbol_names[i];
                 if (symbol_name) {
-                    // For x86_32 short jumps, displacement is at offset 1 (after opcode byte)
+                    // For x86 short jumps (both x86_16 and x86_32), displacement is at offset 1 (after opcode byte)
                     uint32_t displacement_offset = ctx->code_size + 1;  // +1 to skip opcode byte
                     uint32_t reloc_type = RELOC_REL8; // 8-bit displacement
                     
