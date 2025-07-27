@@ -358,8 +358,9 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         buffer[pos++] = 0x48; // REX.W prefix
         buffer[pos++] = 0x21; // AND opcode
         
-        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
-        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        // AT&T syntax: operands[0]=source, operands[1]=destination
+        uint8_t src_reg = inst->operands[0].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[1].value.reg.encoding & 0x07;
         buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
         
         *length = pos;
@@ -373,8 +374,9 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         buffer[pos++] = 0x48; // REX.W prefix
         buffer[pos++] = 0x09; // OR opcode
         
-        uint8_t src_reg = inst->operands[1].value.reg.encoding & 0x07;
-        uint8_t dst_reg = inst->operands[0].value.reg.encoding & 0x07;
+        // AT&T syntax: operands[0]=source, operands[1]=destination
+        uint8_t src_reg = inst->operands[0].value.reg.encoding & 0x07;
+        uint8_t dst_reg = inst->operands[1].value.reg.encoding & 0x07;
         buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg;
         
         *length = pos;

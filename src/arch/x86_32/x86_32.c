@@ -222,7 +222,7 @@ int x86_32_parse_instruction(const char *mnemonic, operand_t *operands,
     const char* valid_i386_instructions[] = {
         // Data movement
         "mov", "movb", "movw", "movl", "movsx", "movzx", "xchg",
-        "lea", "push", "pop", "pushw", "popw", "pushad", "popad", "pushfd", "popfd",
+        "lea", "push", "pop", "pushl", "popl", "pushw", "popw", "pushad", "popad", "pushfd", "popfd",
         "bswap", "xadd", "cmpxchg", "movzbl", "movzwl", "movzbw", 
         "movsbl", "movswl", "movsbw", "bswapl", "xaddl", "xaddw", "xaddb",
         "cmpxchgl", "cmpxchgw", "cmpxchgb", "cbw", "cwde", "cwd", "cdq",
@@ -623,6 +623,82 @@ int x86_32_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
                         *length = pos;
                         free(lower_mnemonic);
                         return 0;
+                    }
+                }
+            }
+            
+            // MOV register to memory
+            if (inst->operands[0].type == OPERAND_REGISTER && 
+                inst->operands[1].type == OPERAND_MEMORY) {
+                
+                uint8_t src_encoding, src_size;
+                if (x86_32_find_register(inst->operands[0].value.reg.name, &src_encoding, &src_size) == 0) {
+                    
+                    // Simple case: MOV r32, (%reg)
+                    if (inst->operands[1].value.memory.base.name) {
+                        uint8_t base_encoding, base_size;
+                        if (x86_32_find_register(inst->operands[1].value.memory.base.name, &base_encoding, &base_size) == 0) {
+                            
+                            if (src_size == 4) {
+                                buffer[pos++] = 0x89; // MOV r/m32, r32
+                            } else if (src_size == 2) {
+                                buffer[pos++] = 0x89; // MOV r/m16, r16  
+                            } else if (src_size == 1) {
+                                buffer[pos++] = 0x88; // MOV r/m8, r8
+                            }
+                            
+                            // Special case for ESP (register 4) - requires SIB byte
+                            if (base_encoding == 4) {
+                                if (pos + 3 > MAX_BUFFER_SIZE) { free(lower_mnemonic); return -1; }
+                                buffer[pos++] = x86_32_make_modrm(0, src_encoding, 4); // r/m=100 (SIB)
+                                buffer[pos++] = 0x24; // SIB: scale=00, index=100(none), base=100(ESP)
+                            } else {
+                                if (pos + 2 > MAX_BUFFER_SIZE) { free(lower_mnemonic); return -1; }
+                                buffer[pos++] = x86_32_make_modrm(0, src_encoding, base_encoding);
+                            }
+                            
+                            *length = pos;
+                            free(lower_mnemonic);
+                            return 0;
+                        }
+                    }
+                }
+            }
+            
+            // MOV memory to register  
+            if (inst->operands[0].type == OPERAND_MEMORY && 
+                inst->operands[1].type == OPERAND_REGISTER) {
+                
+                uint8_t dst_encoding, dst_size;
+                if (x86_32_find_register(inst->operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                    
+                    // Simple case: MOV (%reg), r32
+                    if (inst->operands[0].value.memory.base.name) {
+                        uint8_t base_encoding, base_size;
+                        if (x86_32_find_register(inst->operands[0].value.memory.base.name, &base_encoding, &base_size) == 0) {
+                            
+                            if (dst_size == 4) {
+                                buffer[pos++] = 0x8B; // MOV r32, r/m32
+                            } else if (dst_size == 2) {
+                                buffer[pos++] = 0x8B; // MOV r16, r/m16
+                            } else if (dst_size == 1) {
+                                buffer[pos++] = 0x8A; // MOV r8, r/m8
+                            }
+                            
+                            // Special case for ESP (register 4) - requires SIB byte
+                            if (base_encoding == 4) {
+                                if (pos + 3 > MAX_BUFFER_SIZE) { free(lower_mnemonic); return -1; }
+                                buffer[pos++] = x86_32_make_modrm(0, dst_encoding, 4); // r/m=100 (SIB)
+                                buffer[pos++] = 0x24; // SIB: scale=00, index=100(none), base=100(ESP)
+                            } else {
+                                if (pos + 2 > MAX_BUFFER_SIZE) { free(lower_mnemonic); return -1; }
+                                buffer[pos++] = x86_32_make_modrm(0, dst_encoding, base_encoding);
+                            }
+                            
+                            *length = pos;
+                            free(lower_mnemonic);
+                            return 0;
+                        }
                     }
                 }
             }
@@ -2270,7 +2346,7 @@ int x86_32_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
     // ===== STACK OPERATIONS =====
     
     // PUSH instructions
-    if (strcmp(lower_mnemonic, "push") == 0) {
+    if (strcmp(lower_mnemonic, "push") == 0 || strcmp(lower_mnemonic, "pushl") == 0) {
         if (inst->operand_count == 1) {
             if (inst->operands[0].type == OPERAND_REGISTER) {
                 uint8_t reg_encoding, reg_size;
@@ -2301,7 +2377,7 @@ int x86_32_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
     }
 
     // POP instructions
-    if (strcmp(lower_mnemonic, "pop") == 0) {
+    if (strcmp(lower_mnemonic, "pop") == 0 || strcmp(lower_mnemonic, "popl") == 0) {
         if (inst->operand_count == 1 && inst->operands[0].type == OPERAND_REGISTER) {
             uint8_t reg_encoding, reg_size;
             if (x86_32_find_register(inst->operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {

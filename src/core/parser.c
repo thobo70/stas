@@ -807,7 +807,7 @@ int parse_immediate_operand(parser_t *parser, operand_t *operand) {
         } else {
             // Simple number parsing
             char *endptr;
-            operand->value.immediate = strtoll(value_str, &endptr, 0);
+            operand->value.immediate = (int64_t)strtoull(value_str, &endptr, 0);
             
             if (*endptr != '\0') {
                 parser_error(parser, "Invalid immediate value: %s", parser->current_token.value);
