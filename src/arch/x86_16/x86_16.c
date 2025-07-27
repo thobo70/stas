@@ -22,6 +22,51 @@ static int strcasecmp_c99(const char *s1, const char *s2) {
     return tolower(*s1) - tolower(*s2);
 }
 
+// x86-16 register table for operand parsing
+static const struct {
+    const char *name;
+    uint8_t encoding;
+    uint8_t size;
+} x86_16_registers[] = {
+    // 16-bit general purpose registers  
+    {"ax", 0, 2}, {"cx", 1, 2}, {"dx", 2, 2}, {"bx", 3, 2},
+    {"sp", 4, 2}, {"bp", 5, 2}, {"si", 6, 2}, {"di", 7, 2},
+    
+    // 8-bit registers (low byte)
+    {"al", 0, 1}, {"cl", 1, 1}, {"dl", 2, 1}, {"bl", 3, 1},
+    
+    // 8-bit registers (high byte)  
+    {"ah", 4, 1}, {"ch", 5, 1}, {"dh", 6, 1}, {"bh", 7, 1},
+};
+
+// Find register encoding by name
+static int x86_16_find_register(const char *name, uint8_t *encoding, uint8_t *size) {
+    if (!name || !encoding || !size) return -1;
+    
+    // Skip % prefix if present
+    const char *reg_name = (name[0] == '%') ? name + 1 : name;
+    
+    size_t count = sizeof(x86_16_registers) / sizeof(x86_16_registers[0]);
+    for (size_t i = 0; i < count; i++) {
+        if (strcmp(reg_name, x86_16_registers[i].name) == 0) {
+            *encoding = x86_16_registers[i].encoding;
+            *size = x86_16_registers[i].size;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+// Helper to encode immediate values
+static void x86_16_encode_immediate(uint8_t *buffer, size_t *pos, int64_t value, uint8_t size) {
+    if (size == 1) {
+        buffer[(*pos)++] = (uint8_t)(value & 0xFF);
+    } else if (size == 2) {
+        buffer[(*pos)++] = (uint8_t)(value & 0xFF);
+        buffer[(*pos)++] = (uint8_t)((value >> 8) & 0xFF);
+    }
+}
+
 // Comprehensive validation for all x86_16 instructions
 bool x86_16_validate_instruction(const char *mnemonic, const operand_t *operands, size_t operand_count) {
     (void)operands; // Suppress warning for now
@@ -144,7 +189,6 @@ bool x86_16_validate_instruction(const char *mnemonic, const operand_t *operands
 
 // Comprehensive encoding for all x86_16 instructions
 bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, size_t operand_count, uint8_t *output, size_t *output_size) {
-    (void)operands; // Simplified implementation - ignore operands for now
     if (!mnemonic || !output || !output_size) return false;
     
     size_t pos = 0;
@@ -153,24 +197,72 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     // ARITHMETIC INSTRUCTIONS (12 total)
     // ===========================================
     
-    // ADD instruction (already implemented)
+    // ADD instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "add") == 0 && operand_count == 2) {
+        // ADD register to register
+        if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (src_size == dst_size && src_size == 2) { // 16-bit registers
+                    output[pos++] = 0x01; // ADD r16, r/m16
+                    output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x01; // ADD r16, r/m16  
         output[pos++] = 0xC0; // ModR/M
         *output_size = pos;
         return true;
     }
     
-    // SUB instruction (already implemented)
+    // SUB instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "sub") == 0 && operand_count == 2) {
+        // SUB register from register
+        if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (src_size == dst_size && src_size == 2) { // 16-bit registers
+                    output[pos++] = 0x29; // SUB r16, r/m16
+                    output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x29; // SUB r16, r/m16
         output[pos++] = 0xC0; // ModR/M
         *output_size = pos;
         return true;
     }
     
-    // CMP instruction (already implemented)
+    // CMP instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "cmp") == 0 && operand_count == 2) {
+        // CMP register with register
+        if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (src_size == dst_size && src_size == 2) { // 16-bit registers
+                    output[pos++] = 0x39; // CMP r16, r/m16
+                    output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x39; // CMP r16, r/m16
         output[pos++] = 0xC0; // ModR/M
         *output_size = pos;
@@ -209,15 +301,39 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
         return true;
     }
     
-    // INC instruction
+    // INC instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "inc") == 0 && operand_count == 1) {
+        if (operands[0].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                if (reg_size == 2) { // 16-bit register
+                    output[pos++] = 0x40 + reg_encoding; // INC r16 (short form)
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x40; // INC AX (short form)
         *output_size = pos;
         return true;
     }
     
-    // DEC instruction
+    // DEC instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "dec") == 0 && operand_count == 1) {
+        if (operands[0].type == OPERAND_REGISTER) {
+            uint8_t reg_encoding, reg_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                if (reg_size == 2) { // 16-bit register
+                    output[pos++] = 0x48 + reg_encoding; // DEC r16 (short form)
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x48; // DEC AX (short form)
         *output_size = pos;
         return true;
@@ -251,16 +367,48 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     // LOGICAL INSTRUCTIONS (13 total)
     // ===========================================
     
-    // AND instruction
+    // AND instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "and") == 0 && operand_count == 2) {
+        // AND register with register
+        if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (src_size == dst_size && src_size == 2) { // 16-bit registers
+                    output[pos++] = 0x21; // AND r16, r/m16
+                    output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x21; // AND r16, r/m16
         output[pos++] = 0xC0; // ModR/M
         *output_size = pos;
         return true;
     }
     
-    // OR instruction
+    // OR instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "or") == 0 && operand_count == 2) {
+        // OR register with register
+        if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            uint8_t src_encoding, src_size, dst_encoding, dst_size;
+            if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                
+                if (src_size == dst_size && src_size == 2) { // 16-bit registers
+                    output[pos++] = 0x09; // OR r16, r/m16
+                    output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        
+        // Fallback to old behavior
         output[pos++] = 0x09; // OR r16, r/m16
         output[pos++] = 0xC0; // ModR/M
         *output_size = pos;
@@ -359,8 +507,52 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     // DATA MOVEMENT INSTRUCTIONS (11 total)
     // ===========================================
     
-    // MOV instruction (already implemented)
+    // MOV instruction (proper operand handling)
     if (strcasecmp_c99(mnemonic, "mov") == 0 && operand_count == 2) {
+        // MOV immediate to register
+        if (operands[0].type == OPERAND_IMMEDIATE && operands[1].type == OPERAND_REGISTER) {
+            // Check if register name is valid
+            if (operands[1].value.reg.name != NULL) {
+                uint8_t reg_encoding, reg_size;
+                if (x86_16_find_register(operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                    int64_t imm = operands[0].value.immediate;
+                    
+                    if (reg_size == 2) { // 16-bit register
+                        output[pos++] = 0xB8 + reg_encoding; // MOV r16, imm16
+                        x86_16_encode_immediate(output, &pos, imm, 2);
+                    } else if (reg_size == 1) { // 8-bit register
+                        if (reg_encoding >= 4) {
+                            // High byte register (AH, BH, CH, DH)
+                            output[pos++] = 0xB4 + (reg_encoding - 4);
+                        } else {
+                            // Low byte register (AL, BL, CL, DL)
+                            output[pos++] = 0xB0 + reg_encoding;
+                        }
+                        x86_16_encode_immediate(output, &pos, imm, 1);
+                    }
+                    *output_size = pos;
+                    return true;
+                }
+            }
+        }
+        // MOV register to register
+        else if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            if (operands[0].value.reg.name != NULL && operands[1].value.reg.name != NULL) {
+                uint8_t src_encoding, src_size, dst_encoding, dst_size;
+                if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                    x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                    
+                    if (src_size == dst_size && src_size == 2) { // 16-bit registers
+                        output[pos++] = 0x89; // MOV r16, r/m16
+                        output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                        *output_size = pos;
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        // If we get here, unsupported MOV variant - fallback to old behavior
         output[pos++] = 0x89; // MOV r16, r/m16
         output[pos++] = 0xC0; // ModR/M (simplified: ax,ax)
         *output_size = pos;
@@ -929,7 +1121,34 @@ int x86_16_parse_instruction(const char *mnemonic, operand_t *operands,
     if (operands && operand_count > 0) {
         inst->operands = malloc(operand_count * sizeof(operand_t));
         if (inst->operands) {
-            memcpy(inst->operands, operands, operand_count * sizeof(operand_t));
+            // Deep copy operands, handling string pointers properly
+            for (size_t i = 0; i < operand_count; i++) {
+                inst->operands[i] = operands[i];  // Copy the structure
+                
+                // Handle register name strings
+                if (operands[i].type == OPERAND_REGISTER && operands[i].value.reg.name) {
+                    inst->operands[i].value.reg.name = malloc(strlen(operands[i].value.reg.name) + 1);
+                    if (inst->operands[i].value.reg.name) {
+                        strcpy(inst->operands[i].value.reg.name, operands[i].value.reg.name);
+                    }
+                }
+                
+                // Handle memory operands if they have base register names
+                if (operands[i].type == OPERAND_MEMORY) {
+                    if (operands[i].value.memory.base.name) {
+                        inst->operands[i].value.memory.base.name = malloc(strlen(operands[i].value.memory.base.name) + 1);
+                        if (inst->operands[i].value.memory.base.name) {
+                            strcpy(inst->operands[i].value.memory.base.name, operands[i].value.memory.base.name);
+                        }
+                    }
+                    if (operands[i].value.memory.index.name) {
+                        inst->operands[i].value.memory.index.name = malloc(strlen(operands[i].value.memory.index.name) + 1);
+                        if (inst->operands[i].value.memory.index.name) {
+                            strcpy(inst->operands[i].value.memory.index.name, operands[i].value.memory.index.name);
+                        }
+                    }
+                }
+            }
         }
     } else {
         inst->operands = NULL;

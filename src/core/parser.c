@@ -681,6 +681,8 @@ int parse_register_operand(parser_t *parser, operand_t *operand) {
     // Parse register using architecture interface
     if (parser->arch && parser->arch->parse_register) {
         if (parser->arch->parse_register(parser->current_token.value, &operand->value.reg) == 0) {
+            // Copy the register name from the token
+            operand->value.reg.name = safe_strdup(parser->current_token.value);
             operand->size = operand->value.reg.size;
             parser_advance(parser);
             return 0;
