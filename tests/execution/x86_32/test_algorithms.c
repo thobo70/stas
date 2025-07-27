@@ -47,7 +47,7 @@ static assembly_result_t assemble_stas_source(const char *source_code) {
     }
     
     // Get x86-32 architecture operations first
-    arch_ops_t *arch_ops = get_arch_ops_x86_32();
+    arch_ops_t *arch_ops = x86_32_get_arch_ops();
     if (!arch_ops) {
         printf("Failed to get x86-32 architecture operations\n");
         lexer_destroy(lexer);
@@ -75,12 +75,21 @@ static assembly_result_t assemble_stas_source(const char *source_code) {
     output_context_t *output = malloc(sizeof(output_context_t));
     if (!output) {
         printf("Failed to allocate output context\n");
-        ast_node_destroy(ast);
-        parser_destroy(parser);
+        parser_destroy(parser);  // This handles AST cleanup
         lexer_destroy(lexer);
         return result;
     }
     
+    output = malloc(sizeof(output_context_t));
+    if (!output) {
+        printf("Failed to allocate output context\n");
+        parser_destroy(parser);  // This handles AST cleanup
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Initialize all fields to zero
+    memset(output, 0, sizeof(output_context_t));
     output->format = FORMAT_FLAT_BIN;
     output->base_address = 0x1000000;  // Match arch_x86_32.code_addr
     output->verbose = false;
@@ -90,8 +99,7 @@ static assembly_result_t assemble_stas_source(const char *source_code) {
     if (!codegen) {
         printf("Failed to create codegen context\n");
         free(output);
-        ast_node_destroy(ast);
-        parser_destroy(parser);
+        parser_destroy(parser);  // This handles AST cleanup
         lexer_destroy(lexer);
         return result;
     }
@@ -101,8 +109,7 @@ static assembly_result_t assemble_stas_source(const char *source_code) {
         printf("Failed to generate machine code\n");
         codegen_destroy(codegen);
         free(output);
-        ast_node_destroy(ast);
-        parser_destroy(parser);
+        parser_destroy(parser);  // This handles AST cleanup
         lexer_destroy(lexer);
         return result;
     }
@@ -121,11 +128,14 @@ static assembly_result_t assemble_stas_source(const char *source_code) {
         }
     }
     
-    // Cleanup
+    // Cleanup - use proper output format cleanup
+    output_format_ops_t *format_ops = get_output_format(output->format);
+    if (format_ops && format_ops->cleanup) {
+        format_ops->cleanup(output);
+    }
     codegen_destroy(codegen);
     free(output);
-    ast_node_destroy(ast);
-    parser_destroy(parser);
+    parser_destroy(parser);  // This handles AST cleanup internally
     lexer_destroy(lexer);
     
     return result;
@@ -149,54 +159,56 @@ void test_matrix_multiplication_algorithm(void) {
         "movl $3, %ecx\n"      // A[1][0] = 3
         "movl $4, %edx\n"      // A[1][1] = 4
         
-        // Matrix B: [5,6; 7,8] stored in esi,edi,esp,ebp
-        "movl $5, %esi\n"      // B[0][0] = 5
-        "movl $6, %edi\n"      // B[0][1] = 6
-        "pushl %ebp\n"         // Save original ebp
-        "movl $7, %ebp\n"      // B[1][0] = 7 (temporarily use ebp)
+        // Matrix B: [5,6; 7,8] - use memory locations on stack
         "pushl $8\n"           // B[1][1] = 8 (push to stack)
+        "pushl $7\n"           // B[1][0] = 7
+        "pushl $6\n"           // B[0][1] = 6
+        "pushl $5\n"           // B[0][0] = 5
+        
+        // Now stack has (from ESP): [5, 6, 7, 8]
         
         // Calculate C[0][0] = A[0][0]*B[0][0] + A[0][1]*B[1][0] = 1*5 + 2*7 = 19
-        "movl %eax, %esp\n"    // esp = A[0][0] = 1
-        "imull %esi, %esp\n"   // esp = 1*5 = 5
-        "pushl %esp\n"         // Save partial result
-        "movl %ebx, %esp\n"    // esp = A[0][1] = 2
-        "imull %ebp, %esp\n"   // esp = 2*7 = 14
-        "popl %eax\n"          // Restore first partial result
-        "addl %esp, %eax\n"    // eax = 5 + 14 = 19 (C[0][0])
+        "movl %eax, %esi\n"    // esi = A[0][0] = 1
+        "movl 0(%esp), %edi\n" // edi = B[0][0] = 5
+        "imull %edi, %esi\n"   // esi = 1*5 = 5
+        "movl %ebx, %edi\n"    // edi = A[0][1] = 2
+        "movl 8(%esp), %ebp\n" // ebp = B[1][0] = 7
+        "imull %ebp, %edi\n"   // edi = 2*7 = 14
+        "addl %edi, %esi\n"    // esi = 5 + 14 = 19 (C[0][0])
+        "movl %esi, %eax\n"    // Store result in eax
         
         // Calculate C[0][1] = A[0][0]*B[0][1] + A[0][1]*B[1][1] = 1*6 + 2*8 = 22
-        "movl $1, %esp\n"      // Restore A[0][0] = 1
-        "imull %edi, %esp\n"   // esp = 1*6 = 6
-        "pushl %esp\n"         // Save partial result
-        "movl $2, %esp\n"      // Restore A[0][1] = 2
-        "movl (%esp), %ebx\n"  // Load B[1][1] = 8 from stack
-        "imull %ebx, %esp\n"   // esp = 2*8 = 16
-        "popl %ebx\n"          // Restore first partial result
-        "addl %esp, %ebx\n"    // ebx = 6 + 16 = 22 (C[0][1])
+        "movl $1, %esi\n"      // Restore A[0][0] = 1
+        "movl 4(%esp), %edi\n" // edi = B[0][1] = 6
+        "imull %edi, %esi\n"   // esi = 1*6 = 6
+        "movl $2, %edi\n"      // Restore A[0][1] = 2
+        "movl 12(%esp), %ebp\n"// ebp = B[1][1] = 8
+        "imull %ebp, %edi\n"   // edi = 2*8 = 16
+        "addl %edi, %esi\n"    // esi = 6 + 16 = 22 (C[0][1])
+        "movl %esi, %ebx\n"    // Store result in ebx
         
         // Calculate C[1][0] = A[1][0]*B[0][0] + A[1][1]*B[1][0] = 3*5 + 4*7 = 43
-        "movl $3, %esp\n"      // Restore A[1][0] = 3
-        "imull %esi, %esp\n"   // esp = 3*5 = 15
-        "pushl %esp\n"         // Save partial result
-        "movl $4, %esp\n"      // Restore A[1][1] = 4
-        "imull %ebp, %esp\n"   // esp = 4*7 = 28
-        "popl %ecx\n"          // Restore first partial result
-        "addl %esp, %ecx\n"    // ecx = 15 + 28 = 43 (C[1][0])
+        "movl %ecx, %esi\n"    // esi = A[1][0] = 3
+        "movl 0(%esp), %edi\n" // edi = B[0][0] = 5
+        "imull %edi, %esi\n"   // esi = 3*5 = 15
+        "movl %edx, %edi\n"    // edi = A[1][1] = 4
+        "movl 8(%esp), %ebp\n" // ebp = B[1][0] = 7
+        "imull %ebp, %edi\n"   // edi = 4*7 = 28
+        "addl %edi, %esi\n"    // esi = 15 + 28 = 43 (C[1][0])
+        "movl %esi, %ecx\n"    // Store result in ecx
         
         // Calculate C[1][1] = A[1][0]*B[0][1] + A[1][1]*B[1][1] = 3*6 + 4*8 = 50
-        "movl $3, %esp\n"      // Restore A[1][0] = 3
-        "imull %edi, %esp\n"   // esp = 3*6 = 18
-        "pushl %esp\n"         // Save partial result
-        "movl $4, %esp\n"      // Restore A[1][1] = 4
-        "popl %esi\n"          // Get B[1][1] = 8 from stack manipulation
-        "movl $8, %esi\n"      // Directly load B[1][1] = 8
-        "imull %esi, %esp\n"   // esp = 4*8 = 32
-        "popl %edx\n"          // Restore first partial result
-        "addl %esp, %edx\n"    // edx = 18 + 32 = 50 (C[1][1])
+        "movl $3, %esi\n"      // Restore A[1][0] = 3
+        "movl 4(%esp), %edi\n" // edi = B[0][1] = 6
+        "imull %edi, %esi\n"   // esi = 3*6 = 18
+        "movl $4, %edi\n"      // Restore A[1][1] = 4
+        "movl 12(%esp), %ebp\n"// ebp = B[1][1] = 8
+        "imull %ebp, %edi\n"   // edi = 4*8 = 32
+        "addl %edi, %esi\n"    // esi = 18 + 32 = 50 (C[1][1])
+        "movl %esi, %edx\n"    // Store result in edx
         
-        "popl %esp\n"          // Clean up stack
-        "popl %ebp\n"          // Restore original ebp
+        // Clean up stack
+        "addl $16, %esp\n"     // Remove 4 values from stack
         "";
 
     assembly_result_t asm_result = assemble_stas_source(source);
@@ -404,56 +416,96 @@ void test_hash_table_algorithm(void) {
         "pushl $31\n"              // hash_table[6] = 31
         "pushl $0\n"               // hash_table[7] = 0 (empty)
         
-        // Search for key 15
-        "movl $15, %esp\n"         // Key to search for
-        "movl %esp, %ebp\n"        // Copy key
-        "andl $7, %ebp\n"          // Hash function: key % 8 = index
+        // Search for key 15 (using proper registers, not corrupting ESP)
+        "movl $15, %ebp\n"         // Key to search for (use EBP instead of ESP)
+        "movl %ebp, %edi\n"        // Copy key to EDI for hashing
+        "andl $7, %edi\n"          // Hash function: key % 8 = index (use EDI)
         
         // Linear probe starting at hash index
-        "movl $8, %esp\n"          // Max attempts (table size)
+        "movl $8, %esi\n"          // Max attempts (table size) (use ESI instead of ESP)
         "search_loop:\n"
-        "cmpl $0, %esp\n"          // Check attempts remaining
+        "cmpl $0, %esi\n"          // Check attempts remaining
         "jz not_found\n"
         
-        // Check current position based on index
-        "cmpl $0, %ebp\n"          // Check index 0
+        // Check current position based on index - handle all 8 indices
+        "cmpl $0, %edi\n"          // Check index 0
         "jne check_idx1\n"
-        "cmpl $15, %eax\n"         // Compare with hash_table[0]
+        "cmpl $15, %eax\n"         // Compare with hash_table[0] = 7
         "je found\n"
         "cmpl $0, %eax\n"          // Check if empty
         "je not_found\n"
         "jmp next_probe\n"
         
         "check_idx1:\n"
-        "cmpl $1, %ebp\n"          // Check index 1
+        "cmpl $1, %edi\n"          // Check index 1
         "jne check_idx2\n"
-        "cmpl $15, %ebx\n"         // Compare with hash_table[1]
+        "cmpl $15, %ebx\n"         // Compare with hash_table[1] = 0
         "je found\n"
         "cmpl $0, %ebx\n"
         "je not_found\n"
         "jmp next_probe\n"
         
         "check_idx2:\n"
-        "cmpl $2, %ebp\n"          // Check index 2
+        "cmpl $2, %edi\n"          // Check index 2
         "jne check_idx3\n"
-        "cmpl $15, %ecx\n"         // Compare with hash_table[2]
+        "cmpl $15, %ecx\n"         // Compare with hash_table[2] = 15 (SHOULD FIND HERE!)
         "je found\n"
         "cmpl $0, %ecx\n"
         "je not_found\n"
         "jmp next_probe\n"
         
         "check_idx3:\n"
-        "cmpl $3, %ebp\n"          // Check index 3
-        "jne next_probe\n"         // Skip other indices for simplicity
-        "cmpl $15, %edx\n"         // Compare with hash_table[3]
+        "cmpl $3, %edi\n"          // Check index 3
+        "jne check_idx4\n"
+        "cmpl $15, %edx\n"         // Compare with hash_table[3] = 0
         "je found\n"
         "cmpl $0, %edx\n"
         "je not_found\n"
+        "jmp next_probe\n"
+        
+        "check_idx4:\n"
+        "cmpl $4, %edi\n"          // Check index 4
+        "jne check_idx5\n"
+        "movl $23, %ebp\n"         // Load hash_table[4] = 23 from register
+        "cmpl $15, %ebp\n"
+        "je found\n"
+        "cmpl $0, %ebp\n"
+        "je not_found\n"
+        "jmp next_probe\n"
+        
+        "check_idx5:\n"
+        "cmpl $5, %edi\n"          // Check index 5
+        "jne check_idx6\n"
+        "movl $0, %ebp\n"          // Load hash_table[5] = 0
+        "cmpl $15, %ebp\n"
+        "je found\n"
+        "cmpl $0, %ebp\n"
+        "je not_found\n"
+        "jmp next_probe\n"
+        
+        "check_idx6:\n"
+        "cmpl $6, %edi\n"          // Check index 6
+        "jne check_idx7\n"
+        "movl (%esp), %ebp\n"      // Load hash_table[6] = 31 from stack
+        "cmpl $15, %ebp\n"
+        "je found\n"
+        "cmpl $0, %ebp\n"
+        "je not_found\n"
+        "jmp next_probe\n"
+        
+        "check_idx7:\n"
+        "cmpl $7, %edi\n"          // Check index 7
+        "jne next_probe\n"
+        "movl 4(%esp), %ebp\n"     // Load hash_table[7] = 0 from stack
+        "cmpl $15, %ebp\n"
+        "je found\n"
+        "cmpl $0, %ebp\n"
+        "je not_found\n"
         
         "next_probe:\n"
-        "incl %ebp\n"              // Next index
-        "andl $7, %ebp\n"          // Wrap around (% 8)
-        "decl %esp\n"              // Decrement attempts
+        "incl %edi\n"              // Next index (use EDI)
+        "andl $7, %edi\n"          // Wrap around (% 8)
+        "decl %esi\n"              // Decrement attempts (use ESI)
         "jmp search_loop\n"
         
         "found:\n"
@@ -464,8 +516,7 @@ void test_hash_table_algorithm(void) {
         "movl $0, %eax\n"          // Return 0 (not found)
         
         "search_done:\n"
-        "popl %esp\n"              // Clean stack
-        "popl %esp\n"              // Clean stack
+        "addl $8, %esp\n"          // Clean stack properly (remove 2 pushed values)
         "";
 
     assembly_result_t asm_result = assemble_stas_source(source);
@@ -508,13 +559,14 @@ void test_fast_division_algorithm(void) {
         
         // The quotient is in the high part (edx) after adjustment
         "shrl $2, %edx\n"          // Shift right by 2 for this magic number
-        "movl %edx, %eax\n"        // Move quotient to eax
+        "movl %edx, %esi\n"        // Save quotient in esi (preserve it!)
         
         // Calculate remainder: remainder = dividend - (quotient * divisor)
+        "movl %esi, %eax\n"        // Move quotient to eax for multiplication
         "mull %ebx\n"              // eax = quotient * divisor
         "movl $1000, %ecx\n"       // Restore original dividend
         "subl %eax, %ecx\n"        // remainder = dividend - (quotient * divisor)
-        "movl %edx, %eax\n"        // Put quotient back in eax
+        "movl %esi, %eax\n"        // Put quotient back in eax
         "movl %ecx, %ebx\n"        // Put remainder in ebx
         "";
 
@@ -543,4 +595,17 @@ void test_fast_division_algorithm(void) {
     
     destroy_test_case(test);
     free_assembly_result(&asm_result);
+}
+
+int main(void) {
+    UNITY_BEGIN();
+    
+    // Run x86_32 algorithmic tests
+    RUN_TEST(test_matrix_multiplication_algorithm);
+    RUN_TEST(test_crc32_algorithm);
+    RUN_TEST(test_base64_encoding_algorithm);
+    RUN_TEST(test_hash_table_algorithm);
+    RUN_TEST(test_fast_division_algorithm);
+    
+    return UNITY_END();
 }

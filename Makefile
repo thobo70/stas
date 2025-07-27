@@ -445,6 +445,10 @@ $(TESTBIN_DIR)/execution_test_x86_32_basic: tests/execution/x86_32/test_basic.c 
 	@echo "Compiling x86_32 execution test: $@"
 	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
 
+$(TESTBIN_DIR)/test_x86_32_algorithms: tests/execution/x86_32/test_algorithms.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_32 algorithmic tests: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
 $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected: tests/execution/x86_32/test_real_to_protected_mode.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "Compiling x86_32 real-to-protected mode test: $@"
 	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
@@ -466,11 +470,15 @@ test-execution-x86_16:
 	@echo "=== Running x86-16 Execution Tests ==="
 	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_16_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_16_basic || true
 	@if [ -f $(TESTBIN_DIR)/execution_test_x86_16_basic ]; then ./$(TESTBIN_DIR)/execution_test_x86_16_basic; fi
+	@$(MAKE) -q $(TESTBIN_DIR)/test_x86_16_algorithms || $(MAKE) $(TESTBIN_DIR)/test_x86_16_algorithms || true
+	@if [ -f $(TESTBIN_DIR)/test_x86_16_algorithms ]; then ./$(TESTBIN_DIR)/test_x86_16_algorithms; fi
 
 test-execution-x86_32:
 	@echo "=== Running x86-32 Execution Tests ==="
 	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_32_basic || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_32_basic || true
 	@if [ -f $(TESTBIN_DIR)/execution_test_x86_32_basic ]; then ./$(TESTBIN_DIR)/execution_test_x86_32_basic; fi
+	@$(MAKE) -q $(TESTBIN_DIR)/test_x86_32_algorithms || $(MAKE) $(TESTBIN_DIR)/test_x86_32_algorithms || true
+	@if [ -f $(TESTBIN_DIR)/test_x86_32_algorithms ]; then ./$(TESTBIN_DIR)/test_x86_32_algorithms; fi
 	@$(MAKE) -q $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected || $(MAKE) $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected || true
 	@if [ -f $(TESTBIN_DIR)/execution_test_x86_32_real_to_protected ]; then ./$(TESTBIN_DIR)/execution_test_x86_32_real_to_protected; fi
 

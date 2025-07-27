@@ -628,7 +628,12 @@ bool parse_operand_full(parser_t *parser, operand_t *operand) {
             return parse_immediate_operand(parser, operand) == 0;
             
         case TOKEN_NUMBER:
-            // For architectures like RISC-V that use bare numbers as immediates
+            // Try memory operand first (for displacement syntax), then fallback to immediate
+            if (parse_memory_operand(parser, operand) == 0) {
+                return true;
+            }
+            // Reset operand and try immediate
+            memset(operand, 0, sizeof(operand_t));
             return parse_immediate_operand(parser, operand) == 0;
             
         case TOKEN_SYMBOL:
@@ -844,7 +849,45 @@ int parse_memory_operand(parser_t *parser, operand_t *operand) {
     // For now, implement basic memory operand parsing
     // Full AT&T syntax: displacement(base,index,scale)
     
-    if (parser_match(parser, TOKEN_LPAREN)) {
+    // Check if this starts with a displacement (number)
+    if (parser_match(parser, TOKEN_NUMBER)) {
+        // Parse displacement first
+        const char *value_str = parser->current_token.value;
+        char *endptr;
+        addr->offset = (int64_t)strtoull(value_str, &endptr, 0);
+        if (*endptr != '\0') {
+            parser_error(parser, "Invalid displacement value: %s", parser->current_token.value);
+            return -1;
+        }
+        parser_advance(parser);
+        
+        // Now expect opening parenthesis
+        if (!parser_expect(parser, TOKEN_LPAREN)) {
+            return -1;
+        }
+        
+        // Parse base register
+        if (parser_match(parser, TOKEN_REGISTER)) {
+            if (parser->arch && parser->arch->parse_register) {
+                parser->arch->parse_register(parser->current_token.value, &addr->base);
+            } else {
+                addr->base.name = safe_strdup(parser->current_token.value);
+            }
+            parser_advance(parser);
+        }
+        
+        // TODO: Parse index and scale for more complex addressing
+        // For now, just parse displacement(%register) form
+        
+        if (!parser_expect(parser, TOKEN_RPAREN)) {
+            return -1;
+        }
+        
+        addr->type = ADDR_INDEXED;
+        operand->size = 4; // Default to 32-bit addressing for x86_32
+        return 0;
+    }
+    else if (parser_match(parser, TOKEN_LPAREN)) {
         parser_advance(parser); // consume '('
         
         // Parse base register
@@ -865,12 +908,12 @@ int parse_memory_operand(parser_t *parser, operand_t *operand) {
         }
         
         addr->type = ADDR_INDIRECT;
-        operand->size = 8; // Default to 64-bit addressing
+        operand->size = 4; // Default to 32-bit addressing for x86_32
         return 0;
     }
     
-    // TODO: Parse displacement(base,index,scale) form
-    parser_error(parser, "Complex memory operands not yet implemented");
+    // TODO: Parse other forms like symbol(%register) etc.
+    parser_error(parser, "Complex memory operands not yet fully implemented");
     return -1;
 }
 

@@ -131,7 +131,7 @@ static char *lexer_read_string(lexer_t *lexer) {
     return string;
 }
 
-// Read number (decimal or hexadecimal)
+// Read number (decimal, hexadecimal, or binary)
 static char *lexer_read_number(lexer_t *lexer) {
     size_t start = lexer->position;
     
@@ -142,6 +142,16 @@ static char *lexer_read_number(lexer_t *lexer) {
         lexer_advance(lexer); // Skip 'x'
         
         while (lexer->position < lexer->length && isxdigit(lexer_peek(lexer))) {
+            lexer_advance(lexer);
+        }
+    } else if (lexer_peek(lexer) == '0' && lexer->position + 1 < lexer->length &&
+               (lexer->input[lexer->position + 1] == 'b' || lexer->input[lexer->position + 1] == 'B')) {
+        // Handle binary numbers
+        lexer_advance(lexer); // Skip '0'
+        lexer_advance(lexer); // Skip 'b'
+        
+        while (lexer->position < lexer->length && 
+               (lexer_peek(lexer) == '0' || lexer_peek(lexer) == '1')) {
             lexer_advance(lexer);
         }
     } else {
@@ -460,7 +470,7 @@ bool is_instruction_token(const char *str) {
         "div", "divb", "divw", "divl", "divq",
         "inc", "incb", "incw", "incl", "incq",
         "dec", "decb", "decw", "decl", "decq",
-        "imul", "idiv", "adc", "sbb", "neg", "negb", "negw", "negl",
+        "imul", "imull", "imulw", "imulb", "idiv", "idivl", "idivw", "idivb", "adc", "sbb", "neg", "negb", "negw", "negl",
         "daa", "das", "aaa", "aas", "aam", "aad",
         "bsf", "bsr", "bt", "btc", "btr", "bts",
         "bsfl", "bsfw", "bsrl", "bsrw", "btl", "btw", "btcl", "btcw", 

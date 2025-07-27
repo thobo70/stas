@@ -3,6 +3,7 @@
  * Converts parsed AST to machine code using architecture-specific encoders
  */
 
+#define _GNU_SOURCE  // For strdup
 #include "codegen.h"
 #include "parser.h"
 #include "output_format.h"
@@ -34,6 +35,7 @@ codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output, symbol
     ctx->current_section = ".text";
     ctx->verbose = output->verbose;
     ctx->total_code_size = 0; // Track total bytes generated
+    ctx->relocations = NULL;  // Initialize relocation list
     
     // Initialize code buffer
     ctx->code_capacity = 1024;
@@ -49,6 +51,15 @@ codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output, symbol
 void codegen_destroy(codegen_ctx_t *ctx) {
     if (!ctx) {
         return;
+    }
+    
+    // Free relocation list
+    relocation_t *reloc = ctx->relocations;
+    while (reloc) {
+        relocation_t *next = reloc->next;
+        free((void*)reloc->symbol_name);
+        free(reloc);
+        reloc = next;
     }
     
     free(ctx->code_buffer);
@@ -96,6 +107,16 @@ int codegen_generate(codegen_ctx_t *ctx, ast_node_t *ast) {
         current = current->next;
     }
     
+    // Resolve relocations before flushing the final section
+    if (ctx->verbose) {
+        printf("Resolving relocations before final section flush...\n");
+    }
+    if (codegen_resolve_relocations(ctx) != 0) {
+        if (ctx->verbose) {
+            printf("Warning: Some relocations could not be resolved\n");
+        }
+    }
+    
     // Flush the final section
     if (flush_current_section(ctx) != 0) {
         return -1;
@@ -118,13 +139,125 @@ static int codegen_process_instruction(codegen_ctx_t *ctx, ast_node_t *inst_node
     if (!ast_inst) {
         return -1;
     }
-    
+
     instruction_t inst = {0};
     inst.mnemonic = ast_inst->mnemonic;
     inst.operands = ast_inst->operands;
     inst.operand_count = ast_inst->operand_count;
     
-    // Check for symbol operands and create relocations
+    // FIRST: Check for jump instructions with symbols and prepare relocations
+    // This must happen before any operand type conversions
+    bool has_jump_relocations = false;
+    const char *jump_symbol_names[8] = {0}; // Support up to 8 operands with symbols
+    size_t jump_symbol_count = 0;
+    
+    for (size_t i = 0; i < inst.operand_count; i++) {
+        if (inst.operands[i].type == OPERAND_SYMBOL) {
+            const char *symbol_name = inst.operands[i].value.symbol;
+            
+            // Check if this is a jump instruction
+            bool is_jump_instruction = (
+                strcmp(inst.mnemonic, "jmp") == 0 ||
+                strcmp(inst.mnemonic, "je") == 0 || strcmp(inst.mnemonic, "jz") == 0 ||
+                strcmp(inst.mnemonic, "jne") == 0 || strcmp(inst.mnemonic, "jnz") == 0 ||
+                strcmp(inst.mnemonic, "ja") == 0 || strcmp(inst.mnemonic, "jae") == 0 ||
+                strcmp(inst.mnemonic, "jb") == 0 || strcmp(inst.mnemonic, "jbe") == 0 ||
+                strcmp(inst.mnemonic, "jg") == 0 || strcmp(inst.mnemonic, "jge") == 0 ||
+                strcmp(inst.mnemonic, "jl") == 0 || strcmp(inst.mnemonic, "jle") == 0 ||
+                strcmp(inst.mnemonic, "jc") == 0 || strcmp(inst.mnemonic, "jnc") == 0 ||
+                strcmp(inst.mnemonic, "jo") == 0 || strcmp(inst.mnemonic, "jno") == 0 ||
+                strcmp(inst.mnemonic, "js") == 0 || strcmp(inst.mnemonic, "jns") == 0 ||
+                strcmp(inst.mnemonic, "jp") == 0 || strcmp(inst.mnemonic, "jnp") == 0 ||
+                strcmp(inst.mnemonic, "jna") == 0 || strcmp(inst.mnemonic, "jnae") == 0 ||
+                strcmp(inst.mnemonic, "jnb") == 0 || strcmp(inst.mnemonic, "jnbe") == 0 ||
+                strcmp(inst.mnemonic, "jng") == 0 || strcmp(inst.mnemonic, "jnge") == 0 ||
+                strcmp(inst.mnemonic, "jnl") == 0 || strcmp(inst.mnemonic, "jnle") == 0
+            );
+            
+            if (is_jump_instruction && symbol_name) {
+                // Skip register names
+                if (!(strcmp(symbol_name, "eax") == 0 || strcmp(symbol_name, "ebx") == 0 ||
+                      strcmp(symbol_name, "ecx") == 0 || strcmp(symbol_name, "edx") == 0 ||
+                      strcmp(symbol_name, "esi") == 0 || strcmp(symbol_name, "edi") == 0 ||
+                      strcmp(symbol_name, "esp") == 0 || strcmp(symbol_name, "ebp") == 0 ||
+                      strcmp(symbol_name, "ax") == 0 || strcmp(symbol_name, "bx") == 0 ||
+                      strcmp(symbol_name, "cx") == 0 || strcmp(symbol_name, "dx") == 0)) {
+                    
+                    has_jump_relocations = true;
+                    
+                    // Store symbol name for later relocation
+                    if (jump_symbol_count < 8) {
+                        jump_symbol_names[jump_symbol_count++] = symbol_name;
+                    }
+                    
+                    if (ctx->verbose) {
+                        printf("Preparing jump relocation for '%s' -> '%s'\n", 
+                               inst.mnemonic, symbol_name);
+                    }
+                    
+                    // Convert to immediate 0 for encoding, but we'll add relocation after encoding
+                    inst.operands[i].type = OPERAND_IMMEDIATE;
+                    inst.operands[i].value.immediate = 0;
+                    inst.operands[i].size = 1; // 8-bit displacement
+                }
+            }
+        }
+    }
+    
+    // Track internal jump relocations before operand conversion
+    for (size_t i = 0; i < inst.operand_count; i++) {
+        if (inst.operands[i].type == OPERAND_SYMBOL) {
+            const char *symbol_name = inst.operands[i].value.symbol;
+            
+            // Check if this is a jump instruction that needs internal relocation
+            bool is_jump_instruction = (
+                strcmp(inst.mnemonic, "jmp") == 0 ||
+                strcmp(inst.mnemonic, "je") == 0 || strcmp(inst.mnemonic, "jz") == 0 ||
+                strcmp(inst.mnemonic, "jne") == 0 || strcmp(inst.mnemonic, "jnz") == 0 ||
+                strcmp(inst.mnemonic, "ja") == 0 || strcmp(inst.mnemonic, "jae") == 0 ||
+                strcmp(inst.mnemonic, "jb") == 0 || strcmp(inst.mnemonic, "jbe") == 0 ||
+                strcmp(inst.mnemonic, "jg") == 0 || strcmp(inst.mnemonic, "jge") == 0 ||
+                strcmp(inst.mnemonic, "jl") == 0 || strcmp(inst.mnemonic, "jle") == 0 ||
+                strcmp(inst.mnemonic, "jc") == 0 || strcmp(inst.mnemonic, "jnc") == 0 ||
+                strcmp(inst.mnemonic, "jo") == 0 || strcmp(inst.mnemonic, "jno") == 0 ||
+                strcmp(inst.mnemonic, "js") == 0 || strcmp(inst.mnemonic, "jns") == 0 ||
+                strcmp(inst.mnemonic, "jp") == 0 || strcmp(inst.mnemonic, "jnp") == 0 ||
+                strcmp(inst.mnemonic, "jna") == 0 || strcmp(inst.mnemonic, "jnae") == 0 ||
+                strcmp(inst.mnemonic, "jnb") == 0 || strcmp(inst.mnemonic, "jnbe") == 0 ||
+                strcmp(inst.mnemonic, "jng") == 0 || strcmp(inst.mnemonic, "jnge") == 0 ||
+                strcmp(inst.mnemonic, "jnl") == 0 || strcmp(inst.mnemonic, "jnle") == 0
+            );
+            
+            if (is_jump_instruction && symbol_name) {
+                // Skip register names misclassified as symbols
+                if (!(strcmp(symbol_name, "eax") == 0 || strcmp(symbol_name, "ebx") == 0 ||
+                      strcmp(symbol_name, "ecx") == 0 || strcmp(symbol_name, "edx") == 0 ||
+                      strcmp(symbol_name, "esi") == 0 || strcmp(symbol_name, "edi") == 0 ||
+                      strcmp(symbol_name, "esp") == 0 || strcmp(symbol_name, "ebp") == 0 ||
+                      strcmp(symbol_name, "ax") == 0 || strcmp(symbol_name, "bx") == 0 ||
+                      strcmp(symbol_name, "cx") == 0 || strcmp(symbol_name, "dx") == 0)) {
+                    
+                    // Store current address for relocation calculation
+                    uint32_t instruction_address = ctx->current_address;
+                    
+                    // Replace symbol with immediate 0 for encoding
+                    inst.operands[i].type = OPERAND_IMMEDIATE;
+                    inst.operands[i].value.immediate = 0;
+                    inst.operands[i].size = 1; // Assume 8-bit displacement for now
+                    
+                    // We'll add the relocation after encoding when we know the displacement offset
+                    // For now, just note that we need to track this
+                    
+                    if (ctx->verbose) {
+                        printf("Jump instruction '%s' with symbol '%s' at address 0x%X\n", 
+                               inst.mnemonic, symbol_name, instruction_address);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Continue with existing logic for non-jump relocations
     for (size_t i = 0; i < inst.operand_count; i++) {
         if (inst.operands[i].type == OPERAND_SYMBOL) {
             const char *symbol_name = inst.operands[i].value.symbol;
@@ -243,12 +376,32 @@ static int codegen_process_instruction(codegen_ctx_t *ctx, ast_node_t *inst_node
     // Encode instruction using architecture-specific encoder
     uint8_t *encode_buffer = ctx->code_buffer + ctx->code_size;
     size_t encode_length = 0;
-    
+
     if (ctx->arch->encode_instruction) {
         int result = ctx->arch->encode_instruction(&inst, encode_buffer, &encode_length);
         if (result != 0) {
             fprintf(stderr, "Error: Failed to encode instruction '%s'\n", inst.mnemonic);
             return -1;
+        }
+        
+        // After encoding, add relocations for jump instructions that were identified earlier
+        if (has_jump_relocations) {
+            // Add relocations for each stored jump symbol
+            for (size_t i = 0; i < jump_symbol_count; i++) {
+                const char *symbol_name = jump_symbol_names[i];
+                if (symbol_name) {
+                    // For x86_32 short jumps, displacement is at offset 1 (after opcode byte)
+                    uint32_t displacement_offset = ctx->code_size + 1;  // +1 to skip opcode byte
+                    uint32_t reloc_type = RELOC_REL8; // 8-bit displacement
+                    
+                    // Add relocation for this jump
+                    if (codegen_add_relocation(ctx, symbol_name, displacement_offset, 
+                                              reloc_type, 0) != 0) {
+                        fprintf(stderr, "Warning: Failed to add relocation for jump to '%s'\n", 
+                               symbol_name);
+                    }
+                }
+            }
         }
         
         ctx->code_size += encode_length;
@@ -1070,4 +1223,136 @@ static int flush_current_section(codegen_ctx_t *ctx) {
     }
     
     return -1;
+}
+
+// Relocation functions
+int codegen_add_relocation(codegen_ctx_t *ctx, const char *symbol_name, 
+                          uint32_t offset, uint32_t reloc_type, int64_t addend) {
+    if (!ctx || !symbol_name) {
+        return -1;
+    }
+    
+    relocation_t *reloc = malloc(sizeof(relocation_t));
+    if (!reloc) {
+        return -1;
+    }
+    
+    reloc->symbol_name = strdup(symbol_name);
+    reloc->offset = offset;
+    reloc->instruction_address = ctx->current_address;  // Current instruction start address
+    reloc->reloc_type = reloc_type;
+    reloc->addend = addend;
+    reloc->next = ctx->relocations;
+    ctx->relocations = reloc;
+    
+    if (ctx->verbose) {
+        printf("Added relocation: '%s' at offset 0x%X (instruction addr 0x%X), type %d\n", 
+               symbol_name, offset, reloc->instruction_address, reloc_type);
+    }
+    
+    return 0;
+}
+
+int codegen_resolve_relocations(codegen_ctx_t *ctx) {
+    if (!ctx) {
+        return -1;
+    }
+    
+    relocation_t *reloc = ctx->relocations;
+    int resolved_count = 0;
+    int failed_count = 0;
+    
+    if (ctx->verbose) {
+        printf("=== Resolving relocations ===\n");
+        printf("Starting relocation resolution with %s relocations\n", 
+               reloc ? "pending" : "no");
+    }
+    
+    while (reloc) {
+        if (ctx->verbose) {
+            printf("Processing relocation for symbol '%s' at offset 0x%X\n", 
+                   reloc->symbol_name, reloc->offset);
+        }
+        
+        // Look up symbol in symbol table
+        symbol_t *symbol = symbol_table_lookup(ctx->symbols, reloc->symbol_name);
+        if (!symbol || !symbol->defined) {
+            if (ctx->verbose) {
+                printf("Warning: Unresolved symbol '%s' (symbol %s, defined %s)\n", 
+                       reloc->symbol_name,
+                       symbol ? "found" : "not found",
+                       (symbol && symbol->defined) ? "yes" : "no");
+            }
+            failed_count++;
+            reloc = reloc->next;
+            continue;
+        }
+        
+        // Calculate displacement
+        int64_t target_address = symbol->value + reloc->addend;
+        
+        // For relative jumps, displacement is from the address after the current instruction
+        // We need to determine the instruction length to calculate the "next instruction" address
+        // For now, assume 2-byte jump instructions (opcode + 8-bit displacement)
+        uint32_t instruction_length = 2; // TODO: Make this more precise based on instruction type
+        int64_t next_instruction_address = reloc->instruction_address + instruction_length;
+        int64_t displacement = target_address - next_instruction_address;
+        
+        if (ctx->verbose) {
+            printf("Symbol '%s': target=0x%lX, instruction=0x%X, next=0x%X, displacement=%ld\n",
+                   reloc->symbol_name, target_address, reloc->instruction_address, 
+                   (uint32_t)next_instruction_address, displacement);
+        }
+        
+        // Apply relocation based on type
+        uint8_t *patch_location = ctx->code_buffer + reloc->offset;
+        
+        if (reloc->reloc_type == RELOC_REL8) {
+            // 8-bit relative displacement
+            if (displacement < -128 || displacement > 127) {
+                if (ctx->verbose) {
+                    printf("Error: 8-bit displacement out of range for '%s': %ld\n", 
+                           reloc->symbol_name, displacement);
+                }
+                failed_count++;
+            } else {
+                *patch_location = (uint8_t)(displacement & 0xFF);
+                resolved_count++;
+                
+                if (ctx->verbose) {
+                    printf("Resolved '%s': displacement = %ld (0x%02X)\n", 
+                           reloc->symbol_name, displacement, (uint8_t)displacement);
+                }
+            }
+        } else if (reloc->reloc_type == RELOC_REL32) {
+            // 32-bit relative displacement
+            if (displacement < -2147483648LL || displacement > 2147483647LL) {
+                if (ctx->verbose) {
+                    printf("Error: 32-bit displacement out of range for '%s': %ld\n", 
+                           reloc->symbol_name, displacement);
+                }
+                failed_count++;
+            } else {
+                // Little-endian encoding
+                patch_location[0] = (uint8_t)(displacement & 0xFF);
+                patch_location[1] = (uint8_t)((displacement >> 8) & 0xFF);
+                patch_location[2] = (uint8_t)((displacement >> 16) & 0xFF);
+                patch_location[3] = (uint8_t)((displacement >> 24) & 0xFF);
+                resolved_count++;
+                
+                if (ctx->verbose) {
+                    printf("Resolved '%s': displacement = %ld (0x%08X)\n", 
+                           reloc->symbol_name, displacement, (uint32_t)displacement);
+                }
+            }
+        }
+        
+        reloc = reloc->next;
+    }
+    
+    if (ctx->verbose) {
+        printf("Relocation summary: %d resolved, %d failed\n", resolved_count, failed_count);
+    }
+    
+    return failed_count == 0 ? 0 : -1;
 }

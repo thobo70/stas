@@ -499,7 +499,7 @@ void test_factorial_algorithm(void) {
 int main(void) {
     UNITY_BEGIN();
     
-    // Start with simpler tests first
+    // Run comprehensive x86_16 algorithmic tests  
     RUN_TEST(test_string_length_algorithm);
     RUN_TEST(test_bubble_sort_algorithm);
     RUN_TEST(test_square_root_algorithm);
