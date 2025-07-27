@@ -249,18 +249,13 @@ void test_lexer_binary_immediates(void)
     lexer = lexer_create("$0b0 $0b1010 $0b11111111", "test.s");
     TEST_ASSERT_NOT_NULL(lexer);
     
-    // First immediate: "$0b0" -> should tokenize as immediate with value "0"
-    token_t token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_IMMEDIATE, token.type);
-    TEST_ASSERT_EQUAL_STRING("0", token.value);
+    const char* expected_values[] = {"0b0", "0b1010", "0b11111111"};
     
-    // Skip 'b' token
-    token = lexer_next_token(lexer);
-    
-    // Second immediate: should get "0"
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_IMMEDIATE, token.type);
-    TEST_ASSERT_EQUAL_STRING("0", token.value);
+    for (int i = 0; i < 3; i++) {
+        token_t token = lexer_next_token(lexer);
+        TEST_ASSERT_EQUAL(TOKEN_IMMEDIATE, token.type);
+        TEST_ASSERT_EQUAL_STRING(expected_values[i], token.value);
+    }
 }
 
 void test_lexer_octal_immediates(void)
