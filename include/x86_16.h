@@ -253,6 +253,9 @@ bool x86_16_encode_modrm(const x86_16_operand_t *operands, size_t operand_count,
 uint8_t x86_16_get_register_encoding(x86_16_register_t reg);
 bool x86_16_is_valid_addressing_mode(const x86_16_operand_t *operand);
 
+// Architecture operations
+arch_ops_t *x86_16_get_arch_ops(void);
+
 // Directive handlers
 bool x86_16_handle_arch_directive(const char *args);
 bool x86_16_handle_code16_directive(void);

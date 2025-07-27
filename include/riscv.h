@@ -157,4 +157,7 @@ uint32_t riscv_encode_b_type(riscv_opcode_t opcode, riscv_funct3_t funct3,
 uint32_t riscv_encode_u_type(riscv_opcode_t opcode, riscv_register_t rd, int32_t imm);
 uint32_t riscv_encode_j_type(riscv_opcode_t opcode, riscv_register_t rd, int32_t imm);
 
+// Architecture operations
+arch_ops_t *get_riscv_arch_ops(void);
+
 #endif // RISCV_H

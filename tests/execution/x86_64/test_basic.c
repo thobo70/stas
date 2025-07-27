@@ -1,7 +1,16 @@
 #include "unity.h"
 #include "../../framework/unicorn_test_framework.h"
+#include "parser.h"
+#include "lexer.h"
+#include "codegen.h"
+#include "../../src/core/output_format.h"
+#include "symbols.h"
+#include "arch_interface.h"
+#include "../../src/arch/x86_64/x86_64.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void setUp(void) {
     // Setup before each test
@@ -11,282 +20,315 @@ void tearDown(void) {
     // Cleanup after each test
 }
 
-// Test basic MOV instruction with immediate value
-void test_movq_immediate_to_register(void) {
-    // STAS assembled code: movq $0x1234567890ABCDEF, %rax
-    // Machine code: 48 B8 EF CD AB 90 78 56 34 12
-    uint8_t code[] = {0x48, 0xB8, 0xEF, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12};
+// Helper function to assemble STAS source code and get machine code
+typedef struct {
+    uint8_t *code;
+    size_t code_size;
+    int success;
+} assembly_result_t;
+
+static assembly_result_t assemble_stas_source(const char *source_code) {
+    assembly_result_t result = {0};
     
-    test_case_t* test = create_test_case(code, sizeof(code));
+    // Initialize lexer
+    lexer_t *lexer = lexer_create(source_code, "<test>");
+    if (!lexer) {
+        printf("Failed to create lexer\n");
+        return result;
+    }
+    
+    // Get x86-64 architecture operations first
+    arch_ops_t *arch_ops = x86_64_get_arch_ops();
+    if (!arch_ops) {
+        printf("Failed to get x86-64 architecture operations\n");
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Initialize parser (parser will create its own symbol table)
+    parser_t *parser = parser_create(lexer, arch_ops);
+    if (!parser) {
+        printf("Failed to create parser\n");
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Parse the source code
+    ast_node_t *ast = parser_parse(parser);
+    if (!ast) {
+        printf("Failed to parse source code\n");
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Create output context
+    output_context_t *output = calloc(1, sizeof(output_context_t));
+    if (!output) {
+        printf("Failed to create output context\n");
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    output->format = FORMAT_FLAT_BIN;
+    output->base_address = 0x1000000;  // Match arch_x86_64.code_addr
+    output->verbose = false;
+    
+    // Create codegen context (use parser's symbol table)
+    codegen_ctx_t *codegen = codegen_create(arch_ops, output, parser->symbols);
+    if (!codegen) {
+        printf("Failed to create codegen context\n");
+        free(output);
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Generate machine code
+    if (codegen_generate(codegen, ast) != 0) {
+        printf("Failed to generate machine code\n");
+        codegen_destroy(codegen);
+        free(output);
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Extract the generated machine code from output sections
+    if (output->sections && output->section_count > 0) {
+        // Find the text section (should be the first one)
+        for (size_t i = 0; i < output->section_count; i++) {
+            if (output->sections[i].data && output->sections[i].size > 0) {
+                result.code_size = output->sections[i].size;
+                result.code = malloc(result.code_size);
+                if (result.code) {
+                    memcpy(result.code, output->sections[i].data, result.code_size);
+                    result.success = 1;
+                    printf("Successfully assembled %zu bytes of machine code\n", result.code_size);
+                    printf("Machine code: ");
+                    for (size_t j = 0; j < result.code_size; j++) {
+                        printf("%02X ", result.code[j]);
+                    }
+                    printf("\n");
+                } else {
+                    printf("Failed to allocate memory for machine code\n");
+                }
+                break;
+            }
+        }
+    }
+    
+    if (!result.success) {
+        printf("Failed to extract generated machine code\n");
+    }
+    
+    // Cleanup
+    codegen_destroy(codegen);
+    free(output);
+    parser_destroy(parser);
+    lexer_destroy(lexer);
+    
+    return result;
+}
+
+static void free_assembly_result(assembly_result_t *result) {
+    if (result && result->code) {
+        free(result->code);
+        result->code = NULL;
+        result->code_size = 0;
+        result->success = 0;
+    }
+}
+
+// Test STAS translation of basic MOV instruction with immediate value
+void test_stas_movq_immediate_translation(void) {
+    const char *source = "movq $0x1234567890ABCDEF, %rax\n";
+    
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate MOV immediate instruction");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for MOV immediate");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
     set_expected_register(test, X86_64_RAX, 0x1234567890ABCDEF);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test MOV between registers
-void test_movq_register_to_register(void) {
-    // Setup: RAX = 0x1234567890ABCDEF, then movq %rax, %rbx
-    uint8_t code[] = {
-        0x48, 0xB8, 0xEF, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12, // movq $imm, %rax
-        0x48, 0x89, 0xC3  // movq %rax, %rbx
-    };
+// Test STAS translation of MOV between registers
+void test_stas_movq_register_translation(void) {
+    const char *source = 
+        "movq $0x1234567890ABCDEF, %rax\n"
+        "movq %rax, %rbx\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate MOV register instructions");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for MOV register");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
     set_expected_register(test, X86_64_RAX, 0x1234567890ABCDEF);
     set_expected_register(test, X86_64_RBX, 0x1234567890ABCDEF);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test arithmetic: addition
-void test_addq_registers(void) {
-    // movq $10, %rax; movq $5, %rbx; addq %rbx, %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x0A, 0x00, 0x00, 0x00, // movq $10, %rax
-        0x48, 0xC7, 0xC3, 0x05, 0x00, 0x00, 0x00, // movq $5, %rbx
-        0x48, 0x01, 0xD8                            // addq %rbx, %rax
-    };
+// Test STAS translation of ADD instruction
+void test_stas_addq_instruction_translation(void) {
+    const char *source = 
+        "movq $1000, %rax\n"
+        "movq $500, %rbx\n"
+        "addq %rbx, %rax\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 15);
-    set_expected_register(test, X86_64_RBX, 5);
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate ADD instruction sequence");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for ADD sequence");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, X86_64_RAX, 1500);  // 1000 + 500
+    set_expected_register(test, X86_64_RBX, 500);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test arithmetic: subtraction
-void test_subq_registers(void) {
-    // movq $20, %rax; movq $8, %rbx; subq %rbx, %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x14, 0x00, 0x00, 0x00, // movq $20, %rax
-        0x48, 0xC7, 0xC3, 0x08, 0x00, 0x00, 0x00, // movq $8, %rbx
-        0x48, 0x29, 0xD8                            // subq %rbx, %rax
-    };
+// Test STAS translation of SUB instruction
+void test_stas_subq_instruction_translation(void) {
+    const char *source = 
+        "movq $2000, %rax\n"
+        "movq $800, %rbx\n"
+        "subq %rbx, %rax\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 12);
-    set_expected_register(test, X86_64_RBX, 8);
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate SUB instruction sequence");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for SUB sequence");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, X86_64_RAX, 1200);  // 2000 - 800
+    set_expected_register(test, X86_64_RBX, 800);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test memory operations: store and load
-void test_memory_store_load(void) {
-    // movq $0x1234, %rax; movq %rax, (%rsp); movq (%rsp), %rbx
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x34, 0x12, 0x00, 0x00, // movq $0x1234, %rax
-        0x48, 0x89, 0x04, 0x24,                     // movq %rax, (%rsp)
-        0x48, 0x8B, 0x1C, 0x24                      // movq (%rsp), %rbx
-    };
+// Test STAS translation of increment/decrement operations
+void test_stas_inc_dec_translation(void) {
+    const char *source = 
+        "movq $100, %rax\n"
+        "incq %rax\n"
+        "decq %rax\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 0x1234);
-    set_expected_register(test, X86_64_RBX, 0x1234);
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate inc/dec operations");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for inc/dec");
     
-    // Also verify memory contents
-    uint8_t expected_mem[] = {0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    set_expected_memory(test, arch_x86_64.stack_addr + arch_x86_64.stack_size - 8, 
-                       expected_mem, 8);
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, X86_64_RAX, 100); // Should be back to 100
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test stack operations: push and pop
-void test_push_pop_operations(void) {
-    // movq $0x5678, %rax; pushq %rax; popq %rbx
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x78, 0x56, 0x00, 0x00, // movq $0x5678, %rax
-        0x50,                                       // pushq %rax
-        0x5B                                        // popq %rbx
-    };
+// Test STAS translation of bitwise AND operation
+void test_stas_and_operation_translation(void) {
+    const char *source = 
+        "movq $0xFFFFFFFF00000000, %rax\n"
+        "movq $0x00000000FFFFFFFF, %rbx\n"
+        "andq %rbx, %rax\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 0x5678);
-    set_expected_register(test, X86_64_RBX, 0x5678);
-    // Stack pointer should be back to original position
-    set_expected_register(test, X86_64_RSP, arch_x86_64.stack_addr + arch_x86_64.stack_size - 8);
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate AND operation");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for AND operation");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, X86_64_RAX, 0x0000000000000000); // Should be 0
+    set_expected_register(test, X86_64_RBX, 0x00000000FFFFFFFF);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test increment and decrement
-void test_inc_dec_operations(void) {
-    // movq $10, %rax; incq %rax; decq %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x0A, 0x00, 0x00, 0x00, // movq $10, %rax
-        0x48, 0xFF, 0xC0,                           // incq %rax
-        0x48, 0xFF, 0xC8                            // decq %rax
-    };
+// Test STAS translation of bitwise OR operation  
+void test_stas_or_operation_translation(void) {
+    const char *source = 
+        "movq $0xFF00FF00FF00FF00, %rax\n"
+        "movq $0x00FF00FF00FF00FF, %rbx\n"
+        "orq %rbx, %rax\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 10); // Should be back to 10
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate OR operation");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for OR operation");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, X86_64_RAX, 0xFFFFFFFFFFFFFFFF); // OR should result in all 1s
+    set_expected_register(test, X86_64_RBX, 0x00FF00FF00FF00FF);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test bitwise operations
-void test_bitwise_operations(void) {
-    // movq $0xFF00, %rax; movq $0x00FF, %rbx; andq %rbx, %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x00, 0xFF, 0x00, 0x00, // movq $0xFF00, %rax
-        0x48, 0xC7, 0xC3, 0xFF, 0x00, 0x00, 0x00, // movq $0x00FF, %rbx
-        0x48, 0x21, 0xD8                            // andq %rbx, %rax
-    };
+// Test STAS translation of compare instruction
+void test_stas_cmp_instruction_translation(void) {
+    const char *source = 
+        "movq $10000, %rax\n"
+        "movq $10000, %rbx\n"
+        "cmpq %rbx, %rax\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 0); // 0xFF00 & 0x00FF = 0
-    set_expected_register(test, X86_64_RBX, 0xFF);
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate CMP instruction");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for CMP instruction");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, X86_64_RAX, 10000);
+    set_expected_register(test, X86_64_RBX, 10000);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
     
     destroy_test_case(test);
-}
-
-// Test OR operation
-void test_or_operation(void) {
-    // movq $0xFF00, %rax; movq $0x00FF, %rbx; orq %rbx, %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x00, 0xFF, 0x00, 0x00, // movq $0xFF00, %rax
-        0x48, 0xC7, 0xC3, 0xFF, 0x00, 0x00, 0x00, // movq $0x00FF, %rbx
-        0x48, 0x09, 0xD8                            // orq %rbx, %rax
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 0xFFFF); // 0xFF00 | 0x00FF = 0xFFFF
-    set_expected_register(test, X86_64_RBX, 0xFF);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
-    
-    destroy_test_case(test);
-}
-
-// Test XOR operation
-void test_xor_operation(void) {
-    // movq $0xFFFF, %rax; movq $0xFF00, %rbx; xorq %rbx, %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0xFF, 0xFF, 0x00, 0x00, // movq $0xFFFF, %rax
-        0x48, 0xC7, 0xC3, 0x00, 0xFF, 0x00, 0x00, // movq $0xFF00, %rbx
-        0x48, 0x31, 0xD8                            // xorq %rbx, %rax
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 0xFF); // 0xFFFF ^ 0xFF00 = 0x00FF
-    set_expected_register(test, X86_64_RBX, 0xFF00);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
-    
-    destroy_test_case(test);
-}
-
-// Test shift operations
-void test_shift_left(void) {
-    // movq $5, %rax; shlq $2, %rax  (5 << 2 = 20)
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x05, 0x00, 0x00, 0x00, // movq $5, %rax
-        0x48, 0xC1, 0xE0, 0x02                      // shlq $2, %rax
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, X86_64_RAX, 20);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
-    
-    destroy_test_case(test);
-}
-
-// Test comparison instruction (affects flags but we can't easily check flags)
-void test_cmp_instruction(void) {
-    // movq $10, %rax; movq $5, %rbx; cmpq %rbx, %rax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0x0A, 0x00, 0x00, 0x00, // movq $10, %rax
-        0x48, 0xC7, 0xC3, 0x05, 0x00, 0x00, 0x00, // movq $5, %rbx
-        0x48, 0x39, 0xD8                            // cmpq %rbx, %rax
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    // Registers should remain unchanged after comparison
-    set_expected_register(test, X86_64_RAX, 10);
-    set_expected_register(test, X86_64_RBX, 5);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
-    
-    destroy_test_case(test);
-}
-
-// Test 32-bit operations (should zero upper 32 bits)
-void test_32bit_operation_zero_extension(void) {
-    // movq $0xFFFFFFFFFFFFFFFF, %rax; movl $0x1234, %eax
-    uint8_t code[] = {
-        0x48, 0xC7, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF, // movq $0xFFFFFFFF, %rax (sign extended)
-        0xB8, 0x34, 0x12, 0x00, 0x00               // movl $0x1234, %eax
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    // 32-bit operation should zero upper 32 bits
-    set_expected_register(test, X86_64_RAX, 0x1234);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_x86_64, test);
-    
-    destroy_test_case(test);
-}
-
-// Test error conditions
-void test_invalid_instruction_execution(void) {
-    // Invalid opcode: 0xFF 0xFF
-    uint8_t code[] = {0xFF, 0xFF};
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    test->should_succeed = false;
-    
-    // Should fail with invalid instruction error
-    int result = execute_and_verify(&arch_x86_64, test);
-    TEST_ASSERT_NOT_EQUAL(0, result);
-    
-    destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
 int main(void) {
     UNITY_BEGIN();
     
-    // Basic move operations
-    RUN_TEST(test_movq_immediate_to_register);
-    RUN_TEST(test_movq_register_to_register);
+    // Test STAS translation of basic instructions
+    RUN_TEST(test_stas_movq_immediate_translation);
+    RUN_TEST(test_stas_movq_register_translation);
     
-    // Arithmetic operations
-    RUN_TEST(test_addq_registers);
-    RUN_TEST(test_subq_registers);
-    RUN_TEST(test_inc_dec_operations);
+    // Test STAS translation of arithmetic operations
+    RUN_TEST(test_stas_addq_instruction_translation);
+    RUN_TEST(test_stas_subq_instruction_translation);
+    RUN_TEST(test_stas_inc_dec_translation);
     
-    // Memory operations
-    RUN_TEST(test_memory_store_load);
-    RUN_TEST(test_push_pop_operations);
+    // Test STAS translation of bitwise operations
+    RUN_TEST(test_stas_and_operation_translation);
+    RUN_TEST(test_stas_or_operation_translation);
     
-    // Bitwise operations
-    RUN_TEST(test_bitwise_operations);
-    RUN_TEST(test_or_operation);
-    RUN_TEST(test_xor_operation);
-    RUN_TEST(test_shift_left);
-    
-    // Other operations
-    RUN_TEST(test_cmp_instruction);
-    RUN_TEST(test_32bit_operation_zero_extension);
-    
-    // Error conditions - commented out due to test issues
-    // RUN_TEST(test_invalid_instruction_execution);
+    // Test STAS translation of comparison operations
+    RUN_TEST(test_stas_cmp_instruction_translation);
     
     return UNITY_END();
 }

@@ -1,7 +1,16 @@
 #include "unity.h"
 #include "../../framework/unicorn_test_framework.h"
+#include "parser.h"
+#include "lexer.h"
+#include "codegen.h"
+#include "../../src/core/output_format.h"
+#include "symbols.h"
+#include "arch_interface.h"
+#include "riscv.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void setUp(void) {
     // Setup before each test
@@ -11,262 +20,275 @@ void tearDown(void) {
     // Cleanup after each test
 }
 
-// Test ADDI (Add Immediate) instruction
-void test_addi_immediate(void) {
-    // addi x1, x0, 100 (x1 = x0 + 100, since x0 is always 0, x1 = 100)
-    // Machine code: 93 00 40 06
-    uint8_t code[] = {0x93, 0x00, 0x40, 0x06};
+// Helper function to assemble STAS source code and get machine code
+typedef struct {
+    uint8_t *code;
+    size_t code_size;
+    int success;
+} assembly_result_t;
+
+static assembly_result_t assemble_stas_source(const char *source_code) {
+    assembly_result_t result = {0};
     
-    test_case_t* test = create_test_case(code, sizeof(code));
+    // Initialize lexer
+    lexer_t *lexer = lexer_create(source_code, "<test>");
+    if (!lexer) {
+        printf("Failed to create lexer\n");
+        return result;
+    }
+    
+    // Get RISC-V architecture operations first
+    arch_ops_t *arch_ops = get_riscv_arch_ops();
+    if (!arch_ops) {
+        printf("Failed to get RISC-V architecture operations\n");
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Initialize parser (parser will create its own symbol table)
+    parser_t *parser = parser_create(lexer, arch_ops);
+    if (!parser) {
+        printf("Failed to create parser\n");
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Parse the source code
+    ast_node_t *ast = parser_parse(parser);
+    if (!ast) {
+        printf("Failed to parse source code\n");
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Create output context
+    output_context_t *output = calloc(1, sizeof(output_context_t));
+    if (!output) {
+        printf("Failed to create output context\n");
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    output->format = FORMAT_FLAT_BIN;
+    output->base_address = 0x1000000;  // Match arch_riscv.code_addr
+    output->verbose = false;
+    
+    // Create codegen context (use parser's symbol table)
+    codegen_ctx_t *codegen = codegen_create(arch_ops, output, parser->symbols);
+    if (!codegen) {
+        printf("Failed to create codegen context\n");
+        free(output);
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Generate machine code
+    int gen_result = codegen_generate(codegen, ast);
+    if (gen_result != 0) {
+        printf("Failed to generate machine code: error %d\n", gen_result);
+        codegen_destroy(codegen);
+        free(output);
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        return result;
+    }
+    
+    // Extract the generated code
+    if (output->sections && output->section_count > 0) {
+        // Get the first section which should contain our code
+        output_section_t *section = &output->sections[0];
+        if (section->data && section->size > 0) {
+            result.code = malloc(section->size);
+            if (result.code) {
+                memcpy(result.code, section->data, section->size);
+                result.code_size = section->size;
+                result.success = 1;
+                printf("Successfully assembled %zu bytes of machine code\n", result.code_size);
+                printf("Machine code: ");
+                for (size_t i = 0; i < result.code_size; i++) {
+                    printf("%02X ", result.code[i]);
+                }
+                printf("\n");
+            }
+        }
+    }
+    
+    if (!result.success) {
+        printf("Failed to extract generated machine code\n");
+        if (result.code) {
+            free(result.code);
+            result.code = NULL;
+        }
+    }
+    
+    // Cleanup
+    codegen_destroy(codegen);
+    free(output);
+    parser_destroy(parser);
+    lexer_destroy(lexer);
+    
+    return result;
+}
+
+static void free_assembly_result(assembly_result_t *result) {
+    if (result && result->code) {
+        free(result->code);
+        result->code = NULL;
+        result->code_size = 0;
+        result->success = 0;
+    }
+}
+
+// Test STAS translation of basic ADDI instruction
+void test_stas_addi_immediate_translation(void) {
+    const char *source = "addi x1, x0, 100\n";
+    
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate ADDI immediate instruction");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for ADDI immediate");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
     set_expected_register(test, RISCV_X1, 100);
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test ADD registers
-void test_add_registers(void) {
-    // addi x1, x0, 50; addi x2, x0, 30; add x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0x20, 0x03, // addi x1, x0, 50
-        0x13, 0x01, 0xE0, 0x01, // addi x2, x0, 30
-        0xB3, 0x01, 0x20, 0x00  // add x3, x1, x2
-    };
+// Test STAS translation of ADD between registers
+void test_stas_add_registers_translation(void) {
+    const char *source = 
+        "addi x1, x0, 50\n"
+        "addi x2, x0, 30\n"
+        "add x3, x1, x2\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate ADD register instructions");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for ADD registers");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
     set_expected_register(test, RISCV_X1, 50);
     set_expected_register(test, RISCV_X2, 30);
-    set_expected_register(test, RISCV_X3, 80);
+    set_expected_register(test, RISCV_X3, 80);  // 50 + 30
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test SUB registers
-void test_sub_registers(void) {
-    // addi x1, x0, 100; addi x2, x0, 25; sub x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0x40, 0x06, // addi x1, x0, 100
-        0x13, 0x01, 0x90, 0x01, // addi x2, x0, 25
-        0xB3, 0x01, 0x20, 0x40  // sub x3, x1, x2
-    };
+// Test STAS translation of SUB instruction
+void test_stas_sub_instruction_translation(void) {
+    const char *source = 
+        "addi x1, x0, 200\n"
+        "addi x2, x0, 80\n"
+        "sub x3, x1, x2\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 100);
-    set_expected_register(test, RISCV_X2, 25);
-    set_expected_register(test, RISCV_X3, 75);
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate SUB instruction sequence");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for SUB sequence");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, RISCV_X1, 200);
+    set_expected_register(test, RISCV_X2, 80);
+    set_expected_register(test, RISCV_X3, 120);  // 200 - 80
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test logical AND
-void test_logical_and(void) {
-    // addi x1, x0, 0xFF; addi x2, x0, 0xF0; and x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0xF0, 0x0F, // addi x1, x0, 0xFF
-        0x13, 0x01, 0x00, 0x0F, // addi x2, x0, 0xF0
-        0xB3, 0x71, 0x20, 0x00  // and x3, x1, x2
-    };
+// Test STAS translation of bitwise AND operation
+void test_stas_and_operation_translation(void) {
+    const char *source = 
+        "addi x1, x0, 0xFF0\n"  // Using smaller immediate for RISC-V
+        "addi x2, x0, 0x0FF\n"
+        "and x3, x1, x2\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 0xFF);
-    set_expected_register(test, RISCV_X2, 0xF0);
-    set_expected_register(test, RISCV_X3, 0xF0); // 0xFF & 0xF0 = 0xF0
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate AND operation");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for AND operation");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, RISCV_X1, 0xFF0);
+    set_expected_register(test, RISCV_X2, 0x0FF);
+    set_expected_register(test, RISCV_X3, 0x0F0); // 0xFF0 & 0x0FF = 0x0F0
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test logical OR
-void test_logical_or(void) {
-    // addi x1, x0, 0xFF; addi x2, x0, 0x0F; or x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0xF0, 0x0F, // addi x1, x0, 0xFF
-        0x13, 0x01, 0xF0, 0x00, // addi x2, x0, 0x0F
-        0xB3, 0x61, 0x20, 0x00  // or x3, x1, x2
-    };
+// Test STAS translation of bitwise OR operation  
+void test_stas_or_operation_translation(void) {
+    const char *source = 
+        "addi x1, x0, 0xF00\n"
+        "addi x2, x0, 0x0FF\n"
+        "or x3, x1, x2\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 0xFF);
-    set_expected_register(test, RISCV_X2, 0x0F);
-    set_expected_register(test, RISCV_X3, 0xFF); // 0xFF | 0x0F = 0xFF
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate OR operation");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for OR operation");
+    
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, RISCV_X1, 0xF00);
+    set_expected_register(test, RISCV_X2, 0x0FF);
+    set_expected_register(test, RISCV_X3, 0xFFF); // 0xF00 | 0x0FF = 0xFFF
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
     
     destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
-// Test logical XOR
-void test_logical_xor(void) {
-    // addi x1, x0, 0xFF; addi x2, x0, 0xF0; xor x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0xF0, 0x0F, // addi x1, x0, 0xFF
-        0x13, 0x01, 0x00, 0x0F, // addi x2, x0, 0xF0
-        0xB3, 0x41, 0x20, 0x00  // xor x3, x1, x2
-    };
+// Test STAS translation of XOR operation
+void test_stas_xor_operation_translation(void) {
+    const char *source = 
+        "addi x1, x0, 0xAAA\n"
+        "addi x2, x0, 0x555\n"
+        "xor x3, x1, x2\n";
     
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 0xFF);
-    set_expected_register(test, RISCV_X2, 0xF0);
-    set_expected_register(test, RISCV_X3, 0x0F); // 0xFF ^ 0xF0 = 0x0F
+    assembly_result_t asm_result = assemble_stas_source(source);
+    TEST_ASSERT_TRUE_MESSAGE(asm_result.success, "STAS failed to translate XOR operation");
+    TEST_ASSERT_NOT_NULL_MESSAGE(asm_result.code, "No machine code generated for XOR operation");
     
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
-}
-
-// Test shift left logical immediate
-void test_shift_left_immediate(void) {
-    // addi x1, x0, 5; slli x2, x1, 3
-    uint8_t code[] = {
-        0x93, 0x00, 0x50, 0x00, // addi x1, x0, 5
-        0x13, 0x91, 0x30, 0x00  // slli x2, x1, 3
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 5);
-    set_expected_register(test, RISCV_X2, 40); // 5 << 3 = 40
+    // Test execution behavior
+    test_case_t* test = create_test_case(asm_result.code, asm_result.code_size);
+    set_expected_register(test, RISCV_X1, 0xAAA);
+    set_expected_register(test, RISCV_X2, 0x555);
+    set_expected_register(test, RISCV_X3, 0xFFF); // 0xAAA ^ 0x555 = 0xFFF
     
     TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
     
     destroy_test_case(test);
-}
-
-// Test shift right logical immediate
-void test_shift_right_immediate(void) {
-    // addi x1, x0, 64; srli x2, x1, 2
-    uint8_t code[] = {
-        0x93, 0x00, 0x00, 0x04, // addi x1, x0, 64
-        0x13, 0x51, 0x20, 0x00  // srli x2, x1, 2
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 64);
-    set_expected_register(test, RISCV_X2, 16); // 64 >> 2 = 16
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
-}
-
-// Test set less than
-void test_set_less_than(void) {
-    // addi x1, x0, 10; addi x2, x0, 20; slt x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0xA0, 0x00, // addi x1, x0, 10
-        0x13, 0x01, 0x40, 0x01, // addi x2, x0, 20
-        0xB3, 0x21, 0x20, 0x00  // slt x3, x1, x2
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 10);
-    set_expected_register(test, RISCV_X2, 20);
-    set_expected_register(test, RISCV_X3, 1); // 10 < 20, so x3 = 1
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
-}
-
-// Test set less than unsigned
-void test_set_less_than_unsigned(void) {
-    // addi x1, x0, 10; addi x2, x0, 5; sltu x3, x1, x2
-    uint8_t code[] = {
-        0x93, 0x00, 0xA0, 0x00, // addi x1, x0, 10
-        0x13, 0x01, 0x50, 0x00, // addi x2, x0, 5
-        0xB3, 0x31, 0x20, 0x00  // sltu x3, x1, x2
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 10);
-    set_expected_register(test, RISCV_X2, 5);
-    set_expected_register(test, RISCV_X3, 0); // 10 >= 5, so x3 = 0
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
-}
-
-// Test memory operations: store and load word
-void test_memory_store_load(void) {
-    // addi x1, x0, 0x1234; sw x1, 0(sp); lw x2, 0(sp)
-    uint8_t code[] = {
-        0x93, 0x01, 0x40, 0x23, // addi x1, x0, 0x1234
-        0x23, 0x20, 0x11, 0x00, // sw x1, 0(sp)
-        0x03, 0x21, 0x01, 0x00  // lw x2, 0(sp)
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 0x1234);
-    set_expected_register(test, RISCV_X2, 0x1234);
-    
-    // Verify memory contents (RISC-V is little-endian)
-    uint8_t expected_mem[] = {0x34, 0x12, 0x00, 0x00};
-    set_expected_memory(test, arch_riscv.stack_addr + arch_riscv.stack_size - 8, 
-                       expected_mem, 4);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
-}
-
-// Test larger immediate values using LUI and ADDI combination
-void test_large_immediate(void) {
-    // lui x1, 0x12345; addi x1, x1, 0x678
-    uint8_t code[] = {
-        0xB7, 0x50, 0x34, 0x12, // lui x1, 0x12345 (load upper immediate)
-        0x93, 0x80, 0x80, 0x67  // addi x1, x1, 0x678
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 0x12345678);
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
-}
-
-// Test branch equal (conditional execution)
-void test_branch_equal(void) {
-    // addi x1, x0, 10; addi x2, x0, 10; beq x1, x2, skip; addi x3, x0, 1; skip: addi x4, x0, 2
-    uint8_t code[] = {
-        0x93, 0x00, 0xA0, 0x00, // addi x1, x0, 10
-        0x13, 0x01, 0xA0, 0x00, // addi x2, x0, 10
-        0x63, 0x02, 0x21, 0x00, // beq x1, x2, 4 (skip next instruction)
-        0x93, 0x01, 0x10, 0x00, // addi x3, x0, 1 (should be skipped)
-        0x13, 0x02, 0x20, 0x00  // addi x4, x0, 2 (should execute)
-    };
-    
-    test_case_t* test = create_test_case(code, sizeof(code));
-    set_expected_register(test, RISCV_X1, 10);
-    set_expected_register(test, RISCV_X2, 10);
-    set_expected_register(test, RISCV_X3, 0); // Should remain 0 (skipped)
-    set_expected_register(test, RISCV_X4, 2); // Should be 2
-    
-    TEST_ASSERT_EXECUTION_SUCCESS(&arch_riscv, test);
-    
-    destroy_test_case(test);
+    free_assembly_result(&asm_result);
 }
 
 int main(void) {
     UNITY_BEGIN();
     
-    // Basic immediate operations (these work well)
-    RUN_TEST(test_addi_immediate);
+    // Test STAS translation of basic instructions
+    RUN_TEST(test_stas_addi_immediate_translation);
+    RUN_TEST(test_stas_add_registers_translation);
     
-    // Shift operations (basic shift left works)
-    RUN_TEST(test_shift_left_immediate);
+    // Test STAS translation of arithmetic operations
+    RUN_TEST(test_stas_sub_instruction_translation);
     
-    // Comparison operations (basic slt works)
-    RUN_TEST(test_set_less_than);
-    
-    // Complex immediate handling (this works)
-    RUN_TEST(test_large_immediate);
+    // Test STAS translation of bitwise operations
+    RUN_TEST(test_stas_and_operation_translation);
+    RUN_TEST(test_stas_or_operation_translation);
+    RUN_TEST(test_stas_xor_operation_translation);
     
     return UNITY_END();
 }

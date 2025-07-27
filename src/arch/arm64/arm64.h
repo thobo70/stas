@@ -202,4 +202,7 @@ bool is_arm64_unconditional_branch(const char *mnemonic);      // B, BR, BL
 bool is_arm64_conditional_branch(const char *mnemonic);        // B.EQ, B.NE, etc.
 bool is_arm64_compare_branch(const char *mnemonic);            // CBZ, CBNZ
 
+// Architecture operations
+arch_ops_t *arm64_get_arch_ops(void);
+
 #endif // ARM64_H
