@@ -4,6 +4,7 @@
 #include "arch_interface.h"
 #include "parser.h"
 #include "output_format.h"
+#include "symbols.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -12,6 +13,7 @@
 typedef struct {
     arch_ops_t *arch;               // Architecture operations
     output_context_t *output;       // Output context
+    symbol_table_t *symbols;        // Symbol table
     
     uint8_t *code_buffer;           // Generated machine code
     size_t code_size;               // Current size of generated code
@@ -25,7 +27,7 @@ typedef struct {
 } codegen_ctx_t;
 
 // Code generation functions
-codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output);
+codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output, symbol_table_t *symbols);
 void codegen_destroy(codegen_ctx_t *ctx);
 int codegen_generate(codegen_ctx_t *ctx, ast_node_t *ast);
 

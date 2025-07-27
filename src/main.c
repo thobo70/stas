@@ -335,7 +335,7 @@ int assemble_file(const config_t *config) {
     }
     
     // Generate machine code from AST
-    codegen_ctx_t *codegen = codegen_create(arch_ops, &output_ctx);
+    codegen_ctx_t *codegen = codegen_create(arch_ops, &output_ctx, parser->symbols);
     if (!codegen) {
         fprintf(stderr, "Error: Failed to create code generator\n");
         parser_destroy(parser);

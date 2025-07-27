@@ -373,10 +373,35 @@ test-unit-utils:
 	@if [ -f $(TESTBIN_DIR)/unit_test_utils ]; then echo "Running utility tests..."; ./$(TESTBIN_DIR)/unit_test_utils; fi
 	@echo "Utility unit tests completed"
 
+# Directive unit tests
+$(TESTBIN_DIR)/unit_test_data_directives: tests/unit/directives/test_data_directives.c tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling data directives unit test: $@"
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+
+$(TESTBIN_DIR)/unit_test_symbol_directives: tests/unit/directives/test_symbol_directives.c tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling symbol directives unit test: $@"
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+
+$(TESTBIN_DIR)/unit_test_alignment_directives: tests/unit/directives/test_alignment_directives.c tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling alignment directives unit test: $@"
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+
+# Directive module unit tests
+test-unit-directives:
+	@echo "=== Running Directive Module Unit Tests ==="
+	@echo "Checking for directive unit tests..."
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_data_directives || $(MAKE) $(TESTBIN_DIR)/unit_test_data_directives || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_symbol_directives || $(MAKE) $(TESTBIN_DIR)/unit_test_symbol_directives || true
+	@$(MAKE) -q $(TESTBIN_DIR)/unit_test_alignment_directives || $(MAKE) $(TESTBIN_DIR)/unit_test_alignment_directives || true
+	@for test in unit_test_data_directives unit_test_symbol_directives unit_test_alignment_directives; do \
+		if [ -f $(TESTBIN_DIR)/$$test ]; then echo "Running $$test..."; ./$(TESTBIN_DIR)/$$test; fi; \
+	done
+	@echo "Directive unit tests completed"
+
 # All unit tests
 test-unit-all:
 	@echo "=== Running All Available Unit Tests ==="
-	@$(MAKE) test-unit-core test-unit-arch test-unit-formats test-unit-utils
+	@$(MAKE) test-unit-core test-unit-arch test-unit-formats test-unit-utils test-unit-directives
 
 # === INTEGRATION TESTING ===
 

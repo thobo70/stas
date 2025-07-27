@@ -17,7 +17,7 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node);
 static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node);
 static int flush_current_section(codegen_ctx_t *ctx);
 
-codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output) {
+codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output, symbol_table_t *symbols) {
     if (!arch || !output) {
         return NULL;
     }
@@ -29,6 +29,7 @@ codegen_ctx_t *codegen_create(arch_ops_t *arch, output_context_t *output) {
     
     ctx->arch = arch;
     ctx->output = output;
+    ctx->symbols = symbols;
     ctx->current_address = output->base_address;
     ctx->current_section = ".text";
     ctx->verbose = output->verbose;
@@ -373,6 +374,392 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node) {
         }
     }
     
+    // Handle .asciz and .string directives (null-terminated strings)
+    if (strcmp(directive, ".asciz") == 0 || strcmp(directive, "asciz") == 0 ||
+        strcmp(directive, ".string") == 0 || strcmp(directive, "string") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            const char *str = ast_dir->args[0];
+            size_t str_len = strlen(str);
+            
+            // Remove quotes if present
+            if (str_len >= 2 && str[0] == '"' && str[str_len-1] == '"') {
+                str++; // Skip opening quote
+                str_len -= 2; // Remove both quotes
+            }
+            
+            // Ensure we have enough buffer space (include null terminator)
+            size_t needed_space = ctx->code_size + str_len + 1;
+            if (needed_space > ctx->code_capacity) {
+                size_t new_capacity = ctx->code_capacity * 2;
+                while (new_capacity < needed_space) {
+                    new_capacity *= 2;
+                }
+                
+                uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                if (!new_buffer) {
+                    return -1;
+                }
+                
+                ctx->code_buffer = new_buffer;
+                ctx->code_capacity = new_capacity;
+            }
+            
+            // Copy string data to buffer with null terminator
+            memcpy(ctx->code_buffer + ctx->code_size, str, str_len);
+            ctx->code_buffer[ctx->code_size + str_len] = '\0';
+            ctx->code_size += str_len + 1;
+            ctx->current_address += str_len + 1;
+            
+            if (ctx->verbose) {
+                printf("Added %s data: %zu bytes (including null terminator)\n", directive, str_len + 1);
+            }
+            
+            return 0;
+        }
+    }
+    
+    // Handle .byte directive
+    if (strcmp(directive, ".byte") == 0 || strcmp(directive, "byte") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Process each byte argument
+            for (size_t i = 0; i < ast_dir->arg_count; i++) {
+                const char *value_str = ast_dir->args[i];
+                if (!value_str) continue;
+                
+                // Parse byte value (supports hex with 0x prefix)
+                char *endptr;
+                long value = strtol(value_str, &endptr, 0);
+                
+                if (endptr == value_str || value < -128 || value > 255) {
+                    fprintf(stderr, "Error: Invalid byte value '%s'\n", value_str);
+                    return -1;
+                }
+                
+                // Ensure we have enough buffer space
+                if (ctx->code_size >= ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Store byte value
+                ctx->code_buffer[ctx->code_size] = (uint8_t)(value & 0xFF);
+                ctx->code_size += 1;
+                ctx->current_address += 1;
+            }
+            
+            if (ctx->verbose) {
+                printf("Added .byte data: %zu bytes\n", ast_dir->arg_count);
+            }
+            
+            return 0;
+        }
+    }
+    
+    // Handle .word directive (16-bit values)
+    if (strcmp(directive, ".word") == 0 || strcmp(directive, "word") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Process each word argument
+            for (size_t i = 0; i < ast_dir->arg_count; i++) {
+                const char *value_str = ast_dir->args[i];
+                if (!value_str) continue;
+                
+                // Parse word value
+                char *endptr;
+                long value = strtol(value_str, &endptr, 0);
+                
+                if (endptr == value_str || value < -32768 || value > 65535) {
+                    fprintf(stderr, "Error: Invalid word value '%s'\n", value_str);
+                    return -1;
+                }
+                
+                // Ensure we have enough buffer space
+                size_t needed_space = ctx->code_size + 2;
+                if (needed_space > ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    while (new_capacity < needed_space) {
+                        new_capacity *= 2;
+                    }
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Store word value (little-endian)
+                uint16_t word_val = (uint16_t)(value & 0xFFFF);
+                ctx->code_buffer[ctx->code_size] = (uint8_t)(word_val & 0xFF);
+                ctx->code_buffer[ctx->code_size + 1] = (uint8_t)((word_val >> 8) & 0xFF);
+                ctx->code_size += 2;
+                ctx->current_address += 2;
+            }
+            
+            if (ctx->verbose) {
+                printf("Added .word data: %zu words (%zu bytes)\n", ast_dir->arg_count, ast_dir->arg_count * 2);
+            }
+            
+            return 0;
+        }
+    }
+    
+    // Handle .dword directive (32-bit values)
+    if (strcmp(directive, ".dword") == 0 || strcmp(directive, "dword") == 0 ||
+        strcmp(directive, ".long") == 0 || strcmp(directive, "long") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Process each dword argument
+            for (size_t i = 0; i < ast_dir->arg_count; i++) {
+                const char *value_str = ast_dir->args[i];
+                if (!value_str) continue;
+                
+                // Parse dword value
+                char *endptr;
+                long long value = strtoll(value_str, &endptr, 0);
+                
+                if (endptr == value_str || value < -2147483648LL || value > 4294967295LL) {
+                    fprintf(stderr, "Error: Invalid dword value '%s'\n", value_str);
+                    return -1;
+                }
+                
+                // Ensure we have enough buffer space
+                size_t needed_space = ctx->code_size + 4;
+                if (needed_space > ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    while (new_capacity < needed_space) {
+                        new_capacity *= 2;
+                    }
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Store dword value (little-endian)
+                uint32_t dword_val = (uint32_t)(value & 0xFFFFFFFF);
+                ctx->code_buffer[ctx->code_size] = (uint8_t)(dword_val & 0xFF);
+                ctx->code_buffer[ctx->code_size + 1] = (uint8_t)((dword_val >> 8) & 0xFF);
+                ctx->code_buffer[ctx->code_size + 2] = (uint8_t)((dword_val >> 16) & 0xFF);
+                ctx->code_buffer[ctx->code_size + 3] = (uint8_t)((dword_val >> 24) & 0xFF);
+                ctx->code_size += 4;
+                ctx->current_address += 4;
+            }
+            
+            if (ctx->verbose) {
+                printf("Added .dword data: %zu dwords (%zu bytes)\n", ast_dir->arg_count, ast_dir->arg_count * 4);
+            }
+            
+            return 0;
+        }
+    }
+    
+    // Handle .quad directive (64-bit values)
+    if (strcmp(directive, ".quad") == 0 || strcmp(directive, "quad") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Process each quad argument
+            for (size_t i = 0; i < ast_dir->arg_count; i++) {
+                const char *value_str = ast_dir->args[i];
+                if (!value_str) continue;
+                
+                // Parse quad value
+                char *endptr;
+                long long value = strtoll(value_str, &endptr, 0);
+                
+                if (endptr == value_str) {
+                    fprintf(stderr, "Error: Invalid quad value '%s'\n", value_str);
+                    return -1;
+                }
+                
+                // Ensure we have enough buffer space
+                size_t needed_space = ctx->code_size + 8;
+                if (needed_space > ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    while (new_capacity < needed_space) {
+                        new_capacity *= 2;
+                    }
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Store quad value (little-endian)
+                uint64_t quad_val = (uint64_t)value;
+                for (int j = 0; j < 8; j++) {
+                    ctx->code_buffer[ctx->code_size + j] = (uint8_t)((quad_val >> (j * 8)) & 0xFF);
+                }
+                ctx->code_size += 8;
+                ctx->current_address += 8;
+            }
+            
+            if (ctx->verbose) {
+                printf("Added .quad data: %zu quads (%zu bytes)\n", ast_dir->arg_count, ast_dir->arg_count * 8);
+            }
+            
+            return 0;
+        }
+    }
+    
+    // Handle symbol constant definition directives
+    if (strcmp(directive, ".equ") == 0 || strcmp(directive, "equ") == 0 ||
+        strcmp(directive, ".set") == 0 || strcmp(directive, "set") == 0) {
+        if (ast_dir->args && ast_dir->arg_count >= 2) {
+            const char *symbol_name = ast_dir->args[0];
+            const char *value_str = ast_dir->args[1];
+            
+            // Parse the value
+            char *endptr;
+            long long value = strtoll(value_str, &endptr, 0);
+            
+            if (endptr == value_str) {
+                fprintf(stderr, "Error: Invalid value '%s' for %s directive\n", value_str, directive);
+                return -1;
+            }
+            
+            // Create or update symbol in symbol table
+            if (ctx->symbols) {
+                // Check if symbol already exists
+                symbol_t *existing = symbol_table_lookup(ctx->symbols, symbol_name);
+                if (existing) {
+                    if (strcmp(directive, ".set") == 0 || strcmp(directive, "set") == 0) {
+                        // .set allows redefinition
+                        symbol_set_value(existing, (uint64_t)value);
+                        if (ctx->verbose) {
+                            printf("Updated symbol '%s' = 0x%llX\n", symbol_name, (unsigned long long)value);
+                        }
+                    } else {
+                        // .equ does not allow redefinition
+                        fprintf(stderr, "Error: Symbol '%s' already defined\n", symbol_name);
+                        return -1;
+                    }
+                } else {
+                    // Create new constant symbol
+                    symbol_t *symbol = symbol_create(symbol_name, SYMBOL_CONSTANT);
+                    if (!symbol) {
+                        fprintf(stderr, "Error: Failed to create symbol '%s'\n", symbol_name);
+                        return -1;
+                    }
+                    
+                    symbol_set_value(symbol, (uint64_t)value);
+                    symbol_mark_defined(symbol);
+                    
+                    if (symbol_table_add(ctx->symbols, symbol) != 0) {
+                        symbol_destroy(symbol);
+                        fprintf(stderr, "Error: Failed to add symbol '%s'\n", symbol_name);
+                        return -1;
+                    }
+                    
+                    if (ctx->verbose) {
+                        printf("Defined symbol '%s' = 0x%llX\n", symbol_name, (unsigned long long)value);
+                    }
+                }
+            }
+            
+            return 0;
+        } else {
+            fprintf(stderr, "Error: %s directive requires symbol name and value\n", directive);
+            return -1;
+        }
+    }
+    
+    // Handle symbol visibility directives
+    if (strcmp(directive, ".global") == 0 || strcmp(directive, "global") == 0 ||
+        strcmp(directive, ".globl") == 0 || strcmp(directive, "globl") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Process each symbol argument
+            for (size_t i = 0; i < ast_dir->arg_count; i++) {
+                const char *symbol_name = ast_dir->args[i];
+                if (!symbol_name) continue;
+                
+                if (ctx->symbols) {
+                    // Check if symbol already exists
+                    symbol_t *existing = symbol_table_lookup(ctx->symbols, symbol_name);
+                    if (existing) {
+                        // Mark existing symbol as global
+                        symbol_set_visibility(existing, VISIBILITY_GLOBAL);
+                    } else {
+                        // Create forward reference as global symbol
+                        symbol_t *symbol = symbol_create(symbol_name, SYMBOL_UNDEFINED);
+                        if (!symbol) {
+                            fprintf(stderr, "Error: Failed to create global symbol '%s'\n", symbol_name);
+                            return -1;
+                        }
+                        
+                        symbol_set_visibility(symbol, VISIBILITY_GLOBAL);
+                        
+                        if (symbol_table_add(ctx->symbols, symbol) != 0) {
+                            symbol_destroy(symbol);
+                            fprintf(stderr, "Error: Failed to add global symbol '%s'\n", symbol_name);
+                            return -1;
+                        }
+                    }
+                    
+                    if (ctx->verbose) {
+                        printf("Marked symbol '%s' as global\n", symbol_name);
+                    }
+                }
+            }
+            
+            return 0;
+        }
+    }
+    
+    // Handle external symbol declarations
+    if (strcmp(directive, ".extern") == 0 || strcmp(directive, "extern") == 0 ||
+        strcmp(directive, ".external") == 0 || strcmp(directive, "external") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Process each external symbol argument
+            for (size_t i = 0; i < ast_dir->arg_count; i++) {
+                const char *symbol_name = ast_dir->args[i];
+                if (!symbol_name) continue;
+                
+                if (ctx->symbols) {
+                    // Check if symbol already exists
+                    symbol_t *existing = symbol_table_lookup(ctx->symbols, symbol_name);
+                    if (existing && existing->defined) {
+                        fprintf(stderr, "Warning: Symbol '%s' already defined, ignoring .extern\n", symbol_name);
+                        continue;
+                    }
+                    
+                    if (!existing) {
+                        // Create external symbol
+                        symbol_t *symbol = symbol_create(symbol_name, SYMBOL_EXTERNAL);
+                        if (!symbol) {
+                            fprintf(stderr, "Error: Failed to create external symbol '%s'\n", symbol_name);
+                            return -1;
+                        }
+                        
+                        symbol_set_visibility(symbol, VISIBILITY_GLOBAL);
+                        
+                        if (symbol_table_add(ctx->symbols, symbol) != 0) {
+                            symbol_destroy(symbol);
+                            fprintf(stderr, "Error: Failed to add external symbol '%s'\n", symbol_name);
+                            return -1;
+                        }
+                    } else {
+                        // Update existing undefined symbol to external
+                        existing->type = SYMBOL_EXTERNAL;
+                        symbol_set_visibility(existing, VISIBILITY_GLOBAL);
+                    }
+                    
+                    if (ctx->verbose) {
+                        printf("Declared external symbol '%s'\n", symbol_name);
+                    }
+                }
+            }
+            
+            return 0;
+        }
+    }
+    
     if (strcmp(directive, ".space") == 0 || strcmp(directive, "space") == 0) {
         if (ast_dir->args && ast_dir->arg_count > 0) {
             // Parse the space size argument
@@ -408,6 +795,123 @@ static int codegen_process_directive(codegen_ctx_t *ctx, ast_node_t *dir_node) {
                 
                 return 0;
             }
+        }
+    }
+    
+    // Handle alignment directive
+    if (strcmp(directive, ".align") == 0 || strcmp(directive, "align") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Parse alignment value
+            const char *align_str = ast_dir->args[0];
+            char *endptr;
+            long alignment = strtol(align_str, &endptr, 0);
+            
+            if (endptr == align_str || alignment <= 0 || alignment > 4096) {
+                fprintf(stderr, "Error: Invalid alignment value '%s'\n", align_str);
+                return -1;
+            }
+            
+            // Check if alignment is power of 2
+            if ((alignment & (alignment - 1)) != 0) {
+                fprintf(stderr, "Error: Alignment must be a power of 2, got %ld\n", alignment);
+                return -1;
+            }
+            
+            // Calculate padding needed
+            uint32_t current_offset = ctx->current_address % alignment;
+            if (current_offset != 0) {
+                size_t padding = alignment - current_offset;
+                
+                // Ensure we have enough buffer space
+                size_t needed_space = ctx->code_size + padding;
+                if (needed_space > ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    while (new_capacity < needed_space) {
+                        new_capacity *= 2;
+                    }
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Fill with zero bytes for alignment
+                memset(ctx->code_buffer + ctx->code_size, 0, padding);
+                ctx->code_size += padding;
+                ctx->current_address += padding;
+                
+                if (ctx->verbose) {
+                    printf("Added %zu bytes for .align %ld (aligned to 0x%08X)\n", 
+                           padding, alignment, ctx->current_address);
+                }
+            } else if (ctx->verbose) {
+                printf("Already aligned to %ld bytes\n", alignment);
+            }
+            
+            return 0;
+        } else {
+            fprintf(stderr, "Error: .align directive requires alignment value\n");
+            return -1;
+        }
+    }
+    
+    // Handle origin directive
+    if (strcmp(directive, ".org") == 0 || strcmp(directive, "org") == 0) {
+        if (ast_dir->args && ast_dir->arg_count > 0) {
+            // Parse origin address
+            const char *org_str = ast_dir->args[0];
+            char *endptr;
+            long long origin = strtoll(org_str, &endptr, 0);
+            
+            if (endptr == org_str || origin < 0) {
+                fprintf(stderr, "Error: Invalid origin address '%s'\n", org_str);
+                return -1;
+            }
+            
+            uint32_t new_address = (uint32_t)origin;
+            
+            if (new_address < ctx->current_address) {
+                fprintf(stderr, "Error: Origin address 0x%08X is before current address 0x%08X\n", 
+                        new_address, ctx->current_address);
+                return -1;
+            }
+            
+            if (new_address > ctx->current_address) {
+                // Fill gap with zeros
+                size_t gap_size = new_address - ctx->current_address;
+                
+                // Ensure we have enough buffer space
+                size_t needed_space = ctx->code_size + gap_size;
+                if (needed_space > ctx->code_capacity) {
+                    size_t new_capacity = ctx->code_capacity * 2;
+                    while (new_capacity < needed_space) {
+                        new_capacity *= 2;
+                    }
+                    uint8_t *new_buffer = realloc(ctx->code_buffer, new_capacity);
+                    if (!new_buffer) {
+                        return -1;
+                    }
+                    ctx->code_buffer = new_buffer;
+                    ctx->code_capacity = new_capacity;
+                }
+                
+                // Fill gap with zeros
+                memset(ctx->code_buffer + ctx->code_size, 0, gap_size);
+                ctx->code_size += gap_size;
+            }
+            
+            ctx->current_address = new_address;
+            
+            if (ctx->verbose) {
+                printf("Set origin to 0x%08X\n", ctx->current_address);
+            }
+            
+            return 0;
+        } else {
+            fprintf(stderr, "Error: .org directive requires address value\n");
+            return -1;
         }
     }
     
@@ -448,6 +952,53 @@ static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node) {
         printf("Label '%s' at address 0x%08X\n", label, ctx->current_address);
     }
     
+    // Add or update symbol in symbol table
+    if (ctx->symbols) {
+        symbol_t *existing = symbol_table_lookup(ctx->symbols, label);
+        
+        if (existing) {
+            // Update existing symbol with current address
+            symbol_set_value(existing, ctx->current_address);
+            symbol_mark_defined(existing);
+            
+            // Update type if needed
+            if (strcmp(ctx->current_section, ".text") == 0) {
+                existing->type = SYMBOL_LABEL;
+            } else {
+                existing->type = SYMBOL_VARIABLE;
+            }
+            
+            if (ctx->verbose) {
+                printf("Updated symbol '%s' at address 0x%08X\n", label, ctx->current_address);
+            }
+        } else {
+            // Create new symbol
+            symbol_t *symbol = symbol_create(label, 
+                strcmp(ctx->current_section, ".text") == 0 ? SYMBOL_LABEL : SYMBOL_VARIABLE);
+            
+            if (!symbol) {
+                fprintf(stderr, "Error: Failed to create symbol '%s'\n", label);
+                return -1;
+            }
+            
+            symbol_set_value(symbol, ctx->current_address);
+            symbol_mark_defined(symbol);
+            
+            // Default visibility is local, but will be updated by .global if needed
+            symbol_set_visibility(symbol, VISIBILITY_LOCAL);
+            
+            if (symbol_table_add(ctx->symbols, symbol) != 0) {
+                symbol_destroy(symbol);
+                fprintf(stderr, "Error: Failed to add symbol '%s'\n", label);
+                return -1;
+            }
+            
+            if (ctx->verbose) {
+                printf("Created symbol '%s' at address 0x%08X\n", label, ctx->current_address);
+            }
+        }
+    }
+    
     // Add symbol to SMOF output format
     output_format_ops_t *format_ops = get_output_format(ctx->output->format);
     if (format_ops && format_ops->add_symbol) {
@@ -463,10 +1014,12 @@ static int codegen_process_label(codegen_ctx_t *ctx, ast_node_t *label_node) {
             symbol_type = SMOF_SYM_OBJECT;
         }
         
-        // TODO: Check for .global directive to set SMOF_BIND_GLOBAL
-        // For now, assume _start is global
-        if (strcmp(label, "_start") == 0) {
-            symbol_binding = SMOF_BIND_GLOBAL;
+        // Check symbol table for visibility
+        if (ctx->symbols) {
+            symbol_t *symbol = symbol_table_lookup(ctx->symbols, label);
+            if (symbol && symbol->visibility == VISIBILITY_GLOBAL) {
+                symbol_binding = SMOF_BIND_GLOBAL;
+            }
         }
         
         // Add symbol to output format
