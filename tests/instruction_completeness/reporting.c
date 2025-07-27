@@ -76,57 +76,77 @@ void print_instruction_completeness_report_compact(arch_test_result_t *results, 
         }
         printf("+============================================================================+\n");
     } else {
-        // Standard width format (≤80 chars)
-        printf("+==============================================================================+\n");
-        printf("|                        STAS INSTRUCTION COMPLETENESS REPORT                 |\n");
-        printf("+==============================================================================+\n");
+        // Standard width format - proper rectangular table (67 chars each line)
+        printf("+----------+------------------+---------+------------+------------+\n");
+        printf("| ARCH     | CATEGORY         | COUNT   | RECOG      | FUNC       |\n");
+        printf("+----------+------------------+---------+------------+------------+\n");
         
         for (size_t i = 0; i < arch_count; i++) {
             arch_test_result_t *arch = &results[i];
             
-            printf("| %-8s | Category Analysis                                            |\n", arch->arch_name);
-            printf("+----------+--------------------------------------------------------------+\n");
-            
             for (size_t j = 0; j < arch->category_count; j++) {
                 category_result_t *cat = &arch->category_results[j];
-                printf("| %-12s | %3zu/%-3zu ", 
-                       cat->category_name, 
-                       cat->result.recognized, 
-                       cat->result.total);
                 
+                // Format the count as a 7-character string
+                char count_str[8];
+                snprintf(count_str, sizeof(count_str), "%zu/%zu", 
+                         cat->result.recognized, cat->result.total);
+                
+                printf("| %-8s | %-16s | %-7s | ", 
+                       (j == 0) ? arch->arch_name : "", // arch name only on first row
+                       cat->category_name, 
+                       count_str);
+                
+                // Recognition column - exactly 10 characters
                 if (show_bars) {
                     print_progress_bar(cat->result.recognition_percent, 8, false);
-                    printf(" ");
+                } else {
+                    printf("%8.1f%%", cat->result.recognition_percent);
+                }
+                printf(" | ");
+                
+                // Functional column - exactly 10 characters  
+                if (show_bars) {
                     print_progress_bar(cat->result.functional_percent, 8, false);
                 } else {
-                    printf("(%5.1f%% / %5.1f%%)", 
-                           cat->result.recognition_percent,
-                           cat->result.functional_percent);
+                    printf("%8.1f%%", cat->result.functional_percent);
                 }
                 printf(" |\n");
             }
             
-            printf("+----------+--------------------------------------------------------------+\n");
-            printf("| OVERALL  | %3zu/%-3zu ", 
-                   arch->overall.recognized, 
-                   arch->overall.total);
+            printf("+----------+------------------+---------+------------+------------+\n");
             
+            // Format OVERALL count as a 7-character string
+            char overall_count_str[8];
+            snprintf(overall_count_str, sizeof(overall_count_str), "%zu/%zu", 
+                     arch->overall.recognized, arch->overall.total);
+            
+            printf("| %-8s | %-16s | %-7s | ", 
+                   "", // empty 
+                   "OVERALL",
+                   overall_count_str);
+            
+            // Recognition column for OVERALL
             if (show_bars) {
                 print_progress_bar(arch->overall.recognition_percent, 8, false);
-                printf(" ");
+            } else {
+                printf("%8.1f%%", arch->overall.recognition_percent);
+            }
+            printf(" | ");
+            
+            // Functional column for OVERALL
+            if (show_bars) {
                 print_progress_bar(arch->overall.functional_percent, 8, false);
             } else {
-                printf("(%5.1f%% / %5.1f%%)", 
-                       arch->overall.recognition_percent,
-                       arch->overall.functional_percent);
+                printf("%8.1f%%", arch->overall.functional_percent);
             }
             printf(" |\n");
             
             if (i < arch_count - 1) {
-                printf("+==============================================================================+\n");
+                printf("+----------+------------------+---------+------------+------------+\n");
             }
         }
-        printf("+==============================================================================+\n");
+        printf("+----------+------------------+---------+------------+------------+\n");
     }
     
     printf("\n    Legend: ");
