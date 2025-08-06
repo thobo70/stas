@@ -4,7 +4,6 @@
 #include "lexer.h"
 #include "arch_interface.h"
 #include "symbols.h"
-#include "macro.h"
 #include "include.h"
 #include <stdint.h>
 #include <stdbool.h>
@@ -82,7 +81,6 @@ struct parser {
     lexer_t *lexer;
     arch_ops_t *arch;
     symbol_table_t *symbols;
-    macro_processor_t *macros;
     include_processor_t *includes;
     ast_node_t *root;
     token_t current_token;
@@ -105,15 +103,6 @@ ast_node_t *parse_label(parser_t *parser);
 ast_node_t *parse_directive(parser_t *parser);
 ast_node_t *parse_operand(parser_t *parser);
 ast_node_t *parse_expression(parser_t *parser);
-
-// Macro parsing functions
-bool parse_macro_define(parser_t *parser);
-bool parse_macro_ifdef(parser_t *parser);
-bool parse_macro_ifndef(parser_t *parser);
-bool parse_macro_else(parser_t *parser);
-bool parse_macro_endif(parser_t *parser);
-bool parse_macro_include(parser_t *parser);
-bool parse_macro_undef(parser_t *parser);
 
 // Operand parsing
 bool parse_operand_full(parser_t *parser, operand_t *operand);

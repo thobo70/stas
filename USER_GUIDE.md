@@ -65,33 +65,7 @@ stas [options] input.s
 
 ## Advanced Language Features
 
-STAS Phase 7 introduces comprehensive advanced language features including macro processing, file inclusion, conditional assembly, and complex expression evaluation.
-
-### Macro Processing
-
-Define and use C-style macros with `#define`:
-
-```assembly
-# Simple value macros
-#define BUFFER_SIZE 1024
-#define MAX_USERS 100
-#define SUCCESS 0
-
-# Use macros in code
-movq $BUFFER_SIZE, %rax     # Expands to: movq $1024, %rax
-movq $MAX_USERS, %rbx       # Expands to: movq $100, %rbx
-movq $SUCCESS, %rcx         # Expands to: movq $0, %rcx
-
-# Macros in data sections
-.section .data
-buffer_size: .quad BUFFER_SIZE    # Expands to: .quad 1024
-```
-
-#### Macro Features:
-- **Numeric Values**: Decimal and hexadecimal constants
-- **String Replacement**: Exact text substitution
-- **Redefinition**: Later definitions override earlier ones
-- **Case Sensitive**: Macro names are case-sensitive
+STAS Phase 7 introduces advanced language features including file inclusion and complex expression evaluation.
 
 ### Include Directives
 
@@ -110,57 +84,16 @@ movq $COMMON_BUFFER_SIZE, %rax    # From constants.inc
 - **Path Resolution**: Supports relative paths
 - **Recursive Inclusion**: Included files can include other files
 - **Error Prevention**: Circular inclusion detection
-- **Content Integration**: Macros and labels from included files are available
-
-### Conditional Assembly
-
-Use preprocessor conditionals to include/exclude code:
-
-```assembly
-#define DEBUG_BUILD
-#define OPTIMIZATION_LEVEL 2
-
-# Basic conditional inclusion
-#ifdef DEBUG_BUILD
-    movq $1, %rax           # Only included if DEBUG_BUILD is defined
-    call debug_function
-#endif
-
-# Conditional with alternative
-#ifdef RELEASE_BUILD
-    movq $0, %rbx           # Release build code
-#else
-    movq $1, %rbx           # Debug build code
-#endif
-
-# Negative conditional
-#ifndef PRODUCTION
-    call development_init    # Only in non-production builds
-#endif
-
-# Nested conditionals
-#ifdef DEBUG_BUILD
-    #ifdef ARM_TARGET
-        call arm_debug_init
-    #endif
-#endif
-```
-
-#### Conditional Features:
-- **`#ifdef MACRO`**: Include if macro is defined
-- **`#ifndef MACRO`**: Include if macro is NOT defined  
-- **`#else`**: Alternative code path
-- **`#endif`**: End conditional block
-- **Nesting Support**: Conditionals can be nested arbitrarily deep
+- **Content Integration**: Constants and labels from included files are available
 
 ### Advanced Expressions
 
 Complex expressions in immediate values and operands:
 
 ```assembly
-#define BASE_ADDR 0x1000
-#define OFFSET 0x100
-#define MULTIPLIER 4
+BASE_ADDR = 0x1000
+OFFSET = 0x100
+MULTIPLIER = 4
 
 # Arithmetic expressions
 movq $(BASE_ADDR + OFFSET), %rax        # 0x1000 + 0x100 = 0x1100
@@ -188,7 +121,7 @@ calculated_value: .quad (BASE_ADDR + OFFSET * MULTIPLIER)
 - **Shift**: `<<` (left), `>>` (right)
 - **Precedence**: Standard operator precedence
 - **Parentheses**: Explicit precedence control
-- **Mixed Values**: Combine macros, constants, and expressions
+- **Mixed Values**: Combine constants and expressions
 
 ### Combined Example
 
@@ -198,12 +131,9 @@ Complete example using all Phase 7 features:
 # Include common definitions
 .include "system_config.inc"
 
-# Build configuration
-#define FEATURE_DEBUGGING
-#define BUFFER_COUNT 8
-
-# Advanced macro with expression
-#define TOTAL_BUFFER_SIZE (BUFFER_SIZE * BUFFER_COUNT)
+# Constants
+BUFFER_COUNT = 8
+TOTAL_BUFFER_SIZE = (BUFFER_SIZE * BUFFER_COUNT)
 
 .section .text
 .global _start
@@ -212,29 +142,16 @@ _start:
     # Use included constants with expressions
     movq $(SYSTEM_BASE + CONFIG_OFFSET), %rax
     
-    # Conditional compilation
-    #ifdef FEATURE_DEBUGGING
-        movq $DEBUG_MODE, %rbx
-        call debug_init
-    #else
-        movq $RELEASE_MODE, %rbx
-    #endif
-    
-    # Complex expression using multiple macros
+    # Use calculated constants
     movq $TOTAL_BUFFER_SIZE, %rcx
     
-    # Conditional data based on architecture
-    #ifdef X86_64_TARGET
-        movq $64, %rdx          # 64-bit specific value
-    #endif
+    # Architecture-specific code
+    movq $64, %rdx          # 64-bit specific value
     
     ret
 
 .section .data
-    #ifdef FEATURE_DEBUGGING
-    debug_buffer: .space TOTAL_BUFFER_SIZE
-    #endif
-    
+    data_buffer: .space TOTAL_BUFFER_SIZE
     system_config: .quad (SYSTEM_BASE | CONFIG_FLAGS)
 ```
 

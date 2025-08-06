@@ -4,8 +4,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-// Forward declaration will be handled by macro.h inclusion in lexer.c
-
 // Token types for AT&T syntax assembly
 typedef enum {
     TOKEN_INSTRUCTION,    // mov, add, sub, etc.
@@ -22,13 +20,6 @@ typedef enum {
     TOKEN_RPAREN,         // )
     TOKEN_NEWLINE,        // \n
     TOKEN_COMMENT,        // # comment
-    TOKEN_MACRO_DEFINE,   // #define
-    TOKEN_MACRO_IFDEF,    // #ifdef
-    TOKEN_MACRO_IFNDEF,   // #ifndef
-    TOKEN_MACRO_ELSE,     // #else
-    TOKEN_MACRO_ENDIF,    // #endif
-    TOKEN_MACRO_INCLUDE,  // #include
-    TOKEN_MACRO_UNDEF,    // #undef
     TOKEN_EOF,            // End of file
     TOKEN_ERROR           // Lexical error
 } token_type_t;
@@ -59,7 +50,6 @@ typedef struct {
 // Lexer functions
 lexer_t *lexer_create(const char *input, const char *filename);
 void lexer_destroy(lexer_t *lexer);
-void lexer_set_macro_processor(lexer_t *lexer, void *processor);
 token_t lexer_next_token(lexer_t *lexer);
 void token_free(token_t *token);
 bool lexer_has_error(const lexer_t *lexer);

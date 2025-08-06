@@ -322,77 +322,32 @@ void test_lexer_data_directives(void)
 // COMPREHENSIVE MACRO TESTS
 // ========================================
 
-void test_lexer_macro_define_complex(void)
+void test_lexer_include_directive(void)
 {
-    lexer = lexer_create("#define MAX_SIZE 1024\n#define MIN_SIZE 0", "test.s");
+    lexer = lexer_create("#include \"header.inc\"\n.text", "test.s");
     TEST_ASSERT_NOT_NULL(lexer);
     
-    // First macro definition
+    // Include directive
     token_t token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_DEFINE, token.type);
-    TEST_ASSERT_EQUAL_STRING("define", token.value);
+    TEST_ASSERT_EQUAL(TOKEN_MACRO_INCLUDE, token.type);
+    TEST_ASSERT_EQUAL_STRING("include", token.value);
     
     token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_SYMBOL, token.type);
-    TEST_ASSERT_EQUAL_STRING("MAX_SIZE", token.value);
-    
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_NUMBER, token.type);
-    TEST_ASSERT_EQUAL_STRING("1024", token.value);
+    TEST_ASSERT_EQUAL(TOKEN_STRING, token.type);
+    TEST_ASSERT_EQUAL_STRING("header.inc", token.value);
     
     // Newline
     token = lexer_next_token(lexer);
     TEST_ASSERT_EQUAL(TOKEN_NEWLINE, token.type);
     
-    // Second macro definition
+    // Regular directive
     token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_DEFINE, token.type);
-    TEST_ASSERT_EQUAL_STRING("define", token.value);
-    
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_SYMBOL, token.type);
-    TEST_ASSERT_EQUAL_STRING("MIN_SIZE", token.value);
+    TEST_ASSERT_EQUAL(TOKEN_DIRECTIVE, token.type);
+    TEST_ASSERT_EQUAL_STRING("text", token.value);
     
     token = lexer_next_token(lexer);
     TEST_ASSERT_EQUAL(TOKEN_NUMBER, token.type);
     TEST_ASSERT_EQUAL_STRING("0", token.value);
-}
-
-void test_lexer_macro_conditionals_nested(void)
-{
-    lexer = lexer_create("#ifdef DEBUG\n#ifndef RELEASE\nmov %rax, %rbx\n#endif\n#endif", "test.s");
-    TEST_ASSERT_NOT_NULL(lexer);
-    
-    token_t token;
-    
-    // #ifdef DEBUG
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_IFDEF, token.type);
-    
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_SYMBOL, token.type);
-    TEST_ASSERT_EQUAL_STRING("DEBUG", token.value);
-    
-    // Newline
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_NEWLINE, token.type);
-    
-    // #ifndef RELEASE
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_IFNDEF, token.type);
-    
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_SYMBOL, token.type);
-    TEST_ASSERT_EQUAL_STRING("RELEASE", token.value);
-    
-    // Newline
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_NEWLINE, token.type);
-    
-    // mov instruction
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_INSTRUCTION, token.type);
-    TEST_ASSERT_EQUAL_STRING("mov", token.value);
 }
 
 void test_lexer_macro_include_variations(void)

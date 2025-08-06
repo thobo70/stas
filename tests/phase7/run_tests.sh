@@ -59,144 +59,77 @@ print_pass "STAS assembler built successfully"
 # Test 1: Basic Macro Processing
 # =============================================================================
 
-print_header "Test 1: Basic Macro Processing"
-
-print_test "Simple macro definition and expansion"
-cat > tests/phase7/test_macro_basic.s << 'EOF'
-#define TEST_VALUE 42
-
-.section .text
-mov r0, #TEST_VALUE
-EOF
-
-if ./bin/stas tests/phase7/test_macro_basic.s -o tests/phase7/test1.out >/dev/null 2>&1; then
-    print_pass "Basic macro expansion works correctly"
-else
-    print_fail "Basic macro expansion failed"
-fi
-
-print_test "Hex value macro expansion"
-cat > tests/phase7/test_macro_hex.s << 'EOF'
-#define HEX_VALUE 0x1000
-
-.section .text
-mov r0, #HEX_VALUE
-EOF
-
-if ./bin/stas tests/phase7/test_macro_hex.s -o tests/phase7/test2.out >/dev/null 2>&1; then
-    print_pass "Hex macro expansion works correctly"
-else
-    print_fail "Hex macro expansion failed"
-fi
-
-# =============================================================================
-# Test 2: Conditional Assembly
-# =============================================================================
-
-print_header "Test 2: Conditional Assembly"
-
-print_test "ifdef with defined macro"
-cat > tests/phase7/test_ifdef_true.s << 'EOF'
-#define DEBUG_MODE
-
-.section .text
-#ifdef DEBUG_MODE
-mov r0, #1
-#endif
-mov r1, #2
-EOF
-
-if ./bin/stas tests/phase7/test_ifdef_true.s -o tests/phase7/test3.out >/dev/null 2>&1; then
-    print_pass "ifdef with defined macro works correctly"
-else
-    print_fail "ifdef with defined macro failed"
-fi
-
-print_test "ifdef with undefined macro"
-cat > tests/phase7/test_ifdef_false.s << 'EOF'
-.section .text
-#ifdef UNDEFINED_MACRO
-mov r0, #1
-#endif
-mov r1, #2
-EOF
-
-if ./bin/stas tests/phase7/test_ifdef_false.s -o tests/phase7/test4.out >/dev/null 2>&1; then
-    print_pass "ifdef with undefined macro works correctly"
-else
-    print_fail "ifdef with undefined macro failed"
-fi
-
-print_test "ifndef with undefined macro"
-cat > tests/phase7/test_ifndef_true.s << 'EOF'
-.section .text
-#ifndef UNDEFINED_MACRO
-mov r0, #3
-#endif
-mov r1, #4
-EOF
-
-if ./bin/stas tests/phase7/test_ifndef_true.s -o tests/phase7/test5.out >/dev/null 2>&1; then
-    print_pass "ifndef with undefined macro works correctly"
-else
-    print_fail "ifndef with undefined macro failed"
-fi
-
-# =============================================================================
-# Test 3: Include Directives
-# =============================================================================
-
-print_header "Test 3: Include Directives"
+print_header "Test 1: Include Directive Processing"
 
 print_test "Basic file inclusion"
 
-# Create include file
-cat > tests/phase7/common.inc << 'EOF'
-#define SHARED_VALUE 0x5555
-#define ANOTHER_VALUE 100
+# Create include file with constants
+cat > tests/phase7/constants.inc << 'EOF'
+; Common constants for tests
+CONSTANT_VALUE = 42
+HEX_VALUE = 0x1000
 EOF
 
-# Create main file
-cat > tests/phase7/test_include.s << 'EOF'
-.include "tests/phase7/common.inc"
+# Create main file that includes constants
+cat > tests/phase7/test_include_basic.s << 'EOF'
+#include "tests/phase7/constants.inc"
 
 .section .text
-mov r0, #SHARED_VALUE
-mov r1, #ANOTHER_VALUE
+mov r0, #CONSTANT_VALUE
+mov r1, #HEX_VALUE
 EOF
 
-if ./bin/stas tests/phase7/test_include.s -o tests/phase7/test6.out >/dev/null 2>&1; then
-    print_pass "Include directive works correctly"
+if ./bin/stas tests/phase7/test_include_basic.s -o tests/phase7/test1.out >/dev/null 2>&1; then
+    print_pass "Basic include directive works correctly"
 else
-    print_fail "Include directive failed"
+    print_fail "Basic include directive failed"
+fi
+
+print_test "Nested includes"
+
+# Create first level include
+cat > tests/phase7/level1.inc << 'EOF'
+#include "tests/phase7/constants.inc"
+LEVEL1_VALUE = 200
+EOF
+
+# Create main file with nested includes
+cat > tests/phase7/test_include_nested.s << 'EOF'
+#include "tests/phase7/level1.inc"
+
+.section .text
+mov r0, #CONSTANT_VALUE
+mov r1, #LEVEL1_VALUE
+EOF
+
+if ./bin/stas tests/phase7/test_include_nested.s -o tests/phase7/test2.out >/dev/null 2>&1; then
+    print_pass "Nested includes work correctly"
+else
+    print_fail "Nested includes failed"
 fi
 
 # =============================================================================
-# Test 4: Complex Integration
+# Test 2: Assembly Features Testing
 # =============================================================================
 
-print_header "Test 4: Complex Integration Tests"
+print_header "Test 2: Core Assembly Features"
 
-print_test "Macros + Conditionals + Includes"
-cat > tests/phase7/complex_defs.inc << 'EOF'
-#define BASE_ADDR 0x8000
-#define MODE_FLAG 1
+print_test "Complex assembly with includes"
+
+# Create shared definitions
+cat > tests/phase7/shared_defs.inc << 'EOF'
+; Shared definitions
+BASE_ADDR = 0x8000
+MODE_FLAG = 1
 EOF
 
-cat > tests/phase7/test_complex.s << 'EOF'
-.include "tests/phase7/complex_defs.inc"
-
-#define BUILD_TYPE 2
+# Create main test file
+cat > tests/phase7/test_assembly.s << 'EOF'
+#include "tests/phase7/shared_defs.inc"
 
 .section .text
-#ifdef MODE_FLAG
 mov r0, #BASE_ADDR
-#endif
-
-#ifndef UNDEFINED_FLAG
-mov r1, #BUILD_TYPE
-#endif
-
+mov r1, #MODE_FLAG
 mov r2, #0x9999
 EOF
 
@@ -226,72 +159,39 @@ mov r0, #0x1234
 mov r1, #0x5678
 EOF
 
-if ./bin/stas tests/phase7/test_nested.s -o tests/phase7/test8.out >/dev/null 2>&1; then
-    print_pass "Nested conditionals work correctly"
+if ./bin/stas tests/phase7/test_assembly.s -o tests/phase7/test3.out >/dev/null 2>&1; then
+    print_pass "Complex assembly with includes works correctly"
 else
-    print_fail "Nested conditionals failed"
-fi
-
-print_test "Macro redefinition"
-cat > tests/phase7/test_redefine.s << 'EOF'
-#define VALUE 100
-#define VALUE 200
-
-.section .text
-mov r0, #VALUE
-EOF
-
-if ./bin/stas tests/phase7/test_redefine.s -o tests/phase7/test9.out >/dev/null 2>&1; then
-    print_pass "Macro redefinition works correctly"
-else
-    print_fail "Macro redefinition failed"
+    print_fail "Complex assembly with includes failed"
 fi
 
 # =============================================================================
-# Test 6: ARM Architecture Tests (Primary Support)
+# Test 3: Multiple Architecture Support
 # =============================================================================
 
-print_header "Test 6: ARM Architecture Tests"
+print_header "Test 3: Architecture-Specific Assembly"
 
-print_test "ARM macro expansion"
-cat > tests/phase7/test_arm_macros.s << 'EOF'
-#define ARM_REG_VAL 0x1000
-#define ARM_OFFSET 4
+print_test "ARM64 assembly with includes"
 
-.section .text
-mov r0, #ARM_REG_VAL
-ldr r1, [r0, #ARM_OFFSET]
+# Create ARM-specific definitions
+cat > tests/phase7/arm_defs.inc << 'EOF'
+; ARM64 specific constants
+ARM_REG_VAL = 0x1000
+ARM_OFFSET = 4
 EOF
 
-if ./bin/stas tests/phase7/test_arm_macros.s -o tests/phase7/test_arm.out >/dev/null 2>&1; then
-    print_pass "ARM macro expansion works correctly"
-else
-    print_fail "ARM macro expansion failed"
-fi
-
-print_test "ARM conditional assembly"
-cat > tests/phase7/test_arm_cond.s << 'EOF'
-#define ARM_BUILD
-#define THUMB_BUILD
+cat > tests/phase7/test_arm.s << 'EOF'
+#include "tests/phase7/arm_defs.inc"
 
 .section .text
-#ifdef ARM_BUILD
-mov r0, #1
-#endif
-
-#ifdef THUMB_BUILD
-mov r1, #2
-#endif
-
-#ifndef X86_BUILD
-mov r2, #3
-#endif
+mov x0, #ARM_REG_VAL
+ldr x1, [x0, #ARM_OFFSET]
 EOF
 
-if ./bin/stas tests/phase7/test_arm_cond.s -o tests/phase7/test_arm_cond.out >/dev/null 2>&1; then
-    print_pass "ARM conditional assembly works correctly"
+if ./bin/stas tests/phase7/test_arm.s -o tests/phase7/test_arm.out >/dev/null 2>&1; then
+    print_pass "ARM64 assembly with includes works correctly"
 else
-    print_fail "ARM conditional assembly failed"
+    print_fail "ARM64 assembly with includes failed"
 fi
 
 # =============================================================================

@@ -12,7 +12,6 @@
 #include "symbols.h"
 #include "core/output_format.h"
 #include "codegen.h"
-#include "macro.h"
 #include "include.h"
 
 // External architecture function declarations
@@ -224,25 +223,13 @@ int assemble_file(const config_t *config) {
         goto cleanup;
     }
     
-    // Initialize Phase 7 features: Macro processor
-    macro_processor_t *macro_processor = macro_processor_create();
-    if (!macro_processor) {
-        fprintf(stderr, "Error: Failed to create macro processor\n");
-        lexer_destroy(lexer);
-        goto cleanup;
-    }
-    
     // Initialize include processor
     include_processor_t *include_processor = include_processor_create();
     if (!include_processor) {
         fprintf(stderr, "Error: Failed to create include processor\n");
-        macro_processor_destroy(macro_processor);
         lexer_destroy(lexer);
         goto cleanup;
     }
-    
-    // Set macro processor in lexer
-    lexer_set_macro_processor(lexer, macro_processor);
     
     // Get architecture operations
     arch_ops_t *arch_ops = get_architecture(config->architecture);
@@ -256,7 +243,6 @@ int assemble_file(const config_t *config) {
     if (arch_ops->init && arch_ops->init() != 0) {
         fprintf(stderr, "Error: Failed to initialize %s architecture\n", config->architecture);
         include_processor_destroy(include_processor);
-        macro_processor_destroy(macro_processor);
         lexer_destroy(lexer);
         goto cleanup;
     }
@@ -266,7 +252,6 @@ int assemble_file(const config_t *config) {
     if (!parser) {
         fprintf(stderr, "Error: Failed to create parser\n");
         include_processor_destroy(include_processor);
-        macro_processor_destroy(macro_processor);
         lexer_destroy(lexer);
         goto cleanup;
     }
@@ -295,7 +280,6 @@ int assemble_file(const config_t *config) {
     if (parser_has_error(parser)) {
         fprintf(stderr, "Parse error: %s\n", parser_get_error(parser));
         include_processor_destroy(include_processor);
-        macro_processor_destroy(macro_processor);
         parser_destroy(parser);
         goto cleanup;
     }
@@ -370,7 +354,6 @@ int assemble_file(const config_t *config) {
     
     // Clean up Phase 7 processors
     include_processor_destroy(include_processor);
-    macro_processor_destroy(macro_processor);
     parser_destroy(parser);
     
 cleanup:

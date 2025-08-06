@@ -237,11 +237,11 @@ void test_lexer_multiple_tokens(void)
 // Test macro tokens
 void test_lexer_macro_tokens(void)
 {
-    lexer = lexer_create("#define", "test.s");
+    lexer = lexer_create("#include", "test.s");
     token_t token = lexer_next_token(lexer);
     
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_DEFINE, token.type);
-    TEST_ASSERT_EQUAL_STRING("define", token.value);  // Lexer strips # prefix
+    TEST_ASSERT_EQUAL(TOKEN_MACRO_INCLUDE, token.type);
+    TEST_ASSERT_EQUAL_STRING("include", token.value);  // Lexer strips # prefix
     
     token_free(&token);
 }

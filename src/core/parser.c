@@ -33,18 +33,12 @@ parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch) {
     parser->lexer = lexer;
     parser->arch = arch;
     parser->symbols = symbol_table_create(256);
-    parser->macros = macro_processor_create();
     parser->includes = include_processor_create();
     parser->root = NULL;
     parser->error = false;
     parser->error_message = NULL;
     parser->current_section = 0;
     parser->current_address = 0;
-    
-    // Connect macro processor to lexer
-    if (parser->macros) {
-        lexer_set_macro_processor(lexer, parser->macros);
-    }
     
     // Initialize current_token to avoid garbage values
     parser->current_token.type = TOKEN_EOF;
@@ -54,9 +48,8 @@ parser_t *parser_create(lexer_t *lexer, arch_ops_t *arch) {
     parser->current_token.column = 0;
     parser->current_token.position = 0;
     
-    if (!parser->symbols || !parser->macros || !parser->includes) {
+    if (!parser->symbols || !parser->includes) {
         if (parser->symbols) symbol_table_destroy(parser->symbols);
-        if (parser->macros) macro_processor_destroy(parser->macros);
         if (parser->includes) include_processor_destroy(parser->includes);
         free(parser);
         return NULL;
@@ -84,10 +77,6 @@ void parser_destroy(parser_t *parser) {
     
     if (parser->symbols) {
         symbol_table_destroy(parser->symbols);
-    }
-    
-    if (parser->macros) {
-        macro_processor_destroy(parser->macros);
     }
     
     if (parser->includes) {
@@ -289,32 +278,15 @@ ast_node_t *parser_parse(parser_t *parser) {
     ast_node_t *last_stmt = NULL;
     
     while (!parser->error && parser->current_token.type != TOKEN_EOF) {
-        // Check if current line should be included based on conditional compilation
-        if (macro_processor_should_include_line(parser->macros)) {
-            ast_node_t *stmt = parse_statement(parser);
-            
-            if (stmt) {
-                if (!root) {
-                    root = stmt;
-                    last_stmt = stmt;
-                } else {
-                    last_stmt->next = stmt;
-                    last_stmt = stmt;
-                }
-            }
-        } else {
-            // Skip lines that are conditionally excluded (except macro directives)
-            if (parser->current_token.type >= TOKEN_MACRO_DEFINE && 
-                parser->current_token.type <= TOKEN_MACRO_UNDEF) {
-                // Always process macro directives to maintain conditional state
-                parse_statement(parser);
+        ast_node_t *stmt = parse_statement(parser);
+        
+        if (stmt) {
+            if (!root) {
+                root = stmt;
+                last_stmt = stmt;
             } else {
-                // Skip regular content
-                while (!parser->error && 
-                       parser->current_token.type != TOKEN_NEWLINE &&
-                       parser->current_token.type != TOKEN_EOF) {
-                    parser_advance(parser);
-                }
+                last_stmt->next = stmt;
+                last_stmt = stmt;
             }
         }
         
@@ -343,29 +315,8 @@ static ast_node_t *parse_statement(parser_t *parser) {
         parser_advance(parser);
     }
     
-    // Handle macro directives
+    // Handle different token types
     switch (parser->current_token.type) {
-        case TOKEN_MACRO_DEFINE:
-            parse_macro_define(parser);
-            return NULL; // Macro definitions don't generate AST nodes
-        case TOKEN_MACRO_IFDEF:
-            parse_macro_ifdef(parser);
-            return NULL;
-        case TOKEN_MACRO_IFNDEF:
-            parse_macro_ifndef(parser);
-            return NULL;
-        case TOKEN_MACRO_ELSE:
-            parse_macro_else(parser);
-            return NULL;
-        case TOKEN_MACRO_ENDIF:
-            parse_macro_endif(parser);
-            return NULL;
-        case TOKEN_MACRO_INCLUDE:
-            parse_macro_include(parser);
-            return NULL;
-        case TOKEN_MACRO_UNDEF:
-            parse_macro_undef(parser);
-            return NULL;
         case TOKEN_LABEL:
             return parse_label(parser);
         case TOKEN_DIRECTIVE:
@@ -518,7 +469,6 @@ ast_node_t *parse_directive(parser_t *parser) {
         }
         
         // Set macro processor on include lexer
-        lexer_set_macro_processor(include_lexer, parser->macros);
         
         // Parse the included content  
         parser_t *include_parser = parser_create(include_lexer, parser->arch);
@@ -529,9 +479,8 @@ ast_node_t *parse_directive(parser_t *parser) {
             return NULL;
         }
         
-        // Copy symbol table and macro state
+        // Copy symbol table state
         include_parser->symbols = parser->symbols;
-        include_parser->macros = parser->macros;
         include_parser->includes = parser->includes;
         
         // Parse included file
@@ -539,7 +488,6 @@ ast_node_t *parse_directive(parser_t *parser) {
         
         // Cleanup (but preserve shared state)
         include_parser->symbols = NULL;
-        include_parser->macros = NULL; 
         include_parser->includes = NULL;
         parser_destroy(include_parser);
         lexer_destroy(include_lexer);
@@ -1165,309 +1113,8 @@ void ast_print_compact(const ast_node_t *root) {
 }
 
 //=============================================================================
-// Macro Processing Functions
+// Include Processing Functions
 //=============================================================================
 
-// Parse #define directive
-bool parse_macro_define(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_DEFINE)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #define
-    
-    // Expect macro name
-    if (!parser_match(parser, TOKEN_SYMBOL)) {
-        parser_error(parser, "Expected macro name after #define");
-        return false;
-    }
-    
-    char *macro_name = strdup(parser->current_token.value);
-    if (!macro_name) {
-        parser_error(parser, "Memory allocation failed for macro name");
-        return false;
-    }
-    
-    parser_advance(parser); // Skip macro name
-    
-    // Check for parameters
-    char **parameters = NULL;
-    size_t parameter_count = 0;
-    
-    if (parser_match(parser, TOKEN_LPAREN)) {
-        parser_advance(parser); // Skip '('
-        
-        // Parse parameter list
-        size_t capacity = 4;
-        parameters = malloc(capacity * sizeof(char*));
-        if (!parameters) {
-            free(macro_name);
-            parser_error(parser, "Memory allocation failed for macro parameters");
-            return false;
-        }
-        
-        while (!parser_match(parser, TOKEN_RPAREN) && !parser_match(parser, TOKEN_EOF)) {
-            if (!parser_match(parser, TOKEN_SYMBOL)) {
-                parser_error(parser, "Expected parameter name in macro definition");
-                goto cleanup_params;
-            }
-            
-            if (parameter_count >= capacity) {
-                capacity *= 2;
-                char **new_params = realloc(parameters, capacity * sizeof(char*));
-                if (!new_params) {
-                    parser_error(parser, "Memory allocation failed for macro parameters");
-                    goto cleanup_params;
-                }
-                parameters = new_params;
-            }
-            
-            parameters[parameter_count] = strdup(parser->current_token.value);
-            if (!parameters[parameter_count]) {
-                parser_error(parser, "Memory allocation failed for parameter name");
-                goto cleanup_params;
-            }
-            parameter_count++;
-            
-            parser_advance(parser); // Skip parameter name
-            
-            if (parser_match(parser, TOKEN_COMMA)) {
-                parser_advance(parser); // Skip comma
-            } else if (!parser_match(parser, TOKEN_RPAREN)) {
-                parser_error(parser, "Expected ',' or ')' in macro parameter list");
-                goto cleanup_params;
-            }
-        }
-        
-        if (!parser_match(parser, TOKEN_RPAREN)) {
-            parser_error(parser, "Expected ')' after macro parameters");
-            goto cleanup_params;
-        }
-        
-        parser_advance(parser); // Skip ')'
-    }
-    
-    // Read macro body (rest of line)
-    size_t body_capacity = 256;
-    char *body = malloc(body_capacity);
-    if (!body) {
-        parser_error(parser, "Memory allocation failed for macro body");
-        goto cleanup_params;
-    }
-    
-    size_t body_length = 0;
-    
-    // Skip any whitespace after macro name/parameters
-    while (parser_match(parser, TOKEN_OPERATOR) && 
-           parser->current_token.value && 
-           parser->current_token.value[0] == ' ') {
-        parser_advance(parser);
-    }
-    
-    // Collect rest of line as macro body
-    while (!parser_match(parser, TOKEN_NEWLINE) && !parser_match(parser, TOKEN_EOF)) {
-        const char *token_text = parser->current_token.value ? parser->current_token.value : "";
-        size_t token_len = strlen(token_text);
-        
-        // Ensure capacity
-        while (body_length + token_len + 2 >= body_capacity) {
-            body_capacity *= 2;
-            char *new_body = realloc(body, body_capacity);
-            if (!new_body) {
-                parser_error(parser, "Memory allocation failed for macro body");
-                free(body);
-                goto cleanup_params;
-            }
-            body = new_body;
-        }
-        
-        if (body_length > 0) {
-            body[body_length++] = ' '; // Add space between tokens
-        }
-        strcpy(body + body_length, token_text);
-        body_length += token_len;
-        
-        parser_advance(parser);
-    }
-    
-    body[body_length] = '\0';
-    
-    // Define the macro
-    bool success = macro_processor_define(parser->macros, macro_name,
-                                        (const char**)parameters, parameter_count,
-                                        body, parser->current_token.line,
-                                        lexer_has_error(parser->lexer) ? "<stdin>" : "file");
-    
-    free(body);
-    free(macro_name);
-    
-    if (parameters) {
-        for (size_t i = 0; i < parameter_count; i++) {
-            free(parameters[i]);
-        }
-        free(parameters);
-    }
-    
-    if (!success) {
-        parser_error(parser, "Failed to define macro: %s", 
-                    macro_processor_get_error(parser->macros));
-        return false;
-    }
-    
-    return true;
-    
-cleanup_params:
-    free(macro_name);
-    if (parameters) {
-        for (size_t i = 0; i < parameter_count; i++) {
-            free(parameters[i]);
-        }
-        free(parameters);
-    }
-    return false;
-}
-
-// Parse #ifdef directive
-bool parse_macro_ifdef(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_IFDEF)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #ifdef
-    
-    if (!parser_match(parser, TOKEN_SYMBOL)) {
-        parser_error(parser, "Expected macro name after #ifdef");
-        return false;
-    }
-    
-    bool success = macro_processor_ifdef(parser->macros, parser->current_token.value);
-    parser_advance(parser); // Skip macro name
-    
-    if (!success) {
-        parser_error(parser, "Failed to process #ifdef: %s",
-                    macro_processor_get_error(parser->macros));
-        return false;
-    }
-    
-    return true;
-}
-
-// Parse #ifndef directive
-bool parse_macro_ifndef(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_IFNDEF)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #ifndef
-    
-    if (!parser_match(parser, TOKEN_SYMBOL)) {
-        parser_error(parser, "Expected macro name after #ifndef");
-        return false;
-    }
-    
-    bool success = macro_processor_ifndef(parser->macros, parser->current_token.value);
-    parser_advance(parser); // Skip macro name
-    
-    if (!success) {
-        parser_error(parser, "Failed to process #ifndef: %s",
-                    macro_processor_get_error(parser->macros));
-        return false;
-    }
-    
-    return true;
-}
-
-// Parse #else directive
-bool parse_macro_else(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_ELSE)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #else
-    
-    bool success = macro_processor_else(parser->macros);
-    if (!success) {
-        parser_error(parser, "Failed to process #else: %s",
-                    macro_processor_get_error(parser->macros));
-        return false;
-    }
-    
-    return true;
-}
-
-// Parse #endif directive
-bool parse_macro_endif(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_ENDIF)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #endif
-    
-    bool success = macro_processor_endif(parser->macros);
-    if (!success) {
-        parser_error(parser, "Failed to process #endif: %s",
-                    macro_processor_get_error(parser->macros));
-        return false;
-    }
-    
-    return true;
-}
-
 // Parse #include directive
-bool parse_macro_include(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_INCLUDE)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #include
-    
-    if (!parser_match(parser, TOKEN_STRING)) {
-        parser_error(parser, "Expected filename string after #include");
-        return false;
-    }
-    
-    char *filename = strdup(parser->current_token.value);
-    if (!filename) {
-        parser_error(parser, "Memory allocation failed for include filename");
-        return false;
-    }
-    
-    parser_advance(parser); // Skip filename
-    
-    // For now, just track the include (actual file reading would be done at a higher level)
-    bool success = macro_processor_include_file(parser->macros, filename);
-    
-    free(filename);
-    
-    if (!success) {
-        parser_error(parser, "Failed to process #include: %s",
-                    macro_processor_get_error(parser->macros));
-        return false;
-    }
-    
-    return true;
-}
 
-// Parse #undef directive
-bool parse_macro_undef(parser_t *parser) {
-    if (!parser || !parser_match(parser, TOKEN_MACRO_UNDEF)) {
-        return false;
-    }
-    
-    parser_advance(parser); // Skip #undef
-    
-    if (!parser_match(parser, TOKEN_SYMBOL)) {
-        parser_error(parser, "Expected macro name after #undef");
-        return false;
-    }
-    
-    bool success = macro_processor_undefine(parser->macros, parser->current_token.value);
-    parser_advance(parser); // Skip macro name
-    
-    if (!success) {
-        parser_error(parser, "Macro '%s' was not defined", parser->current_token.value);
-        return false;
-    }
-    
-    return true;
-}

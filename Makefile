@@ -28,7 +28,7 @@ TESTBIN_DIR = testbin
 
 # Core source files (moved to src/core)
 CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/expr.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c $(SRC_DIR)/core/codegen.c
-CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o) $(OBJ_DIR)/macro.o $(OBJ_DIR)/include.o
+CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o) $(OBJ_DIR)/include.o
 
 # Format source files
 FORMAT_SOURCES = $(SRC_DIR)/formats/elf.c $(SRC_DIR)/formats/flat_binary.c $(SRC_DIR)/formats/com_format.c $(SRC_DIR)/formats/intel_hex.c $(SRC_DIR)/formats/motorola_srec.c $(SRC_DIR)/formats/smof.c
@@ -59,7 +59,7 @@ MAIN_SOURCE = $(SRC_DIR)/main.c
 MAIN_OBJECT = $(OBJ_DIR)/main.o
 
 # All sources and objects for dynamic build
-SOURCES = $(CORE_SOURCES) $(SRC_DIR)/macro.c $(SRC_DIR)/include.c $(FORMAT_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(ARCH_ARM64_SOURCES) $(ARCH_RISCV_SOURCES) $(MAIN_SOURCE)
+SOURCES = $(CORE_SOURCES) $(SRC_DIR)/include.c $(FORMAT_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(ARCH_ARM64_SOURCES) $(ARCH_RISCV_SOURCES) $(MAIN_SOURCE)
 OBJECTS = $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(ARCH_ARM64_OBJECTS) $(ARCH_RISCV_OBJECTS) $(MAIN_OBJECT)
 
 # Target executable
@@ -107,10 +107,6 @@ $(OBJ_DIR)/main.o: $(SRC_DIR)/main.c | $(OBJ_DIR)
 
 # Core module compilation
 $(OBJ_DIR)/core/%.o: $(SRC_DIR)/core/%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-# Macro processor compilation
-$(OBJ_DIR)/macro.o: $(SRC_DIR)/macro.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Include processor compilation
