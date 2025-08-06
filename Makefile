@@ -498,8 +498,49 @@ test-execution-all:
 	@echo "=== Running All Execution Tests ==="
 	@$(MAKE) test-execution-x86_16 test-execution-x86_32 test-execution-x86_64 test-execution-arm64 test-execution-riscv
 
+# QEMU System-Level Testing
+test-qemu-x86_16:
+	@echo "=== Running QEMU x86-16 System Tests ==="
+	@tests/framework/qemu_test_framework.sh -a x86_16
+
+test-qemu-x86_32:
+	@echo "=== Running QEMU x86-32 System Tests ==="
+	@tests/framework/qemu_test_framework.sh -a x86_32
+
+test-qemu-x86_64:
+	@echo "=== Running QEMU x86-64 System Tests ==="
+	@tests/framework/qemu_test_framework.sh -a x86_64
+
+test-qemu-arm64:
+	@echo "=== Running QEMU ARM64 System Tests ==="
+	@tests/framework/qemu_test_framework.sh -a arm64
+
+test-qemu-riscv:
+	@echo "=== Running QEMU RISC-V System Tests ==="
+	@tests/framework/qemu_test_framework.sh -a riscv
+
+test-qemu-all:
+	@echo "=== Running All QEMU System Tests ==="
+	@echo "Note: x86_32 is prioritized as the primary implementation"
+	@tests/framework/qemu_test_framework.sh
+
+# Quick QEMU test (x86_32 only - primary implementation)
+test-qemu-quick:
+	@echo "=== Running Quick QEMU Test (x86_32 Primary Implementation) ==="
+	@tests/framework/qemu_test_framework.sh -a x86_32
+
+# Emulator Integration Tests
+$(TESTBIN_DIR)/test_emulator_integration: tests/integration/test_emulator_integration.c $(UNICORN_FRAMEWORK) tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling emulator integration test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+test-emulator-integration:
+	@echo "=== Running Emulator Integration Tests ==="
+	@$(MAKE) -q $(TESTBIN_DIR)/test_emulator_integration || $(MAKE) $(TESTBIN_DIR)/test_emulator_integration
+	@./$(TESTBIN_DIR)/test_emulator_integration
+
 # Modern test suite
-test-all: test test-unit-all test-execution-all test-build-variants test-integration test-phase7-advanced
+test-all: test test-unit-all test-execution-all test-qemu-all test-build-variants test-integration test-phase7-advanced
 
 # === CODE COVERAGE ===
 
@@ -581,6 +622,25 @@ test-help:
 	@echo "  test-unit-arch       - Test architecture modules"
 	@echo "  test-unit-formats    - Test output format modules"
 	@echo "  test-unit-utils      - Test utility modules"
+	@echo ""
+	@echo "Execution Testing (Unicorn Engine):"
+	@echo "  test-execution-all   - Test code execution on all architectures"
+	@echo "  test-execution-x86_16 - Test x86-16 code execution"
+	@echo "  test-execution-x86_32 - Test x86-32 code execution"  
+	@echo "  test-execution-x86_64 - Test x86-64 code execution"
+	@echo "  test-execution-arm64 - Test ARM64 code execution"
+	@echo "  test-execution-riscv - Test RISC-V code execution"
+	@echo ""
+	@echo "System Testing (QEMU):"
+	@echo "  test-qemu-all        - Test system-level execution on all architectures"
+	@echo "  test-qemu-x86_16     - Test x86-16 system-level execution"
+	@echo "  test-qemu-x86_32     - Test x86-32 system-level execution"
+	@echo "  test-qemu-x86_64     - Test x86-64 system-level execution"
+	@echo "  test-qemu-arm64      - Test ARM64 system-level execution"
+	@echo "  test-qemu-riscv      - Test RISC-V system-level execution"
+	@echo ""
+	@echo "Integration Testing:"
+	@echo "  test-emulator-integration - Comprehensive emulator testing demo"
 	@echo ""
 	@echo "Build Testing:"
 	@echo "  test-build-variants  - Test all build configurations"
