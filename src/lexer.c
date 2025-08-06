@@ -18,7 +18,6 @@ lexer_t *lexer_create(const char *input, const char *filename) {
     lexer->line = 1;
     lexer->column = 1;
     lexer->filename = filename ? strdup(filename) : strdup("<stdin>");
-    lexer->macros = NULL;
     lexer->error = false;
     lexer->error_message = NULL;
     
@@ -160,7 +159,7 @@ static void lexer_skip_comment(lexer_t *lexer) {
     }
 }
 
-// Handle '#' - could be comment or macro directive
+// Handle '#' - comment
 static token_t lexer_handle_hash(lexer_t *lexer) {
     token_t token = {0};
     token.line = lexer->line;
@@ -168,24 +167,9 @@ static token_t lexer_handle_hash(lexer_t *lexer) {
     
     lexer_advance(lexer); // Skip '#'
     
-    // Check if this is a macro directive
-    if (isalpha(lexer_peek(lexer))) {
-        char *directive = lexer_read_identifier(lexer);
-        if (!directive) {
-            token.type = TOKEN_ERROR;
-            return token;
-        }
-        
-        // Check for macro directives
-        // No macro directives supported - treat all # lines as comments
-        free(directive);
-        lexer_skip_comment(lexer);
-        token.type = TOKEN_COMMENT;
-    } else {
-        // Regular comment
-        lexer_skip_comment(lexer);
-        token.type = TOKEN_COMMENT;
-    }
+    // All # lines are treated as comments
+    lexer_skip_comment(lexer);
+    token.type = TOKEN_COMMENT;
     
     return token;
 }

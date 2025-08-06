@@ -8,10 +8,8 @@ This directory contains comprehensive regression tests for STAS Phase 7 features
 ```
 tests/phase7/
 ├── run_tests.sh                 # Main test runner script
-├── test_macros.s               # Macro processing tests
-├── test_conditionals.s         # Conditional assembly tests
 ├── test_includes.s             # Include directive tests
-├── test_expressions.s          # Advanced expression tests
+├── test_expressions.s          # Advanced expression tests  
 ├── test_combined.s             # Combined feature tests
 ├── common_test.inc            # Shared include file for testing
 └── README.md                   # This file
@@ -19,37 +17,24 @@ tests/phase7/
 
 ### Features Tested
 
-#### 1. Macro Processing
-- **Simple Macros**: Basic #define with numeric values
-- **Hex Macros**: Hexadecimal value definitions
-- **Complex Macros**: Nested macro usage
-- **Redefinition**: Macro redefinition behavior
-
-#### 2. Conditional Assembly
-- **#ifdef**: Conditional inclusion when macro is defined
-- **#ifndef**: Conditional inclusion when macro is NOT defined
-- **#else**: Alternative code paths
-- **#endif**: Proper block termination
-- **Nested Conditionals**: Multi-level conditional blocks
-
-#### 3. Include Directives
+#### 1. Include Directives
 - **Basic Inclusion**: Simple .include "file.inc" functionality
-- **Macro Sharing**: Macros defined in included files
+- **Nested Includes**: Include files that include other files
+- **Constant Sharing**: Constants defined in included files
 - **Function Sharing**: Labels and functions from included files
 - **Data Sharing**: Data sections from included files
 
-#### 4. Advanced Expressions
+#### 2. Advanced Expressions
 - **Arithmetic**: Addition, subtraction, multiplication
 - **Bitwise**: OR, AND, XOR operations
 - **Shift Operations**: Left shift (<<), right shift (>>)
 - **Precedence**: Proper operator precedence handling
 - **Parentheses**: Precedence override with parentheses
 
-#### 5. Integration Tests
-- **Combined Features**: All features working together
-- **Cross-dependencies**: Macros using included constants
-- **Conditional Includes**: Conditionally including different files
-- **Expression Macros**: Macros containing complex expressions
+#### 3. Integration Tests
+- **Combined Features**: Include directives with expressions
+- **Cross-dependencies**: Constants using included values
+- **Complex Assembly**: Real-world assembly patterns
 
 ### Running Tests
 
@@ -61,17 +46,13 @@ chmod +x tests/phase7/run_tests.sh
 ./tests/phase7/run_tests.sh
 
 # Run individual test files
-./bin/stas tests/phase7/test_macros.s -o test_output.bin
-./bin/stas tests/phase7/test_conditionals.s -o test_output.bin
 ./bin/stas tests/phase7/test_includes.s -o test_output.bin
+./bin/stas tests/phase7/test_expressions.s -o test_output.bin
 ```
 
 ### Expected Output
 
 All tests should pass with the following results:
-- ✅ Basic macro expansion
-- ✅ Hex value macro expansion  
-- ✅ Conditional compilation (ifdef/ifndef/else/endif)
 - ✅ Include directive processing
 - ✅ Advanced expression evaluation
 - ✅ Combined feature integration

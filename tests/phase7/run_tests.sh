@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # STAS Phase 7 Regression Test Suite
-# Tests for Advanced Language Features: Macros, Includes, Conditionals
+# Tests for Advanced Language Features: Includes and Expressions
 # =============================================================================
 
 set -e  # Exit on any error
@@ -56,7 +56,7 @@ fi
 print_pass "STAS assembler built successfully"
 
 # =============================================================================
-# Test 1: Basic Macro Processing
+# Test 1: Include Directive Processing
 # =============================================================================
 
 print_header "Test 1: Include Directive Processing"

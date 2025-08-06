@@ -240,8 +240,8 @@ void test_lexer_macro_tokens(void)
     lexer = lexer_create("#include", "test.s");
     token_t token = lexer_next_token(lexer);
     
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_INCLUDE, token.type);
-    TEST_ASSERT_EQUAL_STRING("include", token.value);  // Lexer strips # prefix
+    TEST_ASSERT_EQUAL(TOKEN_COMMENT, token.type);
+    // #include is now treated as a comment, not a macro directive
     
     token_free(&token);
 }

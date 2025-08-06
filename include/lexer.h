@@ -42,7 +42,6 @@ typedef struct {
     size_t line;          // Current line number
     size_t column;        // Current column number
     const char *filename; // Source filename
-    void *macros;         // Macro processor for expansion (opaque pointer)
     bool error;           // Error flag
     char *error_message;  // Error message
 } lexer_t;

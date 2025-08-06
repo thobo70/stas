@@ -2,22 +2,20 @@
 
 This directory demonstrates all Phase 7 features of the STAS assembler:
 
-## 1. Macro Processing ✅
-- C-style `#define` macros with and without parameters
-- Automatic macro expansion in immediate values and symbols
-- Support for hex, decimal, and string macro values
+## 1. Include Directives ✅
+- Support for `.include "filename"` directives
+- File inclusion with proper path resolution
+- Constant and label sharing across files
 
 Example:
 ```assembly
-#define BUFFER_SIZE 1024
-#define DEBUG_VALUE 0xDEADBEEF
-movq $BUFFER_SIZE, %rax      # Expands to movq $1024, %rax
-movq $DEBUG_VALUE, %rbx     # Expands to movq $0xDEADBEEF, %rbx
+.include "common_defs.inc"   # Includes constant definitions
+movq $INCLUDED_VALUE, %rax   # Uses constant from included file
 ```
 
-## 2. Include Directives ✅
-- Support for `.include "filename"` directives
-- File inclusion with proper path resolution
+## 2. Advanced Expressions ✅
+- Complex arithmetic and bitwise expressions
+- Proper operator precedence
 - Shared macro and symbol namespaces across included files
 
 Example:

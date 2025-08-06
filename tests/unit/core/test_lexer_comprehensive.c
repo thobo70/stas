@@ -327,14 +327,9 @@ void test_lexer_include_directive(void)
     lexer = lexer_create("#include \"header.inc\"\n.text", "test.s");
     TEST_ASSERT_NOT_NULL(lexer);
     
-    // Include directive
+    // Include directive is now treated as a comment (entire line)
     token_t token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_INCLUDE, token.type);
-    TEST_ASSERT_EQUAL_STRING("include", token.value);
-    
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_STRING, token.type);
-    TEST_ASSERT_EQUAL_STRING("header.inc", token.value);
+    TEST_ASSERT_EQUAL(TOKEN_COMMENT, token.type);
     
     // Newline
     token = lexer_next_token(lexer);
@@ -357,21 +352,17 @@ void test_lexer_macro_include_variations(void)
     
     token_t token;
     
-    // First include with quotes
+    // First include line - now treated as comment (entire line)
     token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_INCLUDE, token.type);
-    
-    token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_STRING, token.type);
-    TEST_ASSERT_EQUAL_STRING("header.inc", token.value);
+    TEST_ASSERT_EQUAL(TOKEN_COMMENT, token.type);
     
     // Newline
     token = lexer_next_token(lexer);
     TEST_ASSERT_EQUAL(TOKEN_NEWLINE, token.type);
     
-    // Second include with angle brackets
+    // Second include line - now treated as comment (entire line)
     token = lexer_next_token(lexer);
-    TEST_ASSERT_EQUAL(TOKEN_MACRO_INCLUDE, token.type);
+    TEST_ASSERT_EQUAL(TOKEN_COMMENT, token.type);
 }
 
 // ========================================
@@ -716,9 +707,7 @@ int main(void)
     RUN_TEST(test_lexer_symbol_directives);
     RUN_TEST(test_lexer_data_directives);
     
-    // Comprehensive macro tests
-    RUN_TEST(test_lexer_macro_define_complex);
-    RUN_TEST(test_lexer_macro_conditionals_nested);
+    // Include directive test (now treated as comment)
     RUN_TEST(test_lexer_macro_include_variations);
     
     // Comprehensive position tracking tests

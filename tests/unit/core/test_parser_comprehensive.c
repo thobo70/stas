@@ -270,7 +270,8 @@ void test_parser_symbol_expression(void)
 
 void test_parser_macro_define(void)
 {
-    lexer = lexer_create("#define MAX_SIZE 1024", "test.s");
+    // Test that #define is now treated as a comment and ignored by parser
+    lexer = lexer_create("#define MAX_SIZE 1024\n.text", "test.s");
     TEST_ASSERT_NOT_NULL(lexer);
     
     arch_ops_t *arch = get_arch_ops_x86_64();
@@ -278,9 +279,10 @@ void test_parser_macro_define(void)
     TEST_ASSERT_NOT_NULL(parser);
     
     ast_node_t *root = parser_parse(parser);
-    (void)root;
+    TEST_ASSERT_NOT_NULL(root);
     
-    TEST_ASSERT_NOT_NULL(parser);
+    // The parser should have parsed the .text directive, ignoring the #define comment
+    TEST_ASSERT_EQUAL(AST_DIRECTIVE, root->type);
 }
 
 void test_parser_macro_conditional(void)

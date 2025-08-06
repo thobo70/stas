@@ -468,8 +468,6 @@ ast_node_t *parse_directive(parser_t *parser) {
             return NULL;
         }
         
-        // Set macro processor on include lexer
-        
         // Parse the included content  
         parser_t *include_parser = parser_create(include_lexer, parser->arch);
         if (!include_parser) {
