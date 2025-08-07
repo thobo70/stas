@@ -7,7 +7,7 @@
 #ifndef X86_64_H
 #define X86_64_H
 
-#include "../../include/arch_interface.h"
+#include "arch_interface.h"
 #include <stdint.h>
 #include <stdbool.h>
 

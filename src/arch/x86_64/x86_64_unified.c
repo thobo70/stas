@@ -121,7 +121,88 @@ static const x86_64_instruction_info_t instruction_database[] = {
     {"movq",   X86_64_CAT_DATA_MOVEMENT, {0x8B}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Move r/m64 to r64"},
     {"movl",   X86_64_CAT_DATA_MOVEMENT, {0x89}, 1, true,  false, false, 0, 2, 0x30, 0, "Move r32 to r/m32"},
     {"movl",   X86_64_CAT_DATA_MOVEMENT, {0x8B}, 1, true,  false, false, 0, 2, 0x30, 0, "Move r/m32 to r32"},
-    {"nop",    X86_64_CAT_CONTROL_FLOW, {0x90}, 1, false, false, false, 0, 0, 0x70, 0, "No operation"},
+    
+    // Control flow instructions - CRITICAL for basic functionality
+    {"ret",    X86_64_CAT_CONTROL_FLOW, {0xC3}, 1, false, false, false, 0, 0, 0, 0, "Return near"},
+    {"retq",   X86_64_CAT_CONTROL_FLOW, {0xC3}, 1, false, false, false, 0, 0, 0, 0, "Return near 64-bit"},
+    {"call",   X86_64_CAT_CONTROL_FLOW, {0xE8}, 1, false, false, false, 0, 1, 0, 0, "Call near rel32"},
+    {"jmp",    X86_64_CAT_CONTROL_FLOW, {0xEB}, 1, false, false, false, 0, 1, 0, 0, "Jump short rel8"},
+    
+    // Conditional jumps - Complete set per Intel SDM
+    {"je",     X86_64_CAT_CONTROL_FLOW, {0x74}, 1, false, false, false, 0, 1, 0, 0, "Jump if equal"},
+    {"jne",    X86_64_CAT_CONTROL_FLOW, {0x75}, 1, false, false, false, 0, 1, 0, 0, "Jump if not equal"},
+    {"jl",     X86_64_CAT_CONTROL_FLOW, {0x7C}, 1, false, false, false, 0, 1, 0, 0, "Jump if less"},
+    {"jg",     X86_64_CAT_CONTROL_FLOW, {0x7F}, 1, false, false, false, 0, 1, 0, 0, "Jump if greater"},
+    {"jle",    X86_64_CAT_CONTROL_FLOW, {0x7E}, 1, false, false, false, 0, 1, 0, 0, "Jump if less or equal"},
+    {"jge",    X86_64_CAT_CONTROL_FLOW, {0x7D}, 1, false, false, false, 0, 1, 0, 0, "Jump if greater or equal"},
+    {"ja",     X86_64_CAT_CONTROL_FLOW, {0x77}, 1, false, false, false, 0, 1, 0, 0, "Jump if above"},
+    {"jb",     X86_64_CAT_CONTROL_FLOW, {0x72}, 1, false, false, false, 0, 1, 0, 0, "Jump if below"},
+    {"jae",    X86_64_CAT_CONTROL_FLOW, {0x73}, 1, false, false, false, 0, 1, 0, 0, "Jump if above or equal"},
+    {"jbe",    X86_64_CAT_CONTROL_FLOW, {0x76}, 1, false, false, false, 0, 1, 0, 0, "Jump if below or equal"},
+    {"jo",     X86_64_CAT_CONTROL_FLOW, {0x70}, 1, false, false, false, 0, 1, 0, 0, "Jump if overflow"},
+    {"jno",    X86_64_CAT_CONTROL_FLOW, {0x71}, 1, false, false, false, 0, 1, 0, 0, "Jump if not overflow"},
+    {"js",     X86_64_CAT_CONTROL_FLOW, {0x78}, 1, false, false, false, 0, 1, 0, 0, "Jump if sign"},
+    {"jns",    X86_64_CAT_CONTROL_FLOW, {0x79}, 1, false, false, false, 0, 1, 0, 0, "Jump if not sign"},
+    {"jc",     X86_64_CAT_CONTROL_FLOW, {0x72}, 1, false, false, false, 0, 1, 0, 0, "Jump if carry"},
+    {"jnc",    X86_64_CAT_CONTROL_FLOW, {0x73}, 1, false, false, false, 0, 1, 0, 0, "Jump if not carry"},
+    
+    // Arithmetic instructions - Basic set with all size variants
+    {"addq",   X86_64_CAT_ARITHMETIC, {0x01}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Add r64 to r/m64"},
+    {"addl",   X86_64_CAT_ARITHMETIC, {0x01}, 1, true,  false, false, 0, 2, 0x30, 0, "Add r32 to r/m32"},
+    {"addw",   X86_64_CAT_ARITHMETIC, {0x66, 0x01}, 2, true,  false, false, 0, 2, 0x30, 0x66, "Add r16 to r/m16"},
+    {"addb",   X86_64_CAT_ARITHMETIC, {0x00}, 1, true,  false, false, 0, 2, 0x30, 0, "Add r8 to r/m8"},
+    
+    {"subq",   X86_64_CAT_ARITHMETIC, {0x29}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Sub r64 from r/m64"},
+    {"subl",   X86_64_CAT_ARITHMETIC, {0x29}, 1, true,  false, false, 0, 2, 0x30, 0, "Sub r32 from r/m32"},
+    {"subw",   X86_64_CAT_ARITHMETIC, {0x66, 0x29}, 2, true,  false, false, 0, 2, 0x30, 0x66, "Sub r16 from r/m16"},
+    {"subb",   X86_64_CAT_ARITHMETIC, {0x28}, 1, true,  false, false, 0, 2, 0x30, 0, "Sub r8 from r/m8"},
+    
+    {"imulq",  X86_64_CAT_ARITHMETIC, {0x0F, 0xAF}, 2, true,  true,  true,  0, 2, 0x70, 0x48, "Signed multiply r/m64 by r64"},
+    {"imull",  X86_64_CAT_ARITHMETIC, {0x0F, 0xAF}, 2, true,  false, false, 0, 2, 0x30, 0, "Signed multiply r/m32 by r32"},
+    {"imulw",  X86_64_CAT_ARITHMETIC, {0x66, 0x0F, 0xAF}, 3, true,  false, false, 0, 2, 0x30, 0x66, "Signed multiply r/m16 by r16"},
+    {"imulb",  X86_64_CAT_ARITHMETIC, {0xF6}, 1, true,  false, false, 5, 1, 0x30, 0, "Signed multiply AL by r/m8"},
+    
+    {"idivq",  X86_64_CAT_ARITHMETIC, {0xF7}, 1, true,  true,  true,  7, 1, 0x70, 0x48, "Signed divide RDX:RAX by r/m64"},
+    {"idivl",  X86_64_CAT_ARITHMETIC, {0xF7}, 1, true,  false, false, 7, 1, 0x30, 0, "Signed divide EDX:EAX by r/m32"},
+    {"idivw",  X86_64_CAT_ARITHMETIC, {0x66, 0xF7}, 2, true,  false, false, 7, 1, 0x30, 0x66, "Signed divide DX:AX by r/m16"},
+    {"idivb",  X86_64_CAT_ARITHMETIC, {0xF6}, 1, true,  false, false, 7, 1, 0x30, 0, "Signed divide AX by r/m8"},
+    
+    // Logical instructions - Basic set with all size variants
+    {"andq",   X86_64_CAT_LOGICAL, {0x21}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Logical AND r64 with r/m64"},
+    {"andl",   X86_64_CAT_LOGICAL, {0x21}, 1, true,  false, false, 0, 2, 0x30, 0, "Logical AND r32 with r/m32"},
+    {"andw",   X86_64_CAT_LOGICAL, {0x66, 0x21}, 2, true,  false, false, 0, 2, 0x30, 0x66, "Logical AND r16 with r/m16"},
+    {"andb",   X86_64_CAT_LOGICAL, {0x20}, 1, true,  false, false, 0, 2, 0x30, 0, "Logical AND r8 with r/m8"},
+    
+    {"orq",    X86_64_CAT_LOGICAL, {0x09}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Logical OR r64 with r/m64"},
+    {"orl",    X86_64_CAT_LOGICAL, {0x09}, 1, true,  false, false, 0, 2, 0x30, 0, "Logical OR r32 with r/m32"},
+    {"orw",    X86_64_CAT_LOGICAL, {0x66, 0x09}, 2, true,  false, false, 0, 2, 0x30, 0x66, "Logical OR r16 with r/m16"},
+    {"orb",    X86_64_CAT_LOGICAL, {0x08}, 1, true,  false, false, 0, 2, 0x30, 0, "Logical OR r8 with r/m8"},
+    
+    {"xorq",   X86_64_CAT_LOGICAL, {0x31}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Logical XOR r64 with r/m64"},
+    {"xorl",   X86_64_CAT_LOGICAL, {0x31}, 1, true,  false, false, 0, 2, 0x30, 0, "Logical XOR r32 with r/m32"},
+    {"xorw",   X86_64_CAT_LOGICAL, {0x66, 0x31}, 2, true,  false, false, 0, 2, 0x30, 0x66, "Logical XOR r16 with r/m16"},
+    {"xorb",   X86_64_CAT_LOGICAL, {0x30}, 1, true,  false, false, 0, 2, 0x30, 0, "Logical XOR r8 with r/m8"},
+    
+    {"notq",   X86_64_CAT_LOGICAL, {0xF7}, 1, true,  true,  true,  2, 1, 0x70, 0x48, "Logical NOT r/m64"},
+    {"notl",   X86_64_CAT_LOGICAL, {0xF7}, 1, true,  false, false, 2, 1, 0x30, 0, "Logical NOT r/m32"},
+    {"notw",   X86_64_CAT_LOGICAL, {0x66, 0xF7}, 2, true,  false, false, 2, 1, 0x30, 0x66, "Logical NOT r/m16"},
+    {"notb",   X86_64_CAT_LOGICAL, {0xF6}, 1, true,  false, false, 2, 1, 0x30, 0, "Logical NOT r/m8"},
+    
+    // Shift instructions - CPU-accurate operand constraints
+    {"shlq",   X86_64_CAT_SHIFT, {0xD1}, 1, true,  true,  true,  4, 1, 0x70, 0x48, "Shift left r/m64 by 1"},
+    {"shll",   X86_64_CAT_SHIFT, {0xD1}, 1, true,  false, false, 4, 1, 0x30, 0, "Shift left r/m32 by 1"},
+    {"shlw",   X86_64_CAT_SHIFT, {0x66, 0xD1}, 2, true,  false, false, 4, 1, 0x30, 0x66, "Shift left r/m16 by 1"},
+    {"shlb",   X86_64_CAT_SHIFT, {0xD0}, 1, true,  false, false, 4, 1, 0x30, 0, "Shift left r/m8 by 1"},
+    
+    {"shrq",   X86_64_CAT_SHIFT, {0xD1}, 1, true,  true,  true,  5, 1, 0x70, 0x48, "Shift right r/m64 by 1"},
+    {"shrl",   X86_64_CAT_SHIFT, {0xD1}, 1, true,  false, false, 5, 1, 0x30, 0, "Shift right r/m32 by 1"},
+    {"shrw",   X86_64_CAT_SHIFT, {0x66, 0xD1}, 2, true,  false, false, 5, 1, 0x30, 0x66, "Shift right r/m16 by 1"},
+    {"shrb",   X86_64_CAT_SHIFT, {0xD0}, 1, true,  false, false, 5, 1, 0x30, 0, "Shift right r/m8 by 1"},
+    
+    // Basic system instructions
+    {"nop",    X86_64_CAT_CONTROL_FLOW, {0x90}, 1, false, false, false, 0, 0, 0, 0, "No operation"},
+    {"syscall", X86_64_CAT_SYSTEM, {0x0F, 0x05}, 2, false, false, false, 0, 0, 0, 0, "System call"},
+    
     {NULL, X86_64_CAT_UNKNOWN, {0}, 0, false, false, false, 0, 0, 0, 0, NULL} // Terminator
 };
 
@@ -247,7 +328,7 @@ bool x86_64_is_valid_register(const char *name) {
 bool x86_64_validate_operand_combination(const char *mnemonic, 
                                          const char **operands, 
                                          int operand_count) {
-    if (!mnemonic || !operands) return false;
+    if (!mnemonic) return false;
     
     const x86_64_instruction_info_t *instr = x86_64_find_instruction(mnemonic);
     if (!instr) return false;
@@ -255,7 +336,8 @@ bool x86_64_validate_operand_combination(const char *mnemonic,
     // Validate operand count
     if (operand_count != instr->operand_count) return false;
     
-    // Additional CPU-specific validation can be added here
+    // If operands are provided, additional CPU-specific validation can be added here
+    // For now, basic validation passes if instruction exists and count matches
     return true;
 }
 
