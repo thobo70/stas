@@ -41,6 +41,7 @@ static bool x86_64_interface_validate_operand_combination(const char *mnemonic,
                                                          operand_t *operands, 
                                                          size_t operand_count) {
     // Call the existing function with adapted parameters
+    (void)operands; // Suppress unused parameter warning for future expansion
     return x86_64_validate_operand_combination(mnemonic, NULL, (int)operand_count);
 }
 

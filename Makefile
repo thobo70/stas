@@ -205,6 +205,7 @@ test: $(TARGET)
 # Clean build artifacts
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(TESTBIN_DIR)
+	rm -f test_x86_64_completeness test_x86_64_completeness_*
 	@echo "Cleaned build artifacts"
 
 # Clean generated logs and reports  
@@ -239,6 +240,7 @@ help:
 	@echo "  test         - Build and test with sample assembly"
 	@echo "  test-unit-all - Run all unit tests (modern Unity framework)"
 	@echo "  test-comprehensive - Run complete test suite"
+	@echo "  test-x86_64-completeness - Run x86-64 instruction set completeness test"
 	@echo "  test-help    - Show detailed testing help"
 	@echo "  test-phase7-advanced - Run Phase 7 advanced features"
 	@echo "  test-all     - Run enhanced comprehensive tests"
@@ -572,6 +574,20 @@ test-instruction-completeness: $(TESTBIN_DIR)/instruction_completeness
 	@./$(TESTBIN_DIR)/instruction_completeness
 	@echo "Instruction completeness analysis completed"
 
+# x86-64 Instruction Set Completeness Test (Unity Framework)
+test-x86_64-completeness: $(OBJECTS)
+	@echo "=== Building x86-64 Instruction Set Completeness Test ==="
+	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
+		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
+		tests/unit/arch/test_x86_64_completeness.c tests/unity.c \
+		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
+		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
+		obj/core/symbols.o obj/utils/utils.o \
+		-o test_x86_64_completeness
+	@echo "=== Running x86-64 Instruction Set Completeness Test ==="
+	@./test_x86_64_completeness
+	@echo "x86-64 instruction completeness test completed"
+
 # === COMPREHENSIVE TESTING ===
 
 # Complete test suite with Python orchestration
@@ -622,6 +638,10 @@ test-help:
 	@echo "  test-unit-arch       - Test architecture modules"
 	@echo "  test-unit-formats    - Test output format modules"
 	@echo "  test-unit-utils      - Test utility modules"
+	@echo ""
+	@echo "Instruction Set Completeness:"
+	@echo "  test-instruction-completeness - Run modular instruction completeness analysis"
+	@echo "  test-x86_64-completeness     - Run x86-64 instruction set completeness test (Unity)"
 	@echo ""
 	@echo "Execution Testing (Unicorn Engine):"
 	@echo "  test-execution-all   - Test code execution on all architectures"
@@ -676,4 +696,4 @@ test-help:
         test-build-variants test-execution-all test-execution-x86_16 test-execution-x86_32 \
         test-execution-x86_64 test-execution-arm64 test-execution-riscv test-integration \
         test-phase7-advanced test-all test-comprehensive test-quick test-ci test-performance \
-        test-coverage coverage-build test-help
+        test-coverage coverage-build test-help test-instruction-completeness test-x86_64-completeness
