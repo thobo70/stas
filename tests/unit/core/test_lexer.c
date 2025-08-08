@@ -1,5 +1,5 @@
-#include "unity.h"
-#include "unity_extensions.h"
+#include "../../../unity/src/unity.h"
+#include "../../framework/unity_extensions.h"
 #include "../../include/lexer.h"
 #include "../../include/symbols.h"
 

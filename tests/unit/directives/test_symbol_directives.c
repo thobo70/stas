@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#include "unity.h"
+#include "../../unity/src/unity.h"
 #include "codegen.h"
 #include "parser.h"
 #include "lexer.h"

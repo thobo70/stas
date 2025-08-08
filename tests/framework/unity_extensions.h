@@ -1,7 +1,7 @@
 #ifndef UNITY_EXTENSIONS_H
 #define UNITY_EXTENSIONS_H
 
-#include "unity.h"
+#include "../unity/src/unity.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>

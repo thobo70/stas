@@ -4,7 +4,7 @@
  * Based on Intel Software Developer's Manual Volume 2
  */
 
-#include "unity.h"
+#include "../../unity/src/unity.h"
 #include "../../../include/x86_64.h"
 #include "../../../include/arch_interface.h"
 #include <string.h>

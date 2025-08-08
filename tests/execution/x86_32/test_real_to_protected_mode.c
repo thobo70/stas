@@ -14,7 +14,7 @@
  * and bootloaders on x86 hardware.
  */
 
-#include "unity.h"
+#include "../../unity/src/unity.h"
 #include "../../framework/unicorn_test_framework.h"
 #include <stdint.h>
 #include <string.h>

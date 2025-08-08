@@ -13,7 +13,14 @@ LDFLAGS = -ldl
 STATIC_LDFLAGS = 
 
 # Architecture-specific defines
-ARCH_X86_16_CFLAGS = -DARCH_X86_16_ONLY
+ARCH_X86_16_CFLAGS = -DARCH_# Execution test compilation - specific rules for each architecture
+$(TESTBIN_DIR)/execution_test_x86_16_basic: tests/execution/x86_16/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_16 execution test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
+
+$(TESTBIN_DIR)/test_x86_16_algorithms: tests/execution/x86_16/test_algorithms.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Compiling x86_16 algorithms test: $@"
+	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@NLY
 ARCH_X86_32_CFLAGS = -DARCH_X86_32_ONLY
 ARCH_X86_64_CFLAGS = -DARCH_X86_64_ONLY
 ARCH_ARM64_CFLAGS = -DARCH_ARM64_ONLY
@@ -299,7 +306,7 @@ REPORTS_DIR = reports
 # Unity extensions and Unicorn framework
 UNITY_EXTENSIONS = $(FRAMEWORK_DIR)/unity_extensions.c
 UNICORN_FRAMEWORK = $(FRAMEWORK_DIR)/unicorn_test_framework.c
-FRAMEWORK_INCLUDES = -I$(FRAMEWORK_DIR) -Itests
+FRAMEWORK_INCLUDES = -I$(FRAMEWORK_DIR) -Itests -Itests/unity/src
 
 # Enhanced test compilation flags
 TEST_CFLAGS_ENHANCED = $(CFLAGS) $(INCLUDES) $(FRAMEWORK_INCLUDES) -DUNITY_INCLUDE_CONFIG_H
@@ -312,9 +319,12 @@ COVERAGE_LDFLAGS = --coverage
 # === UNIT TESTING WITH UNITY ===
 
 # Unit test compilation - flexible pattern matching  
-$(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity.c $(UNITY_EXTENSIONS) $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling unit test: $@"
-	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+# === UNIT TESTING WITH UNITY ===
+
+# Standard Unit Tests with Unity framework  
+$(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity/src/unity.c $(UNITY_EXTENSIONS) $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "Building unit test for $*..."
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity/src/unity.c $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
 # Instruction completeness test (modular version)
 $(TESTBIN_DIR)/instruction_completeness: $(OBJECTS) | $(TESTBIN_DIR)
@@ -372,17 +382,17 @@ test-unit-utils:
 	@echo "Utility unit tests completed"
 
 # Directive unit tests
-$(TESTBIN_DIR)/unit_test_data_directives: tests/unit/directives/test_data_directives.c tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+$(TESTBIN_DIR)/unit_test_data_directives: tests/unit/directives/test_data_directives.c tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "Compiling data directives unit test: $@"
-	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
-$(TESTBIN_DIR)/unit_test_symbol_directives: tests/unit/directives/test_symbol_directives.c tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+$(TESTBIN_DIR)/unit_test_symbol_directives: tests/unit/directives/test_symbol_directives.c tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "Compiling symbol directives unit test: $@"
-	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
-$(TESTBIN_DIR)/unit_test_alignment_directives: tests/unit/directives/test_alignment_directives.c tests/unity.c $(OBJECTS) | $(TESTBIN_DIR)
+$(TESTBIN_DIR)/unit_test_alignment_directives: tests/unit/directives/test_alignment_directives.c tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "Compiling alignment directives unit test: $@"
-	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
+	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
 # Directive module unit tests
 test-unit-directives:

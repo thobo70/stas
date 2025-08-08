@@ -2,7 +2,7 @@
 #define UNICORN_TEST_FRAMEWORK_H
 
 #include <unicorn/unicorn.h>
-#include "unity.h"
+#include "../unity/src/unity.h"
 #include <stdint.h>
 #include <stdbool.h>
 

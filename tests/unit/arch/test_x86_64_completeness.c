@@ -11,7 +11,7 @@
  * Following STAS Manifest Section 3: ARCHITECTURAL PRECISION
  */
 
-#include "unity.h"
+#include "../../unity/src/unity.h"
 #include "arch_interface.h"
 #include "x86_64.h"
 #include <string.h>
