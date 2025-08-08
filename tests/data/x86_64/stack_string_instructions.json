@@ -1,0 +1,191 @@
+{
+  "instruction_set": "x86_64_stack_string",
+  "description": "Stack operations and string instructions",
+  "reference": "Intel SDM Volume 2A",
+  "instructions": [
+    {
+      "mnemonic": "PUSH",
+      "description": "Push Word, Doubleword or Quadword Onto the Stack",
+      "operand_types": ["reg", "mem", "imm"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {"syntax": "pushq %rax", "description": "Push 64-bit register"},
+        {"syntax": "pushl %eax", "description": "Push 32-bit register"},
+        {"syntax": "pushw %ax", "description": "Push 16-bit register"},
+        {"syntax": "pushq (%rax)", "description": "Push memory operand"},
+        {"syntax": "pushq $0x1234", "description": "Push immediate value"},
+        {"syntax": "pushq %r8", "description": "Push extended register"},
+        {"syntax": "pushq variable(%rip)", "description": "Push RIP-relative memory"}
+      ]
+    },
+    {
+      "mnemonic": "POP",
+      "description": "Pop a Value from the Stack",
+      "operand_types": ["reg", "mem"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {"syntax": "popq %rax", "description": "Pop to 64-bit register"},
+        {"syntax": "popl %eax", "description": "Pop to 32-bit register"},
+        {"syntax": "popw %ax", "description": "Pop to 16-bit register"},
+        {"syntax": "popq (%rax)", "description": "Pop to memory operand"},
+        {"syntax": "popq %r15", "description": "Pop to extended register"}
+      ]
+    },
+    {
+      "mnemonic": "PUSHF",
+      "description": "Push EFLAGS Register onto the Stack",
+      "operand_types": ["none"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {"syntax": "pushfq", "description": "Push 64-bit flags (RFLAGS)"},
+        {"syntax": "pushfl", "description": "Push 32-bit flags (EFLAGS)"},
+        {"syntax": "pushfw", "description": "Push 16-bit flags (FLAGS)"}
+      ]
+    },
+    {
+      "mnemonic": "POPF",
+      "description": "Pop Stack into EFLAGS Register",
+      "operand_types": ["none"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {"syntax": "popfq", "description": "Pop to 64-bit flags (RFLAGS)"},
+        {"syntax": "popfl", "description": "Pop to 32-bit flags (EFLAGS)"},
+        {"syntax": "popfw", "description": "Pop to 16-bit flags (FLAGS)"}
+      ]
+    },
+    {
+      "mnemonic": "ENTER",
+      "description": "Make Stack Frame for Procedure Parameters",
+      "operand_types": ["imm16", "imm8"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "enter $16, $0", "description": "Simple stack frame"},
+        {"syntax": "enter $32, $1", "description": "Stack frame with nesting level"}
+      ]
+    },
+    {
+      "mnemonic": "LEAVE",
+      "description": "High Level Procedure Exit",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "leave", "description": "Restore stack frame"}
+      ]
+    },
+    {
+      "mnemonic": "MOVS",
+      "description": "Move Data from String to String",
+      "operand_types": ["none"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "movsq", "description": "Move quadword from [RSI] to [RDI]"},
+        {"syntax": "movsl", "description": "Move doubleword from [RSI] to [RDI]"},
+        {"syntax": "movsw", "description": "Move word from [RSI] to [RDI]"},
+        {"syntax": "movsb", "description": "Move byte from [RSI] to [RDI]"}
+      ]
+    },
+    {
+      "mnemonic": "CMPS",
+      "description": "Compare String Operands",
+      "operand_types": ["none"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "cmpsq", "description": "Compare quadwords [RSI] and [RDI]"},
+        {"syntax": "cmpsl", "description": "Compare doublewords [RSI] and [RDI]"},
+        {"syntax": "cmpsw", "description": "Compare words [RSI] and [RDI]"},
+        {"syntax": "cmpsb", "description": "Compare bytes [RSI] and [RDI]"}
+      ]
+    },
+    {
+      "mnemonic": "SCAS",
+      "description": "Scan String",
+      "operand_types": ["none"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "scasq", "description": "Scan quadword in [RDI] against RAX"},
+        {"syntax": "scasl", "description": "Scan doubleword in [RDI] against EAX"},
+        {"syntax": "scasw", "description": "Scan word in [RDI] against AX"},
+        {"syntax": "scasb", "description": "Scan byte in [RDI] against AL"}
+      ]
+    },
+    {
+      "mnemonic": "LODS",
+      "description": "Load String",
+      "operand_types": ["none"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "lodsq", "description": "Load quadword from [RSI] to RAX"},
+        {"syntax": "lodsl", "description": "Load doubleword from [RSI] to EAX"},
+        {"syntax": "lodsw", "description": "Load word from [RSI] to AX"},
+        {"syntax": "lodsb", "description": "Load byte from [RSI] to AL"}
+      ]
+    },
+    {
+      "mnemonic": "STOS",
+      "description": "Store String",
+      "operand_types": ["none"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "stosq", "description": "Store RAX to [RDI]"},
+        {"syntax": "stosl", "description": "Store EAX to [RDI]"},
+        {"syntax": "stosw", "description": "Store AX to [RDI]"},
+        {"syntax": "stosb", "description": "Store AL to [RDI]"}
+      ]
+    },
+    {
+      "mnemonic": "REP",
+      "description": "Repeat String Operation Prefix",
+      "operand_types": ["prefix"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "rep movsb", "description": "Repeat move string bytes"},
+        {"syntax": "rep stosq", "description": "Repeat store string quadwords"}
+      ]
+    },
+    {
+      "mnemonic": "REPE",
+      "description": "Repeat String Operation While Equal Prefix",
+      "operand_types": ["prefix"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "repe cmpsb", "description": "Repeat compare while equal"},
+        {"syntax": "repe scasb", "description": "Repeat scan while equal"}
+      ]
+    },
+    {
+      "mnemonic": "REPNE",
+      "description": "Repeat String Operation While Not Equal Prefix",
+      "operand_types": ["prefix"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "repne scasb", "description": "Repeat scan while not equal"},
+        {"syntax": "repne cmpsb", "description": "Repeat compare while not equal"}
+      ]
+    },
+    {
+      "mnemonic": "LEA",
+      "description": "Load Effective Address",
+      "operand_types": ["mem", "reg"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {"syntax": "leaq (%rax), %rbx", "description": "Load effective address"},
+        {"syntax": "leaq 16(%rax), %rbx", "description": "LEA with displacement"},
+        {"syntax": "leaq (%rax,%rbx,2), %rcx", "description": "LEA with SIB"},
+        {"syntax": "leaq 8(%rax,%rbx,4), %rcx", "description": "LEA with SIB and displacement"},
+        {"syntax": "leaq data(%rip), %rax", "description": "LEA with RIP-relative addressing"},
+        {"syntax": "leal (%eax), %ebx", "description": "32-bit LEA"},
+        {"syntax": "leaw (%ax), %bx", "description": "16-bit LEA"}
+      ]
+    },
+    {
+      "mnemonic": "NOP",
+      "description": "No Operation",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "nop", "description": "Single-byte NOP"},
+        {"syntax": "nopw (%rax)", "description": "Multi-byte NOP"}
+      ]
+    }
+  ]
+}

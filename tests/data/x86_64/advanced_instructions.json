@@ -1,0 +1,258 @@
+{
+  "instruction_set": "x86_64_advanced",
+  "description": "Advanced x86-64 instructions - SSE, AVX, system instructions", 
+  "reference": "Intel SDM Volume 2B/2C/2D",
+  "instructions": [
+    {
+      "mnemonic": "MOVAPS",
+      "description": "Move Aligned Packed Single-Precision FP Values",
+      "operand_types": ["xmm", "xmm_mem"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "movaps %xmm0, %xmm1", "description": "XMM register to register"},
+        {"syntax": "movaps (%rax), %xmm0", "description": "Memory to XMM register"},
+        {"syntax": "movaps %xmm1, (%rbx)", "description": "XMM register to memory"}
+      ]
+    },
+    {
+      "mnemonic": "MOVUPS", 
+      "description": "Move Unaligned Packed Single-Precision FP Values",
+      "operand_types": ["xmm", "xmm_mem"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "movups %xmm0, %xmm1", "description": "XMM register to register"},
+        {"syntax": "movups (%rax), %xmm0", "description": "Unaligned memory to XMM"}
+      ]
+    },
+    {
+      "mnemonic": "ADDPS",
+      "description": "Add Packed Single-Precision FP Values",
+      "operand_types": ["xmm", "xmm_mem"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "addps %xmm1, %xmm0", "description": "XMM addition"},
+        {"syntax": "addps (%rax), %xmm0", "description": "Memory to XMM addition"}
+      ]
+    },
+    {
+      "mnemonic": "MULPS",
+      "description": "Multiply Packed Single-Precision FP Values",
+      "operand_types": ["xmm", "xmm_mem"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "mulps %xmm1, %xmm0", "description": "XMM multiplication"},
+        {"syntax": "mulps (%rax), %xmm0", "description": "Memory to XMM multiplication"}
+      ]
+    },
+    {
+      "mnemonic": "CVTSI2SS",
+      "description": "Convert Doubleword Integer to Scalar Single-Precision FP",
+      "operand_types": ["reg32", "xmm"],
+      "sizes": ["32"],
+      "test_cases": [
+        {"syntax": "cvtsi2ss %eax, %xmm0", "description": "Integer to single-precision float"},
+        {"syntax": "cvtsi2ss (%rax), %xmm0", "description": "Memory integer to float"}
+      ]
+    },
+    {
+      "mnemonic": "VADDPD",
+      "description": "Add Packed Double-Precision FP Values (AVX)",
+      "operand_types": ["ymm", "ymm", "ymm_mem"],
+      "sizes": ["256"],
+      "test_cases": [
+        {"syntax": "vaddpd %ymm1, %ymm2, %ymm0", "description": "AVX YMM addition"},
+        {"syntax": "vaddpd (%rax), %ymm1, %ymm0", "description": "AVX memory addition"}
+      ]
+    },
+    {
+      "mnemonic": "VMULSS", 
+      "description": "Multiply Scalar Single-Precision FP Values (AVX)",
+      "operand_types": ["xmm", "xmm", "xmm_mem"],
+      "sizes": ["32"],
+      "test_cases": [
+        {"syntax": "vmulss %xmm1, %xmm2, %xmm0", "description": "AVX scalar multiplication"},
+        {"syntax": "vmulss (%rax), %xmm1, %xmm0", "description": "AVX scalar memory multiplication"}
+      ]
+    },
+    {
+      "mnemonic": "VPXOR",
+      "description": "Logical Exclusive OR (AVX)",
+      "operand_types": ["ymm", "ymm", "ymm_mem"],
+      "sizes": ["256"],
+      "test_cases": [
+        {"syntax": "vpxor %ymm1, %ymm2, %ymm0", "description": "AVX YMM XOR"},
+        {"syntax": "vpxor %ymm0, %ymm0, %ymm0", "description": "AVX register zeroing"}
+      ]
+    },
+    {
+      "mnemonic": "PADDB",
+      "description": "Add Packed Integers (MMX/SSE2)",
+      "operand_types": ["mmx", "mmx_mem", "xmm", "xmm_mem"],
+      "sizes": ["64", "128"],
+      "test_cases": [
+        {"syntax": "paddb %mm1, %mm0", "description": "MMX byte addition"},
+        {"syntax": "paddb %xmm1, %xmm0", "description": "SSE2 byte addition"}
+      ]
+    },
+    {
+      "mnemonic": "PMULLW",
+      "description": "Multiply Packed Signed Integers and Store Low Result",
+      "operand_types": ["mmx", "mmx_mem", "xmm", "xmm_mem"],
+      "sizes": ["64", "128"],
+      "test_cases": [
+        {"syntax": "pmullw %mm1, %mm0", "description": "MMX word multiplication"},
+        {"syntax": "pmullw %xmm1, %xmm0", "description": "SSE2 word multiplication"}
+      ]
+    },
+    {
+      "mnemonic": "PXOR",
+      "description": "Logical Exclusive OR (MMX/SSE2)",
+      "operand_types": ["mmx", "mmx_mem", "xmm", "xmm_mem"],
+      "sizes": ["64", "128"],
+      "test_cases": [
+        {"syntax": "pxor %mm0, %mm0", "description": "MMX register zeroing"},
+        {"syntax": "pxor %xmm0, %xmm0", "description": "SSE2 register zeroing"}
+      ]
+    },
+    {
+      "mnemonic": "CPUID",
+      "description": "CPU Identification",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "cpuid", "description": "Get CPU information"}
+      ]
+    },
+    {
+      "mnemonic": "RDTSC",
+      "description": "Read Time-Stamp Counter",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "rdtsc", "description": "Read timestamp counter"}
+      ]
+    },
+    {
+      "mnemonic": "WRMSR",
+      "description": "Write to Model Specific Register",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "wrmsr", "description": "Write MSR"}
+      ]
+    },
+    {
+      "mnemonic": "RDMSR",
+      "description": "Read from Model Specific Register",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "rdmsr", "description": "Read MSR"}
+      ]
+    },
+    {
+      "mnemonic": "SWAPGS",
+      "description": "Swap GS Base Register (x86-64 only)",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "swapgs", "description": "Swap GS base register"}
+      ]
+    },
+    {
+      "mnemonic": "SYSCALL",
+      "description": "Fast System Call (x86-64)",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "syscall", "description": "System call"}
+      ]
+    },
+    {
+      "mnemonic": "SYSRET",
+      "description": "Return From Fast System Call (x86-64)",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "sysret", "description": "Return from system call"}
+      ]
+    },
+    {
+      "mnemonic": "CMPXCHG",
+      "description": "Compare and Exchange",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "cmpxchg %ebx, %eax", "description": "32-bit compare and exchange"},
+        {"syntax": "cmpxchg %rbx, %rax", "description": "64-bit compare and exchange"},
+        {"syntax": "lock cmpxchg %ebx, (%rax)", "description": "Atomic compare and exchange"}
+      ]
+    },
+    {
+      "mnemonic": "CMPXCHG8B",
+      "description": "Compare and Exchange 8 Bytes",
+      "operand_types": ["mem64"],
+      "sizes": ["64"],
+      "test_cases": [
+        {"syntax": "cmpxchg8b (%rax)", "description": "8-byte atomic compare and exchange"}
+      ]
+    },
+    {
+      "mnemonic": "CMPXCHG16B",
+      "description": "Compare and Exchange 16 Bytes (x86-64)",
+      "operand_types": ["mem128"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "cmpxchg16b (%rax)", "description": "16-byte atomic compare and exchange"}
+      ]
+    },
+    {
+      "mnemonic": "XADD",
+      "description": "Exchange and Add", 
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "xadd %eax, %ebx", "description": "Exchange and add registers"},
+        {"syntax": "lock xadd %eax, (%rbx)", "description": "Atomic exchange and add"}
+      ]
+    },
+    {
+      "mnemonic": "ANDN",
+      "description": "Logical AND NOT (BMI1)",
+      "operand_types": ["reg", "reg", "reg_mem"],
+      "sizes": ["32", "64"],
+      "test_cases": [
+        {"syntax": "andn %eax, %ebx, %ecx", "description": "32-bit AND NOT"},
+        {"syntax": "andn %rax, %rbx, %rcx", "description": "64-bit AND NOT"}
+      ]
+    },
+    {
+      "mnemonic": "BLSI",
+      "description": "Extract Lowest Set Isolated Bit (BMI1)",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["32", "64"],
+      "test_cases": [
+        {"syntax": "blsi %eax, %ebx", "description": "32-bit extract lowest set bit"},
+        {"syntax": "blsi %rax, %rbx", "description": "64-bit extract lowest set bit"}
+      ]
+    },
+    {
+      "mnemonic": "AESENC",
+      "description": "Perform One Round of an AES Encryption Flow",
+      "operand_types": ["xmm", "xmm_mem"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "aesenc %xmm1, %xmm0", "description": "AES encryption round"}
+      ]
+    },
+    {
+      "mnemonic": "AESDEC",
+      "description": "Perform One Round of an AES Decryption Flow",
+      "operand_types": ["xmm", "xmm_mem"],
+      "sizes": ["128"],
+      "test_cases": [
+        {"syntax": "aesdec %xmm1, %xmm0", "description": "AES decryption round"}
+      ]
+    }
+  ]
+}

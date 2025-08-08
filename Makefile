@@ -213,7 +213,8 @@ test: $(TARGET)
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(TESTBIN_DIR)
 	rm -f test_x86_64_completeness test_x86_64_completeness_*
-	@echo "Cleaned build artifacts"
+	rm -f test_x86_64_data_driven test_instruction_database test_stas_compliance
+	@echo "Cleaned build artifacts and removed legacy test binaries from project root"
 
 # Clean generated logs and reports  
 clean-logs:
@@ -248,6 +249,9 @@ help:
 	@echo "  test-unit-all - Run all unit tests (modern Unity framework)"
 	@echo "  test-comprehensive - Run complete test suite"
 	@echo "  test-x86_64-completeness - Run x86-64 instruction set completeness test"
+	@echo "  test-x86_64-data-driven - Run data-driven x86-64 instruction tests"
+	@echo "  test-instruction-database - Validate instruction database files"
+	@echo "  test-stas-compliance - Test STAS assembler CPU compliance (REAL VALIDATION)"
 	@echo "  test-help    - Show detailed testing help"
 	@echo "  test-phase7-advanced - Run Phase 7 advanced features"
 	@echo "  test-all     - Run enhanced comprehensive tests"
@@ -585,18 +589,57 @@ test-instruction-completeness: $(TESTBIN_DIR)/instruction_completeness
 	@echo "Instruction completeness analysis completed"
 
 # x86-64 Instruction Set Completeness Test (Unity Framework)
-test-x86_64-completeness: $(OBJECTS)
+test-x86_64-completeness: $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "=== Building x86-64 Instruction Set Completeness Test ==="
 	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
 		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
-		tests/unit/arch/test_x86_64_completeness.c tests/unity.c \
+		tests/unit/arch/test_x86_64_completeness.c tests/unity/src/unity.c \
 		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
 		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
 		obj/core/symbols.o obj/utils/utils.o \
-		-o test_x86_64_completeness
+		-o $(TESTBIN_DIR)/test_x86_64_completeness
 	@echo "=== Running x86-64 Instruction Set Completeness Test ==="
-	@./test_x86_64_completeness
+	@$(TESTBIN_DIR)/test_x86_64_completeness
 	@echo "x86-64 instruction completeness test completed"
+
+# Data-driven x86-64 Instruction Set Test (Unity Framework)
+test-x86_64-data-driven: $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "=== Building Data-Driven x86-64 Instruction Test ==="
+	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
+		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
+		tests/unit/arch/test_x86_64_data_driven.c tests/unity/src/unity.c \
+		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
+		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
+		obj/core/symbols.o obj/utils/utils.o \
+		-o $(TESTBIN_DIR)/test_x86_64_data_driven
+	@echo "=== Running Data-Driven x86-64 Instruction Test ==="
+	@$(TESTBIN_DIR)/test_x86_64_data_driven
+	@echo "Data-driven x86-64 instruction test completed"
+
+# Instruction Database Validation Test 
+test-instruction-database: $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "=== Building Instruction Database Validation Test ==="
+	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
+		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
+		tests/unit/arch/test_instruction_database.c tests/unity/src/unity.c \
+		-o $(TESTBIN_DIR)/test_instruction_database
+	@echo "=== Running Instruction Database Validation Test ==="
+	@$(TESTBIN_DIR)/test_instruction_database
+	@echo "Instruction database validation completed"
+
+# STAS Assembler Compliance Test (Real CPU Validation)
+test-stas-compliance: $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "=== Building STAS Assembler Compliance Test ==="
+	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
+		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
+		tests/unit/arch/test_stas_compliance.c tests/unity/src/unity.c \
+		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
+		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
+		obj/core/symbols.o obj/utils/utils.o \
+		-o $(TESTBIN_DIR)/test_stas_compliance
+	@echo "=== Running STAS Assembler Compliance Test ==="
+	@$(TESTBIN_DIR)/test_stas_compliance
+	@echo "STAS assembler compliance validation completed"
 
 # === COMPREHENSIVE TESTING ===
 

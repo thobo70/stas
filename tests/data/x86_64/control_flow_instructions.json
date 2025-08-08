@@ -1,0 +1,381 @@
+{
+  "instruction_set": "x86_64_control_flow",
+  "description": "Control flow instructions - jumps, calls, returns, loops",
+  "reference": "Intel SDM Volume 2A",
+  "instructions": [
+    {
+      "mnemonic": "JMP",
+      "description": "Unconditional jump",
+      "operand_types": ["rel", "reg", "mem"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jmp label", "description": "Direct jump to label"},
+        {"syntax": "jmp *%rax", "description": "Indirect jump through register"},
+        {"syntax": "jmp *(%rax)", "description": "Indirect jump through memory"}
+      ]
+    },
+    {
+      "mnemonic": "JE",
+      "description": "Jump if equal (ZF=1)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "je label", "description": "Jump if equal"}
+      ]
+    },
+    {
+      "mnemonic": "JZ",
+      "description": "Jump if zero (ZF=1) - alias for JE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jz label", "description": "Jump if zero"}
+      ]
+    },
+    {
+      "mnemonic": "JNE",
+      "description": "Jump if not equal (ZF=0)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jne label", "description": "Jump if not equal"}
+      ]
+    },
+    {
+      "mnemonic": "JNZ",
+      "description": "Jump if not zero (ZF=0) - alias for JNE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnz label", "description": "Jump if not zero"}
+      ]
+    },
+    {
+      "mnemonic": "JL",
+      "description": "Jump if less (SF≠OF)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jl label", "description": "Jump if less (signed)"}
+      ]
+    },
+    {
+      "mnemonic": "JNGE",
+      "description": "Jump if not greater or equal (SF≠OF) - alias for JL",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnge label", "description": "Jump if not greater or equal"}
+      ]
+    },
+    {
+      "mnemonic": "JLE",
+      "description": "Jump if less or equal (ZF=1 or SF≠OF)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jle label", "description": "Jump if less or equal (signed)"}
+      ]
+    },
+    {
+      "mnemonic": "JNG",
+      "description": "Jump if not greater (ZF=1 or SF≠OF) - alias for JLE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jng label", "description": "Jump if not greater"}
+      ]
+    },
+    {
+      "mnemonic": "JG",
+      "description": "Jump if greater (ZF=0 and SF=OF)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jg label", "description": "Jump if greater (signed)"}
+      ]
+    },
+    {
+      "mnemonic": "JNLE",
+      "description": "Jump if not less or equal (ZF=0 and SF=OF) - alias for JG",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnle label", "description": "Jump if not less or equal"}
+      ]
+    },
+    {
+      "mnemonic": "JGE",
+      "description": "Jump if greater or equal (SF=OF)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jge label", "description": "Jump if greater or equal (signed)"}
+      ]
+    },
+    {
+      "mnemonic": "JNL",
+      "description": "Jump if not less (SF=OF) - alias for JGE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnl label", "description": "Jump if not less"}
+      ]
+    },
+    {
+      "mnemonic": "JB",
+      "description": "Jump if below (CF=1)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jb label", "description": "Jump if below (unsigned)"}
+      ]
+    },
+    {
+      "mnemonic": "JNAE",
+      "description": "Jump if not above or equal (CF=1) - alias for JB",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnae label", "description": "Jump if not above or equal"}
+      ]
+    },
+    {
+      "mnemonic": "JC",
+      "description": "Jump if carry (CF=1) - alias for JB",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jc label", "description": "Jump if carry flag set"}
+      ]
+    },
+    {
+      "mnemonic": "JBE",
+      "description": "Jump if below or equal (CF=1 or ZF=1)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jbe label", "description": "Jump if below or equal (unsigned)"}
+      ]
+    },
+    {
+      "mnemonic": "JNA",
+      "description": "Jump if not above (CF=1 or ZF=1) - alias for JBE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jna label", "description": "Jump if not above"}
+      ]
+    },
+    {
+      "mnemonic": "JA",
+      "description": "Jump if above (CF=0 and ZF=0)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "ja label", "description": "Jump if above (unsigned)"}
+      ]
+    },
+    {
+      "mnemonic": "JNBE",
+      "description": "Jump if not below or equal (CF=0 and ZF=0) - alias for JA",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnbe label", "description": "Jump if not below or equal"}
+      ]
+    },
+    {
+      "mnemonic": "JAE",
+      "description": "Jump if above or equal (CF=0)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jae label", "description": "Jump if above or equal (unsigned)"}
+      ]
+    },
+    {
+      "mnemonic": "JNB",
+      "description": "Jump if not below (CF=0) - alias for JAE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnb label", "description": "Jump if not below"}
+      ]
+    },
+    {
+      "mnemonic": "JNC",
+      "description": "Jump if no carry (CF=0) - alias for JAE",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnc label", "description": "Jump if no carry flag"}
+      ]
+    },
+    {
+      "mnemonic": "JS",
+      "description": "Jump if sign (SF=1)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "js label", "description": "Jump if sign flag set"}
+      ]
+    },
+    {
+      "mnemonic": "JNS",
+      "description": "Jump if no sign (SF=0)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jns label", "description": "Jump if sign flag clear"}
+      ]
+    },
+    {
+      "mnemonic": "JO",
+      "description": "Jump if overflow (OF=1)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jo label", "description": "Jump if overflow flag set"}
+      ]
+    },
+    {
+      "mnemonic": "JNO",
+      "description": "Jump if no overflow (OF=0)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jno label", "description": "Jump if overflow flag clear"}
+      ]
+    },
+    {
+      "mnemonic": "JP",
+      "description": "Jump if parity (PF=1)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jp label", "description": "Jump if parity flag set"}
+      ]
+    },
+    {
+      "mnemonic": "JPE",
+      "description": "Jump if parity even (PF=1) - alias for JP",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jpe label", "description": "Jump if parity even"}
+      ]
+    },
+    {
+      "mnemonic": "JNP",
+      "description": "Jump if no parity (PF=0)",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jnp label", "description": "Jump if parity flag clear"}
+      ]
+    },
+    {
+      "mnemonic": "JPO",
+      "description": "Jump if parity odd (PF=0) - alias for JNP",
+      "operand_types": ["rel"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {"syntax": "jpo label", "description": "Jump if parity odd"}
+      ]
+    },
+    {
+      "mnemonic": "JCXZ",
+      "description": "Jump if CX register is zero",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "jcxz label", "description": "Jump if CX is zero"}
+      ]
+    },
+    {
+      "mnemonic": "JECXZ",
+      "description": "Jump if ECX register is zero",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "jecxz label", "description": "Jump if ECX is zero"}
+      ]
+    },
+    {
+      "mnemonic": "JRCXZ",
+      "description": "Jump if RCX register is zero",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "jrcxz label", "description": "Jump if RCX is zero"}
+      ]
+    },
+    {
+      "mnemonic": "CALL",
+      "description": "Call procedure",
+      "operand_types": ["rel", "reg", "mem"],
+      "sizes": ["32"],
+      "test_cases": [
+        {"syntax": "call label", "description": "Direct call to label"},
+        {"syntax": "call *%rax", "description": "Indirect call through register"},
+        {"syntax": "call *(%rax)", "description": "Indirect call through memory"}
+      ]
+    },
+    {
+      "mnemonic": "RET",
+      "description": "Return from procedure",
+      "operand_types": ["none", "imm"],
+      "sizes": ["none"],
+      "test_cases": [
+        {"syntax": "ret", "description": "Return from procedure"},
+        {"syntax": "ret $16", "description": "Return and pop 16 bytes from stack"}
+      ]
+    },
+    {
+      "mnemonic": "LOOP",
+      "description": "Loop with ECX/RCX counter",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "loop label", "description": "Loop while RCX != 0"}
+      ]
+    },
+    {
+      "mnemonic": "LOOPE",
+      "description": "Loop while equal (ZF=1 and ECX/RCX != 0)",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "loope label", "description": "Loop while equal"}
+      ]
+    },
+    {
+      "mnemonic": "LOOPZ",
+      "description": "Loop while zero (ZF=1 and ECX/RCX != 0) - alias for LOOPE",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "loopz label", "description": "Loop while zero"}
+      ]
+    },
+    {
+      "mnemonic": "LOOPNE",
+      "description": "Loop while not equal (ZF=0 and ECX/RCX != 0)",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "loopne label", "description": "Loop while not equal"}
+      ]
+    },
+    {
+      "mnemonic": "LOOPNZ",
+      "description": "Loop while not zero (ZF=0 and ECX/RCX != 0) - alias for LOOPNE",
+      "operand_types": ["rel"],
+      "sizes": ["8"],
+      "test_cases": [
+        {"syntax": "loopnz label", "description": "Loop while not zero"}
+      ]
+    }
+  ]
+}

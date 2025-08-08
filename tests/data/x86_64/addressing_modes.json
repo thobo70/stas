@@ -1,0 +1,142 @@
+{
+  "addressing_modes": "x86_64_complete",
+  "description": "Complete x86-64 addressing modes per Intel SDM and AT&T syntax",
+  "reference": "Intel SDM Volume 2A, OSDev Wiki x86-64 Instruction Encoding",
+  "modes": [
+    {
+      "name": "register_direct",
+      "description": "Direct register addressing",
+      "syntax_patterns": [
+        "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "%rsp", "%rbp",
+        "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15",
+        "%eax", "%ebx", "%ecx", "%edx", "%esi", "%edi", "%esp", "%ebp",
+        "%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d",
+        "%ax", "%bx", "%cx", "%dx", "%si", "%di", "%sp", "%bp",
+        "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w",
+        "%al", "%bl", "%cl", "%dl", "%sil", "%dil", "%spl", "%bpl",
+        "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b",
+        "%ah", "%bh", "%ch", "%dh"
+      ],
+      "test_cases": [
+        {"instruction": "movq %rax, %rbx", "description": "64-bit register to register"},
+        {"instruction": "movl %eax, %ebx", "description": "32-bit register to register"},
+        {"instruction": "movw %ax, %bx", "description": "16-bit register to register"},
+        {"instruction": "movb %al, %bl", "description": "8-bit register to register"},
+        {"instruction": "movq %r8, %r15", "description": "Extended 64-bit registers"},
+        {"instruction": "movl %r8d, %r15d", "description": "Extended 32-bit registers"},
+        {"instruction": "movw %r8w, %r15w", "description": "Extended 16-bit registers"},
+        {"instruction": "movb %r8b, %r15b", "description": "Extended 8-bit registers"},
+        {"instruction": "movb %sil, %dil", "description": "Low 8-bit of index registers"}
+      ]
+    },
+    {
+      "name": "immediate",
+      "description": "Immediate constant addressing",
+      "syntax_patterns": [
+        "$imm8", "$imm16", "$imm32", "$imm64"
+      ],
+      "test_cases": [
+        {"instruction": "movq $0x1234567890ABCDEF, %rax", "description": "64-bit immediate"},
+        {"instruction": "movl $0x12345678, %eax", "description": "32-bit immediate"},
+        {"instruction": "movw $0x1234, %ax", "description": "16-bit immediate"},
+        {"instruction": "movb $0x12, %al", "description": "8-bit immediate"},
+        {"instruction": "addq $1, %rax", "description": "Small immediate addition"},
+        {"instruction": "addq $-128, %rax", "description": "Negative immediate"},
+        {"instruction": "cmpq $0, %rax", "description": "Compare with zero immediate"}
+      ]
+    },
+    {
+      "name": "memory_direct",
+      "description": "Direct memory addressing",
+      "syntax_patterns": [
+        "(%reg)", "disp(%reg)", "label", "label(%rip)"
+      ],
+      "test_cases": [
+        {"instruction": "movq (%rax), %rbx", "description": "Register indirect"},
+        {"instruction": "movq (%r8), %rbx", "description": "Extended register indirect"},
+        {"instruction": "movq 8(%rax), %rbx", "description": "Register indirect with 8-bit displacement"},
+        {"instruction": "movq 256(%rax), %rbx", "description": "Register indirect with 32-bit displacement"},
+        {"instruction": "movq -8(%rax), %rbx", "description": "Register indirect with negative displacement"},
+        {"instruction": "movq (%rsp), %rax", "description": "Stack pointer indirect"},
+        {"instruction": "movq (%rbp), %rax", "description": "Base pointer indirect"},
+        {"instruction": "movq 16(%rbp), %rax", "description": "Stack frame access"}
+      ]
+    },
+    {
+      "name": "rip_relative",
+      "description": "RIP-relative addressing (x86-64 specific)",
+      "syntax_patterns": [
+        "label(%rip)", "disp(%rip)"
+      ],
+      "test_cases": [
+        {"instruction": "movq variable(%rip), %rax", "description": "RIP-relative variable access"},
+        {"instruction": "leaq string(%rip), %rdi", "description": "RIP-relative address loading"},
+        {"instruction": "callq function(%rip)", "description": "RIP-relative function call"},
+        {"instruction": "cmpq $0, flag(%rip)", "description": "RIP-relative comparison"},
+        {"instruction": "addq data(%rip), %rax", "description": "RIP-relative arithmetic"},
+        {"instruction": "movq %rax, result(%rip)", "description": "RIP-relative store operation"},
+        {"instruction": "pushq value(%rip)", "description": "RIP-relative push"}
+      ]
+    },
+    {
+      "name": "sib_scale_index_base",
+      "description": "SIB (Scale-Index-Base) addressing",
+      "syntax_patterns": [
+        "(%base,%index,scale)", "disp(%base,%index,scale)",
+        "(,%index,scale)", "disp(,%index,scale)"
+      ],
+      "test_cases": [
+        {"instruction": "movq (%rax,%rbx,1), %rcx", "description": "SIB with scale 1"},
+        {"instruction": "movq (%rax,%rbx,2), %rcx", "description": "SIB with scale 2"},
+        {"instruction": "movq (%rax,%rbx,4), %rcx", "description": "SIB with scale 4"},
+        {"instruction": "movq (%rax,%rbx,8), %rcx", "description": "SIB with scale 8"},
+        {"instruction": "movq 16(%rax,%rbx,4), %rcx", "description": "SIB with displacement"},
+        {"instruction": "movq -8(%rax,%rbx,2), %rcx", "description": "SIB with negative displacement"},
+        {"instruction": "movq (,%rbx,4), %rcx", "description": "SIB without base register"},
+        {"instruction": "movq 100(,%rbx,8), %rcx", "description": "SIB without base, with displacement"},
+        {"instruction": "movq (%rax,%r8,4), %rcx", "description": "SIB with extended index register"},
+        {"instruction": "movq (%r9,%rbx,2), %rcx", "description": "SIB with extended base register"},
+        {"instruction": "movq (%r9,%r8,4), %rcx", "description": "SIB with both extended registers"}
+      ]
+    },
+    {
+      "name": "complex_memory",
+      "description": "Complex memory addressing combinations",
+      "syntax_patterns": [
+        "segment:offset", "disp32", "abs64"
+      ],
+      "test_cases": [
+        {"instruction": "movq %rax, (%rbx,%rcx,2)", "description": "Register to SIB memory"},
+        {"instruction": "addq 8(%rsp,%rax,4), %rbx", "description": "SIB stack access with arithmetic"},
+        {"instruction": "leaq 64(%rdi,%rsi,8), %rax", "description": "Complex LEA with SIB"},
+        {"instruction": "movq (%rax,%rbx,1), %rcx", "description": "Array element access"},
+        {"instruction": "movq 4(%rax,%rbx,4), %rcx", "description": "Array of 4-byte elements"},
+        {"instruction": "movq 8(%rax,%rbx,8), %rcx", "description": "Array of 8-byte elements"}
+      ]
+    },
+    {
+      "name": "segment_override",
+      "description": "Segment register overrides (mostly legacy in 64-bit)",
+      "syntax_patterns": [
+        "%fs:offset", "%gs:offset"
+      ],
+      "test_cases": [
+        {"instruction": "movq %fs:0, %rax", "description": "FS segment override"},
+        {"instruction": "movq %gs:0, %rax", "description": "GS segment override"},
+        {"instruction": "movq %fs:8(%rax), %rbx", "description": "FS override with register indirect"},
+        {"instruction": "movq %gs:(%rax,%rbx,1), %rcx", "description": "GS override with SIB"}
+      ]
+    },
+    {
+      "name": "address_size_variations",
+      "description": "Address size prefix variations",
+      "syntax_patterns": [
+        "32-bit addressing in 64-bit mode"
+      ],
+      "test_cases": [
+        {"instruction": "addr32 movq (%eax), %rbx", "description": "32-bit address size override"},
+        {"instruction": "addr32 movq 4(%eax,%ebx,2), %rcx", "description": "32-bit SIB addressing"}
+      ]
+    }
+  ]
+}

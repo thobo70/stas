@@ -1,0 +1,177 @@
+{
+  "instruction_set": "x86_64_basic",
+  "description": "Basic x86-64 instructions - data movement, arithmetic, logical",
+  "reference": "Intel SDM Volume 2A/2B",
+  "instructions": [
+    {
+      "mnemonic": "MOV",
+      "description": "Move data between registers/memory",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "movq %rax, %rbx", "description": "64-bit register to register"},
+        {"syntax": "movl %eax, %ebx", "description": "32-bit register to register"}, 
+        {"syntax": "movw %ax, %bx", "description": "16-bit register to register"},
+        {"syntax": "movb %al, %bl", "description": "8-bit register to register"},
+        {"syntax": "movq $0x1234, %rax", "description": "Immediate to 64-bit register"},
+        {"syntax": "movq %rax, (%rbx)", "description": "Register to memory"},
+        {"syntax": "movq (%rax), %rbx", "description": "Memory to register"}
+      ]
+    },
+    {
+      "mnemonic": "ADD",
+      "description": "Add integers",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "addq %rax, %rbx", "description": "64-bit register addition"},
+        {"syntax": "addl %eax, %ebx", "description": "32-bit register addition"},
+        {"syntax": "addw %ax, %bx", "description": "16-bit register addition"},
+        {"syntax": "addb %al, %bl", "description": "8-bit register addition"},
+        {"syntax": "addq $10, %rax", "description": "Immediate addition"},
+        {"syntax": "addq (%rax), %rbx", "description": "Memory to register addition"}
+      ]
+    },
+    {
+      "mnemonic": "SUB", 
+      "description": "Subtract integers",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "subq %rax, %rbx", "description": "64-bit register subtraction"},
+        {"syntax": "subl %eax, %ebx", "description": "32-bit register subtraction"},
+        {"syntax": "subq $5, %rax", "description": "Immediate subtraction"}
+      ]
+    },
+    {
+      "mnemonic": "MUL",
+      "description": "Unsigned multiply",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "mulq %rbx", "description": "64-bit unsigned multiply"},
+        {"syntax": "mull %ebx", "description": "32-bit unsigned multiply"}
+      ]
+    },
+    {
+      "mnemonic": "IMUL",
+      "description": "Signed multiply",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {"syntax": "imulq %rbx", "description": "64-bit signed multiply"},
+        {"syntax": "imulq %rax, %rbx", "description": "64-bit signed multiply with two operands"},
+        {"syntax": "imulq $10, %rax, %rbx", "description": "64-bit signed multiply with immediate"}
+      ]
+    },
+    {
+      "mnemonic": "DIV",
+      "description": "Unsigned divide",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "divq %rbx", "description": "64-bit unsigned divide"},
+        {"syntax": "divl %ebx", "description": "32-bit unsigned divide"}
+      ]
+    },
+    {
+      "mnemonic": "IDIV",
+      "description": "Signed divide", 
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "idivq %rbx", "description": "64-bit signed divide"},
+        {"syntax": "idivl %ebx", "description": "32-bit signed divide"}
+      ]
+    },
+    {
+      "mnemonic": "AND",
+      "description": "Bitwise AND",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "andq %rax, %rbx", "description": "64-bit bitwise AND"},
+        {"syntax": "andq $0xFF, %rax", "description": "AND with immediate"}
+      ]
+    },
+    {
+      "mnemonic": "OR",
+      "description": "Bitwise OR",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "orq %rax, %rbx", "description": "64-bit bitwise OR"},
+        {"syntax": "orq $0xFF, %rax", "description": "OR with immediate"}
+      ]
+    },
+    {
+      "mnemonic": "XOR",
+      "description": "Bitwise XOR",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "xorq %rax, %rbx", "description": "64-bit bitwise XOR"},
+        {"syntax": "xorq %rax, %rax", "description": "Register zeroing idiom"}
+      ]
+    },
+    {
+      "mnemonic": "NOT",
+      "description": "Bitwise NOT",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "notq %rax", "description": "64-bit bitwise NOT"}
+      ]
+    },
+    {
+      "mnemonic": "SHL",
+      "description": "Shift left",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "shlq $1, %rax", "description": "Shift left by 1"},
+        {"syntax": "shlq %cl, %rax", "description": "Shift left by CL register"}
+      ]
+    },
+    {
+      "mnemonic": "SHR",
+      "description": "Shift right (logical)",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "shrq $1, %rax", "description": "Shift right by 1"},
+        {"syntax": "shrq %cl, %rax", "description": "Shift right by CL register"}
+      ]
+    },
+    {
+      "mnemonic": "SAR",
+      "description": "Shift right (arithmetic)",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "sarq $1, %rax", "description": "Arithmetic shift right by 1"},
+        {"syntax": "sarq %cl, %rax", "description": "Arithmetic shift right by CL"}
+      ]
+    },
+    {
+      "mnemonic": "CMP",
+      "description": "Compare operands",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "cmpq %rax, %rbx", "description": "Compare 64-bit registers"},
+        {"syntax": "cmpq $0, %rax", "description": "Compare with immediate"}
+      ]
+    },
+    {
+      "mnemonic": "TEST",
+      "description": "Test operands (bitwise AND without storing result)",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {"syntax": "testq %rax, %rax", "description": "Test register against itself"},
+        {"syntax": "testq $0xFF, %rax", "description": "Test with immediate mask"}
+      ]
+    }
+  ]
+}
