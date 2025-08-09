@@ -574,13 +574,21 @@ bool parse_operand_full(parser_t *parser, operand_t *operand) {
             return parse_immediate_operand(parser, operand) == 0;
             
         case TOKEN_NUMBER:
-            // Try memory operand first (for displacement syntax), then fallback to immediate
-            if (parse_memory_operand(parser, operand) == 0) {
-                return true;
+            // Architecture-specific handling for TOKEN_NUMBER
+            // RISC-V: bare numbers are immediates
+            // x86: numbers followed by ( are memory displacements
+            if (parser->arch && strstr(parser->arch->name, "riscv")) {
+                // For RISC-V, always treat bare numbers as immediates
+                return parse_immediate_operand(parser, operand) == 0;
+            } else {
+                // For other architectures, try memory operand first, then fallback to immediate
+                if (parse_memory_operand(parser, operand) == 0) {
+                    return true;
+                }
+                // Reset operand and try immediate
+                memset(operand, 0, sizeof(operand_t));
+                return parse_immediate_operand(parser, operand) == 0;
             }
-            // Reset operand and try immediate
-            memset(operand, 0, sizeof(operand_t));
-            return parse_immediate_operand(parser, operand) == 0;
             
         case TOKEN_SYMBOL:
             return parse_symbol_operand(parser, operand) == 0;
@@ -871,7 +879,7 @@ int parse_symbol_operand(parser_t *parser, operand_t *operand) {
     // Check if the symbol is actually a register for the current architecture
     if (parser->arch && parser->arch->parse_register) {
         asm_register_t reg = {0};
-        if (parser->arch->parse_register(parser->current_token.value, &reg) == 1) {
+        if (parser->arch->parse_register(parser->current_token.value, &reg) == 0) {
             // This symbol is a register, treat it as such
             operand->type = OPERAND_REGISTER;
             operand->value.reg = reg;

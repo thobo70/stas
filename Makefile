@@ -46,9 +46,7 @@ $(TESTBIN_DIR)/execution_test_riscv_basic: tests/execution/riscv/test_basic.c $(
 	@echo "Building execution test for riscv..."
 	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
 
-$(TESTBIN_DIR)/test_x86_16_algorithms: tests/execution/x86_16/test_algorithms.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_16 algorithms test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@NLY
+ARCH_X86_16_CFLAGS = -DARCH_X86_16_ONLY
 ARCH_X86_32_CFLAGS = -DARCH_X86_32_ONLY
 ARCH_X86_64_CFLAGS = -DARCH_X86_64_ONLY
 ARCH_ARM64_CFLAGS = -DARCH_ARM64_ONLY
@@ -466,39 +464,6 @@ test-phase7-advanced: $(TARGET)
 	@echo "✅ All Phase 7 tests passed!"
 
 # === EXECUTION TESTING ===
-
-# Execution test compilation - specific rules for each architecture
-$(TESTBIN_DIR)/execution_test_x86_16_basic: tests/execution/x86_16/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_16 execution test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/test_x86_16_algorithms: tests/execution/x86_16/test_algorithms.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_16 algorithmic tests: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/execution_test_x86_32_basic: tests/execution/x86_32/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_32 execution test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/test_x86_32_algorithms: tests/execution/x86_32/test_algorithms.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_32 algorithmic tests: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/execution_test_x86_32_real_to_protected: tests/execution/x86_32/test_real_to_protected_mode.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_32 real-to-protected mode test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/execution_test_x86_64_basic: tests/execution/x86_64/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling x86_64 execution test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/execution_test_arm64_basic: tests/execution/arm64/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling arm64 execution test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
-
-$(TESTBIN_DIR)/execution_test_riscv_basic: tests/execution/riscv/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Compiling riscv execution test: $@"
-	$(CC) $(EXECUTION_TEST_CFLAGS) $< $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -lunicorn -o $@
 
 # Architecture-specific execution tests
 test-execution-x86_16:

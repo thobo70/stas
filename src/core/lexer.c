@@ -214,7 +214,25 @@ token_t lexer_next_token(lexer_t *lexer) {
             break;
             
         case '#':
-            return lexer_handle_hash(lexer);
+            // Check if this is an immediate value or a comment
+            lexer_advance(lexer); // Skip '#'
+            if (isdigit(lexer_peek(lexer)) || lexer_peek(lexer) == '0' || 
+                (lexer_peek(lexer) == 'x' && lexer->position + 1 < lexer->length && 
+                 isxdigit(lexer->input[lexer->position + 1]))) {
+                // This is an immediate value like #123 or #0x1000
+                if (isdigit(lexer_peek(lexer))) {
+                    token.value = lexer_read_number(lexer);
+                } else {
+                    token.value = lexer_read_identifier(lexer);
+                }
+                token.type = TOKEN_IMMEDIATE;
+            } else {
+                // This is a comment - restore the lexer position and handle as comment
+                lexer->position--;
+                lexer->column--;
+                return lexer_handle_hash(lexer);
+            }
+            break;
             
         case ';':
             // Semicolon comment (common in assembly language)

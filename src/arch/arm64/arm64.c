@@ -78,6 +78,9 @@ static const arm64_instruction_t arm64_instructions[] = {
     // Data processing - register
     {"add",  0x0b000000, 0x0b000000, ARM64_FORMAT_DATA_PROCESSING_REG, true,  true,  true,  false, "Add register"},
     {"sub",  0x4b000000, 0x4b000000, ARM64_FORMAT_DATA_PROCESSING_REG, true,  true,  true,  false, "Subtract register"},
+    {"and",  0x0a000000, 0x0a000000, ARM64_FORMAT_DATA_PROCESSING_REG, true,  true,  true,  false, "Bitwise AND register"},
+    {"orr",  0x2a000000, 0x2a000000, ARM64_FORMAT_DATA_PROCESSING_REG, true,  true,  true,  false, "Bitwise OR register"},
+    {"cmp",  0x6b000000, 0x6b000000, ARM64_FORMAT_DATA_PROCESSING_REG, false, true,  true,  false, "Compare register"},
     {"mov",  0x2a000000, 0x2a000000, ARM64_FORMAT_DATA_PROCESSING_REG, true,  false, true,  false, "Move register"},
     
     // Load/store
@@ -278,6 +281,54 @@ bool is_arm64_register_impl(asm_register_t reg) {
     return false;
 }
 
+// CPU-ACCURATE: String-based register validation for core parser
+bool arm64_is_valid_register(const char *name) {
+    if (!name) return false;
+    
+    // Remove % prefix if present (for compatibility)
+    const char *reg_name = (name[0] == '%') ? name + 1 : name;
+    
+    // Convert to lowercase for comparison
+    char *lower_name = arm64_strlower(reg_name);
+    if (!lower_name) return false;
+    
+    // Check X registers (64-bit)
+    for (int i = 0; arm64_x_registers[i].name != NULL; i++) {
+        if (strcmp(lower_name, arm64_x_registers[i].name) == 0) {
+            free(lower_name);
+            return true;
+        }
+    }
+    
+    // Check W registers (32-bit)
+    for (int i = 0; arm64_w_registers[i].name != NULL; i++) {
+        if (strcmp(lower_name, arm64_w_registers[i].name) == 0) {
+            free(lower_name);
+            return true;
+        }
+    }
+    
+    // Check special registers
+    for (int i = 0; arm64_special_registers[i].name != NULL; i++) {
+        if (strcmp(lower_name, arm64_special_registers[i].name) == 0) {
+            free(lower_name);
+            return true;
+        }
+    }
+    
+    // Check V registers (vector) - dynamic parsing
+    int reg_num;
+    if (sscanf(lower_name, "v%d", &reg_num) == 1) {
+        if (reg_num >= 0 && reg_num <= 31) {
+            free(lower_name);
+            return true;
+        }
+    }
+    
+    free(lower_name);
+    return false;
+}
+
 const char *get_arm64_register_name_impl(asm_register_t reg) {
     return reg.name;
 }
@@ -427,52 +478,186 @@ int encode_arm64_data_processing_instruction(instruction_t *inst, uint8_t *buffe
     
     uint32_t instruction = 0;
     
-    // Handle basic data processing instructions
-    if (strcmp(lower_mnemonic, "add") == 0 && inst->operand_count == 3) {
-        // ADD Xd, Xn, #imm or ADD Xd, Xn, Xm
-        if (inst->operands[2].type == OPERAND_IMMEDIATE) {
-            // ADD Xd, Xn, #imm
-            instruction = 0x91000000; // ADD (immediate) base opcode
-            
-            // Extract register numbers (simplified)
-            uint8_t rd = 0, rn = 1; // Placeholder register encoding
-            uint32_t imm = (uint32_t)inst->operands[2].value.immediate;
-            
-            instruction |= (imm & 0xFFF) << 10;  // 12-bit immediate
-            instruction |= (rn & 0x1F) << 5;     // Rn field
-            instruction |= (rd & 0x1F);          // Rd field
-        } else {
-            // ADD Xd, Xn, Xm
-            instruction = 0x8b000000; // ADD (shifted register) base opcode
-            
-            uint8_t rd = 0, rn = 1, rm = 2; // Placeholder register encoding
-            
-            instruction |= (rm & 0x1F) << 16;    // Rm field
-            instruction |= (rn & 0x1F) << 5;     // Rn field
-            instruction |= (rd & 0x1F);          // Rd field
+    // CPU-ACCURATE: Handle MOV immediate (ARMv8-A Reference Manual C6.2.145)
+    if (strcmp(lower_mnemonic, "mov") == 0 && inst->operand_count == 2 &&
+        inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_IMMEDIATE) {
+        
+        // Parse destination register
+        uint8_t rd_num, rd_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
         }
-    } else if (strcmp(lower_mnemonic, "mov") == 0 && inst->operand_count == 2) {
-        if (inst->operands[1].type == OPERAND_IMMEDIATE) {
-            // MOV Xd, #imm
-            instruction = 0xd2800000; // MOVZ base opcode
-            
-            uint8_t rd = 0; // Placeholder register encoding
-            uint32_t imm = (uint32_t)inst->operands[1].value.immediate;
-            
-            instruction |= (imm & 0xFFFF) << 5;  // 16-bit immediate
-            instruction |= (rd & 0x1F);          // Rd field
-        } else {
-            // MOV Xd, Xm (alias for ORR Xd, XZR, Xm)
-            instruction = 0xaa0003e0; // ORR with XZR base opcode
-            
-            uint8_t rd = 0, rm = 1; // Placeholder register encoding
-            
-            instruction |= (rm & 0x1F) << 16;    // Rm field
-            instruction |= (rd & 0x1F);          // Rd field
+        
+        uint64_t imm = (uint64_t)inst->operands[1].value.immediate;
+        
+        // ARMv8-A: MOV Xd, #imm using MOVZ (Move wide with zero)
+        // Encoding: sf=1, opc=10, hw=00, imm16, Rd
+        instruction = 0xD2800000; // MOVZ 64-bit base: sf=1, opc=10, hw=00
+        instruction |= (imm & 0xFFFF) << 5;  // imm16 field [20:5]
+        instruction |= (rd_num & 0x1F);      // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle MOV register (ARMv8-A Reference Manual C6.2.144)
+    } else if (strcmp(lower_mnemonic, "mov") == 0 && inst->operand_count == 2 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER) {
+        
+        // Parse registers
+        uint8_t rd_num, rd_size, rm_num, rm_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rm_num, &rm_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
         }
+        
+        // ARMv8-A: MOV Xd, Xm is alias for ORR Xd, XZR, Xm
+        // Encoding: sf=1, opc=01, shift=00, N=0, Rm, imm6=000000, Rn=11111, Rd
+        instruction = 0xAA0003E0; // ORR 64-bit with XZR: sf=1, opc=01, N=0, Rn=31
+        instruction |= (rm_num & 0x1F) << 16; // Rm field [20:16]
+        instruction |= (rd_num & 0x1F);       // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle ADD immediate (ARMv8-A Reference Manual C6.2.4)
+    } else if (strcmp(lower_mnemonic, "add") == 0 && inst->operand_count == 3 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER &&
+               inst->operands[2].type == OPERAND_IMMEDIATE) {
+        
+        // Parse registers
+        uint8_t rd_num, rd_size, rn_num, rn_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rn_num, &rn_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        uint32_t imm = (uint32_t)inst->operands[2].value.immediate;
+        if (imm > 0xFFF) { // 12-bit immediate limit
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        // ARMv8-A: ADD Xd, Xn, #imm
+        // Encoding: sf=1, op=0, S=0, sh=0, imm12, Rn, Rd
+        instruction = 0x91000000; // ADD immediate 64-bit: sf=1, op=0, S=0
+        instruction |= (imm & 0xFFF) << 10;   // imm12 field [21:10]
+        instruction |= (rn_num & 0x1F) << 5;  // Rn field [9:5]
+        instruction |= (rd_num & 0x1F);       // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle ADD register (ARMv8-A Reference Manual C6.2.5)
+    } else if (strcmp(lower_mnemonic, "add") == 0 && inst->operand_count == 3 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER &&
+               inst->operands[2].type == OPERAND_REGISTER) {
+        
+        // Parse registers
+        uint8_t rd_num, rd_size, rn_num, rn_size, rm_num, rm_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rn_num, &rn_size) != 0 ||
+            parse_arm64_register(inst->operands[2].value.reg.name, &rm_num, &rm_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        // ARMv8-A: ADD Xd, Xn, Xm
+        // Encoding: sf=1, op=0, S=0, shift=00, Rm, imm6=000000, Rn, Rd
+        instruction = 0x8B000000; // ADD register 64-bit: sf=1, op=0, S=0
+        instruction |= (rm_num & 0x1F) << 16; // Rm field [20:16]
+        instruction |= (rn_num & 0x1F) << 5;  // Rn field [9:5]
+        instruction |= (rd_num & 0x1F);       // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle SUB register (ARMv8-A Reference Manual C6.2.291)
+    } else if (strcmp(lower_mnemonic, "sub") == 0 && inst->operand_count == 3 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER &&
+               inst->operands[2].type == OPERAND_REGISTER) {
+        
+        // Parse registers
+        uint8_t rd_num, rd_size, rn_num, rn_size, rm_num, rm_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rn_num, &rn_size) != 0 ||
+            parse_arm64_register(inst->operands[2].value.reg.name, &rm_num, &rm_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        // ARMv8-A: SUB Xd, Xn, Xm
+        // Encoding: sf=1, op=1, S=0, shift=00, Rm, imm6=000000, Rn, Rd
+        instruction = 0xCB000000; // SUB register 64-bit: sf=1, op=1, S=0
+        instruction |= (rm_num & 0x1F) << 16; // Rm field [20:16]
+        instruction |= (rn_num & 0x1F) << 5;  // Rn field [9:5]
+        instruction |= (rd_num & 0x1F);       // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle AND register (ARMv8-A Reference Manual C6.2.11)
+    } else if (strcmp(lower_mnemonic, "and") == 0 && inst->operand_count == 3 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER &&
+               inst->operands[2].type == OPERAND_REGISTER) {
+        
+        // Parse registers
+        uint8_t rd_num, rd_size, rn_num, rn_size, rm_num, rm_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rn_num, &rn_size) != 0 ||
+            parse_arm64_register(inst->operands[2].value.reg.name, &rm_num, &rm_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        // ARMv8-A: AND Xd, Xn, Xm
+        // Encoding: sf=1, opc=00, shift=00, N=0, Rm, imm6=000000, Rn, Rd
+        instruction = 0x8A000000; // AND register 64-bit: sf=1, opc=00, N=0
+        instruction |= (rm_num & 0x1F) << 16; // Rm field [20:16]
+        instruction |= (rn_num & 0x1F) << 5;  // Rn field [9:5]
+        instruction |= (rd_num & 0x1F);       // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle ORR register (ARMv8-A Reference Manual C6.2.177)
+    } else if (strcmp(lower_mnemonic, "orr") == 0 && inst->operand_count == 3 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER &&
+               inst->operands[2].type == OPERAND_REGISTER) {
+        
+        // Parse registers
+        uint8_t rd_num, rd_size, rn_num, rn_size, rm_num, rm_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rd_num, &rd_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rn_num, &rn_size) != 0 ||
+            parse_arm64_register(inst->operands[2].value.reg.name, &rm_num, &rm_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        // ARMv8-A: ORR Xd, Xn, Xm
+        // Encoding: sf=1, opc=01, shift=00, N=0, Rm, imm6=000000, Rn, Rd
+        instruction = 0xAA000000; // ORR register 64-bit: sf=1, opc=01, N=0
+        instruction |= (rm_num & 0x1F) << 16; // Rm field [20:16]
+        instruction |= (rn_num & 0x1F) << 5;  // Rn field [9:5]
+        instruction |= (rd_num & 0x1F);       // Rd field [4:0]
+        
+    // CPU-ACCURATE: Handle CMP register (ARMv8-A Reference Manual C6.2.60)
+    } else if (strcmp(lower_mnemonic, "cmp") == 0 && inst->operand_count == 2 &&
+               inst->operands[0].type == OPERAND_REGISTER &&
+               inst->operands[1].type == OPERAND_REGISTER) {
+        
+        // Parse registers
+        uint8_t rn_num, rn_size, rm_num, rm_size;
+        if (parse_arm64_register(inst->operands[0].value.reg.name, &rn_num, &rn_size) != 0 ||
+            parse_arm64_register(inst->operands[1].value.reg.name, &rm_num, &rm_size) != 0) {
+            free(lower_mnemonic);
+            return -1;
+        }
+        
+        // ARMv8-A: CMP Xn, Xm is alias for SUBS XZR, Xn, Xm
+        // Encoding: sf=1, op=1, S=1, shift=00, Rm, imm6=000000, Rn, Rd=11111
+        instruction = 0xEB00001F; // SUBS with XZR: sf=1, op=1, S=1, Rd=31
+        instruction |= (rm_num & 0x1F) << 16; // Rm field [20:16]
+        instruction |= (rn_num & 0x1F) << 5;  // Rn field [9:5]
+        
+    } else {
+        // Instruction not implemented in CPU-accurate mode
+        free(lower_mnemonic);
+        return -1;
     }
     
-    // Write instruction in little-endian format
+    // Write instruction in little-endian format (ARMv8-A always little-endian)
     buffer[0] = (instruction >> 0) & 0xFF;
     buffer[1] = (instruction >> 8) & 0xFF;
     buffer[2] = (instruction >> 16) & 0xFF;
