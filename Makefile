@@ -358,11 +358,6 @@ $(TESTBIN_DIR)/unit_test_%: tests/unit/*/test_%.c tests/unity/src/unity.c $(UNIT
 	@echo "Building unit test for $*..."
 	$(CC) $(TEST_CFLAGS_ENHANCED) $< tests/unity/src/unity.c $(UNITY_EXTENSIONS) $(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) -o $@
 
-# Instruction completeness test (modular version)
-$(TESTBIN_DIR)/instruction_completeness: $(OBJECTS) | $(TESTBIN_DIR)
-	@echo "Building instruction completeness test: $@"
-	@$(MAKE) -C tests/instruction_completeness -f Makefile_modular BIN_DIR=../../$(TESTBIN_DIR) OBJ_BASE_DIR=../../$(OBJ_DIR) TARGET=../../$(TESTBIN_DIR)/instruction_completeness all
-
 # Core module unit tests
 test-unit-core:
 	@echo "=== Running Core Module Unit Tests ==="
@@ -609,12 +604,6 @@ test-coverage:
 	fi
 
 # === INSTRUCTION SET COMPLETENESS TESTING ===
-
-# Instruction completeness analysis
-test-instruction-completeness: $(TESTBIN_DIR)/instruction_completeness
-	@echo "=== Running Instruction Set Completeness Analysis ==="
-	@./$(TESTBIN_DIR)/instruction_completeness
-	@echo "Instruction completeness analysis completed"
 
 # x86-64 Instruction Set Completeness Test (Unity Framework)
 test-x86_64-completeness: $(OBJECTS) | $(TESTBIN_DIR)
