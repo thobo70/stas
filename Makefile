@@ -66,7 +66,7 @@ BIN_DIR = bin
 TESTBIN_DIR = testbin
 
 # Core source files (moved to src/core)
-CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/expr.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c $(SRC_DIR)/core/codegen.c
+CORE_SOURCES = $(SRC_DIR)/core/lexer.c $(SRC_DIR)/core/parser.c $(SRC_DIR)/core/expr.c $(SRC_DIR)/core/symbols.c $(SRC_DIR)/core/expressions.c $(SRC_DIR)/core/output.c $(SRC_DIR)/core/output_format.c $(SRC_DIR)/core/codegen.c $(SRC_DIR)/core/stas_pipeline.c
 CORE_OBJECTS = $(CORE_SOURCES:$(SRC_DIR)/core/%.c=$(OBJ_DIR)/core/%.o) $(OBJ_DIR)/include.o
 
 # Format source files
@@ -603,9 +603,7 @@ test-x86_64-encoding-completeness: $(OBJECTS) | $(TESTBIN_DIR)
 	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests $(CJSON_INCLUDES) \
 		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
 		tests/unit/arch/test_x86_64_encoding_completeness.c tests/unity/src/unity.c \
-		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
-		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
-		obj/core/symbols.o obj/utils/utils.o $(CJSON_OBJ) \
+		$(filter-out $(OBJ_DIR)/main.o,$(OBJECTS)) \
 		-o $(TESTBIN_DIR)/test_x86_64_encoding_completeness
 	@echo "=== Running x86-64 CPU-Accurate Encoding Completeness Test ==="
 	@$(TESTBIN_DIR)/test_x86_64_encoding_completeness
