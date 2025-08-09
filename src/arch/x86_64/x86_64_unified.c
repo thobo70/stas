@@ -124,15 +124,16 @@ static const x86_64_instruction_info_t instruction_database[] = {
     {"movq",   X86_64_CAT_DATA_MOVEMENT, {0x89}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Move r64 to r/m64"},
     {"movq",   X86_64_CAT_DATA_MOVEMENT, {0x8B}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Move r/m64 to r64"},
     
-    // MOV immediate to register - CRITICAL missing instructions per Intel SDM
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xB8}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RAX"}, // MOV immediate to RAX
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xB9}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RCX"}, // MOV immediate to RCX  
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBA}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RDX"}, // MOV immediate to RDX
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBB}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RBX"}, // MOV immediate to RBX
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBC}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RSP"}, // MOV immediate to RSP
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBD}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RBP"}, // MOV immediate to RBP
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBE}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RSI"}, // MOV immediate to RSI
-    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBF}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RDI"}, // MOV immediate to RDI
+    // MOV immediate to register - CPU-ACCURATE per Intel SDM Volume 2A
+    // Intel SDM: MOV imm64, r64 = REX.W + [B8+rd] io (opcode B8-BF + REX.W + register encoding)
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xB8}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RAX"}, // 48 B8 + imm64
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xB9}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RCX"}, // 48 B9 + imm64
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBA}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RDX"}, // 48 BA + imm64  
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBB}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RBX"}, // 48 BB + imm64
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBC}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RSP"}, // 48 BC + imm64
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBD}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RBP"}, // 48 BD + imm64
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBE}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RSI"}, // 48 BE + imm64
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBF}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RDI"}, // 48 BF + imm64
     
     // 32-bit immediate moves (zero-extend to 64-bit in 64-bit mode)
     {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xB8}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to EAX (zero-extend)"}, 

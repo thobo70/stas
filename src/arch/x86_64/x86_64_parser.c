@@ -194,58 +194,213 @@ int x86_64_parse_instruction(const char *line, instruction_t *inst) {
 // Instruction Encoding (Simplified)
 //=============================================================================
 
+// Helper function to get register encoding per Intel SDM
+static uint8_t get_register_encoding(const char *reg_name) {
+    if (!reg_name) return 0xFF;
+    if (strcmp(reg_name, "rax") == 0) return 0;
+    if (strcmp(reg_name, "rcx") == 0) return 1;
+    if (strcmp(reg_name, "rdx") == 0) return 2;
+    if (strcmp(reg_name, "rbx") == 0) return 3;
+    if (strcmp(reg_name, "rsp") == 0) return 4;
+    if (strcmp(reg_name, "rbp") == 0) return 5;
+    if (strcmp(reg_name, "rsi") == 0) return 6;
+    if (strcmp(reg_name, "rdi") == 0) return 7;
+    return 0xFF; // Invalid
+}
+
 int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *length) {
     if (!inst || !buffer || !length || !inst->mnemonic) return -1;
     
     size_t pos = 0;
     
-    // Handle MOV immediate to register instructions specifically
+    // CPU-ACCURATE ENCODING: Handle MOV immediate to register per Intel SDM
     if (strcmp(inst->mnemonic, "movq") == 0 && inst->operand_count == 2 &&
         inst->operands && inst->operands[0].type == OPERAND_IMMEDIATE &&
         inst->operands[1].type == OPERAND_REGISTER) {
         
-        // Add REX.W prefix for 64-bit operation (0x48)
-        buffer[pos++] = 0x48;
-        
-        // Determine register encoding
         const char *reg_name = inst->operands[1].value.reg.name;
         if (!reg_name) return -1; // NULL register name
-        uint8_t opcode = 0xB8; // Base opcode for MOV immediate to register
         
-        if (strcmp(reg_name, "rax") == 0) opcode += 0;
-        else if (strcmp(reg_name, "rcx") == 0) opcode += 1;
-        else if (strcmp(reg_name, "rdx") == 0) opcode += 2;
-        else if (strcmp(reg_name, "rbx") == 0) opcode += 3;
-        else if (strcmp(reg_name, "rsp") == 0) opcode += 4;
-        else if (strcmp(reg_name, "rbp") == 0) opcode += 5;
-        else if (strcmp(reg_name, "rsi") == 0) opcode += 6;
-        else if (strcmp(reg_name, "rdi") == 0) opcode += 7;
-        else return -1; // Unsupported register
+        // Intel SDM: MOV imm64, r64 = REX.W + [B8+rd] io
+        uint8_t reg_encoding = 0xFF; // Invalid default
         
-        // Add opcode with register encoding
-        buffer[pos++] = opcode;
+        if (strcmp(reg_name, "rax") == 0) reg_encoding = 0;
+        else if (strcmp(reg_name, "rcx") == 0) reg_encoding = 1;
+        else if (strcmp(reg_name, "rdx") == 0) reg_encoding = 2;
+        else if (strcmp(reg_name, "rbx") == 0) reg_encoding = 3;
+        else if (strcmp(reg_name, "rsp") == 0) reg_encoding = 4;
+        else if (strcmp(reg_name, "rbp") == 0) reg_encoding = 5;
+        else if (strcmp(reg_name, "rsi") == 0) reg_encoding = 6;
+        else if (strcmp(reg_name, "rdi") == 0) reg_encoding = 7;
+        else return -1; // Unsupported register for this encoding
         
-        // Add 8-byte immediate value (little-endian)
+        // REX.W prefix: 0100W000 (Intel SDM Section 2.2.1)
+        buffer[pos++] = 0x48; // REX.W = 1, others = 0
+        
+        // Opcode: B8+rd where rd is register encoding (Intel SDM Volume 2A)
+        buffer[pos++] = 0xB8 + reg_encoding;
+        
+        // 8-byte immediate value in little-endian format (Intel SDM)
         int64_t imm = inst->operands[0].value.immediate;
         for (int i = 0; i < 8; i++) {
-            buffer[pos++] = (imm >> (i * 8)) & 0xFF;
+            buffer[pos++] = (uint8_t)((imm >> (i * 8)) & 0xFF);
         }
         
         *length = pos;
         return 0;
     }
     
-    // For other instructions, find the instruction info and use basic encoding
-    const x86_64_instruction_info_t *info = x86_64_find_instruction(inst->mnemonic);
-    if (!info) return -1;
-    
-    // Default: just output the base opcode for other instructions
-    for (int i = 0; i < info->opcode_length; i++) {
-        buffer[pos++] = info->opcode[i];
+    // CPU-ACCURATE: Handle simple NOP instruction (Intel SDM)
+    if (strcmp(inst->mnemonic, "nop") == 0 && inst->operand_count == 0) {
+        buffer[pos++] = 0x90; // NOP opcode per Intel SDM
+        *length = pos;
+        return 0;
     }
     
-    *length = pos;
-    return 0;
+    // CPU-ACCURATE: Handle RET instruction (Intel SDM)
+    if ((strcmp(inst->mnemonic, "ret") == 0 || strcmp(inst->mnemonic, "retq") == 0) && 
+        inst->operand_count == 0) {
+        buffer[pos++] = 0xC3; // RET near opcode per Intel SDM
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle SYSCALL instruction (Intel SDM Volume 2B)
+    if (strcmp(inst->mnemonic, "syscall") == 0 && inst->operand_count == 0) {
+        buffer[pos++] = 0x0F; // Two-byte opcode prefix
+        buffer[pos++] = 0x05; // SYSCALL opcode per Intel SDM
+        *length = pos;
+        return 0;
+    }
+    // CPU-ACCURATE: Handle MOV register-to-register (Intel SDM: MOV r64, r/m64 = REX.W + 8B /r)
+    if (strcmp(inst->mnemonic, "movq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_REGISTER) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        uint8_t dst_reg = get_register_encoding(inst->operands[1].value.reg.name);
+        if (src_reg == 0xFF || dst_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x89; // MOV r64 to r/m64 opcode
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // ModR/M: 11 reg r/m
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle ADD register-to-register (Intel SDM: ADD r/m64, r64 = REX.W + 01 /r)
+    if (strcmp(inst->mnemonic, "addq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_REGISTER) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        uint8_t dst_reg = get_register_encoding(inst->operands[1].value.reg.name);
+        if (src_reg == 0xFF || dst_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x01; // ADD r64 to r/m64 opcode
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // ModR/M: 11 reg r/m
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle SUB register-to-register (Intel SDM: SUB r/m64, r64 = REX.W + 29 /r)
+    if (strcmp(inst->mnemonic, "subq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_REGISTER) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        uint8_t dst_reg = get_register_encoding(inst->operands[1].value.reg.name);
+        if (src_reg == 0xFF || dst_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x29; // SUB r64 from r/m64 opcode
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // ModR/M: 11 reg r/m
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle INC register (Intel SDM: INC r/m64 = REX.W + FF /0)
+    if (strcmp(inst->mnemonic, "incq") == 0 && inst->operand_count == 1 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER) {
+        
+        uint8_t reg = get_register_encoding(inst->operands[0].value.reg.name);
+        if (reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0xFF; // INC/DEC opcode
+        buffer[pos++] = 0xC0 | reg; // ModR/M: 11 000 r/m (reg field = 0 for INC)
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle DEC register (Intel SDM: DEC r/m64 = REX.W + FF /1)
+    if (strcmp(inst->mnemonic, "decq") == 0 && inst->operand_count == 1 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER) {
+        
+        uint8_t reg = get_register_encoding(inst->operands[0].value.reg.name);
+        if (reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0xFF; // INC/DEC opcode
+        buffer[pos++] = 0xC8 | reg; // ModR/M: 11 001 r/m (reg field = 1 for DEC)
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle AND register-to-register (Intel SDM: AND r/m64, r64 = REX.W + 21 /r)
+    if (strcmp(inst->mnemonic, "andq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_REGISTER) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        uint8_t dst_reg = get_register_encoding(inst->operands[1].value.reg.name);
+        if (src_reg == 0xFF || dst_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x21; // AND r64 with r/m64 opcode
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // ModR/M: 11 reg r/m
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle OR register-to-register (Intel SDM: OR r/m64, r64 = REX.W + 09 /r)
+    if (strcmp(inst->mnemonic, "orq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_REGISTER) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        uint8_t dst_reg = get_register_encoding(inst->operands[1].value.reg.name);
+        if (src_reg == 0xFF || dst_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x09; // OR r64 with r/m64 opcode
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // ModR/M: 11 reg r/m
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle CMP register-to-register (Intel SDM: CMP r/m64, r64 = REX.W + 39 /r)
+    if (strcmp(inst->mnemonic, "cmpq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_REGISTER) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        uint8_t dst_reg = get_register_encoding(inst->operands[1].value.reg.name);
+        if (src_reg == 0xFF || dst_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x39; // CMP r64 with r/m64 opcode
+        buffer[pos++] = 0xC0 | (src_reg << 3) | dst_reg; // ModR/M: 11 reg r/m
+        *length = pos;
+        return 0;
+    }
+    
+    // For other instructions that we haven't implemented yet, return error
+    // This prevents generating invalid machine code that violates CPU specifications
+    fprintf(stderr, "x86_64: Instruction '%s' encoding not yet implemented in CPU-accurate mode\n", 
+            inst->mnemonic);
+    return -1;
 }
 
 //=============================================================================
