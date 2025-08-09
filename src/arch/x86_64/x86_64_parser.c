@@ -197,14 +197,18 @@ int x86_64_parse_instruction(const char *line, instruction_t *inst) {
 // Helper function to get register encoding per Intel SDM
 static uint8_t get_register_encoding(const char *reg_name) {
     if (!reg_name) return 0xFF;
-    if (strcmp(reg_name, "rax") == 0) return 0;
-    if (strcmp(reg_name, "rcx") == 0) return 1;
-    if (strcmp(reg_name, "rdx") == 0) return 2;
-    if (strcmp(reg_name, "rbx") == 0) return 3;
-    if (strcmp(reg_name, "rsp") == 0) return 4;
-    if (strcmp(reg_name, "rbp") == 0) return 5;
-    if (strcmp(reg_name, "rsi") == 0) return 6;
-    if (strcmp(reg_name, "rdi") == 0) return 7;
+    
+    // CPU-ACCURATE: Handle register names with or without % prefix
+    const char *name = (reg_name[0] == '%') ? reg_name + 1 : reg_name;
+    
+    if (strcmp(name, "rax") == 0) return 0;
+    if (strcmp(name, "rcx") == 0) return 1;
+    if (strcmp(name, "rdx") == 0) return 2;
+    if (strcmp(name, "rbx") == 0) return 3;
+    if (strcmp(name, "rsp") == 0) return 4;
+    if (strcmp(name, "rbp") == 0) return 5;
+    if (strcmp(name, "rsi") == 0) return 6;
+    if (strcmp(name, "rdi") == 0) return 7;
     return 0xFF; // Invalid
 }
 
@@ -288,6 +292,74 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         return 0;
     }
     
+    // CPU-ACCURATE: Handle MOV immediate to memory (Intel SDM: MOV imm32, r/m64 = REX.W + C7 /0)
+    if (strcmp(inst->mnemonic, "movq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_IMMEDIATE &&
+        inst->operands[1].type == OPERAND_MEMORY) {
+        
+        // For simple (%rdi) addressing mode
+        addressing_mode_t *addr = &inst->operands[1].value.memory;
+        uint8_t base_reg = get_register_encoding(addr->base.name);
+        if (base_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0xC7; // MOV imm32 to r/m64 opcode
+        
+        // ModR/M byte: mod=00 (register indirect), reg=000, r/m=base_reg
+        if (addr->offset == 0) {
+            buffer[pos++] = base_reg; // [rdi] = mod=00, r/m=base_reg
+        } else if (addr->offset >= -128 && addr->offset <= 127) {
+            buffer[pos++] = 0x40 | base_reg; // [rdi+disp8] = mod=01, r/m=base_reg
+            buffer[pos++] = (uint8_t)addr->offset; // 8-bit displacement
+        } else {
+            buffer[pos++] = 0x80 | base_reg; // [rdi+disp32] = mod=10, r/m=base_reg
+            // 32-bit displacement in little-endian
+            for (int i = 0; i < 4; i++) {
+                buffer[pos++] = (uint8_t)((addr->offset >> (i * 8)) & 0xFF);
+            }
+        }
+        
+        // 32-bit immediate value (sign-extended to 64-bit)
+        int32_t imm = (int32_t)inst->operands[0].value.immediate;
+        for (int i = 0; i < 4; i++) {
+            buffer[pos++] = (uint8_t)((imm >> (i * 8)) & 0xFF);
+        }
+        
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle MOV register to memory (Intel SDM: MOV r64, r/m64 = REX.W + 89 /r)
+    if (strcmp(inst->mnemonic, "movq") == 0 && inst->operand_count == 2 &&
+        inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
+        inst->operands[1].type == OPERAND_MEMORY) {
+        
+        uint8_t src_reg = get_register_encoding(inst->operands[0].value.reg.name);
+        addressing_mode_t *addr = &inst->operands[1].value.memory;
+        uint8_t base_reg = get_register_encoding(addr->base.name);
+        if (src_reg == 0xFF || base_reg == 0xFF) return -1;
+        
+        buffer[pos++] = 0x48; // REX.W prefix
+        buffer[pos++] = 0x89; // MOV r64 to r/m64 opcode
+        
+        // ModR/M byte: mod depends on displacement, reg=src_reg, r/m=base_reg
+        if (addr->offset == 0) {
+            buffer[pos++] = (src_reg << 3) | base_reg; // [base] = mod=00
+        } else if (addr->offset >= -128 && addr->offset <= 127) {
+            buffer[pos++] = 0x40 | (src_reg << 3) | base_reg; // [base+disp8] = mod=01
+            buffer[pos++] = (uint8_t)addr->offset; // 8-bit displacement
+        } else {
+            buffer[pos++] = 0x80 | (src_reg << 3) | base_reg; // [base+disp32] = mod=10
+            // 32-bit displacement in little-endian
+            for (int i = 0; i < 4; i++) {
+                buffer[pos++] = (uint8_t)((addr->offset >> (i * 8)) & 0xFF);
+            }
+        }
+        
+        *length = pos;
+        return 0;
+    }
+    
     // CPU-ACCURATE: Handle ADD register-to-register (Intel SDM: ADD r/m64, r64 = REX.W + 01 /r)
     if (strcmp(inst->mnemonic, "addq") == 0 && inst->operand_count == 2 &&
         inst->operands && inst->operands[0].type == OPERAND_REGISTER &&
@@ -344,6 +416,44 @@ int x86_64_encode_instruction(instruction_t *inst, uint8_t *buffer, size_t *leng
         buffer[pos++] = 0x48; // REX.W prefix
         buffer[pos++] = 0xFF; // INC/DEC opcode
         buffer[pos++] = 0xC8 | reg; // ModR/M: 11 001 r/m (reg field = 1 for DEC)
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle JNE (conditional jump) with 8-bit relative displacement (Intel SDM)
+    if (strcmp(inst->mnemonic, "jne") == 0 && inst->operand_count == 1 &&
+        inst->operands && (inst->operands[0].type == OPERAND_SYMBOL || 
+                          inst->operands[0].type == OPERAND_IMMEDIATE)) {
+        
+        // For now, use a placeholder displacement (will be resolved by linker)
+        buffer[pos++] = 0x75; // JNE rel8 opcode per Intel SDM
+        buffer[pos++] = 0x00; // Placeholder 8-bit displacement
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle JMP (unconditional jump) with 8-bit relative displacement (Intel SDM)
+    if (strcmp(inst->mnemonic, "jmp") == 0 && inst->operand_count == 1 &&
+        inst->operands && (inst->operands[0].type == OPERAND_SYMBOL || 
+                          inst->operands[0].type == OPERAND_IMMEDIATE)) {
+        
+        // For now, use a placeholder displacement (will be resolved by linker)
+        buffer[pos++] = 0xEB; // JMP rel8 opcode per Intel SDM
+        buffer[pos++] = 0x00; // Placeholder 8-bit displacement
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle CLI (clear interrupt flag) (Intel SDM)
+    if (strcmp(inst->mnemonic, "cli") == 0 && inst->operand_count == 0) {
+        buffer[pos++] = 0xFA; // CLI opcode per Intel SDM
+        *length = pos;
+        return 0;
+    }
+    
+    // CPU-ACCURATE: Handle HLT (halt) (Intel SDM)
+    if (strcmp(inst->mnemonic, "hlt") == 0 && inst->operand_count == 0) {
+        buffer[pos++] = 0xF4; // HLT opcode per Intel SDM
         *length = pos;
         return 0;
     }

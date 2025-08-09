@@ -50,10 +50,19 @@ static bool x86_64_interface_validate_operand_combination(const char *mnemonic,
 static int x86_64_interface_parse_register(const char *reg_name, asm_register_t *reg) {
     if (!reg_name || !reg) return -1;
     
+    // CPU-ACCURATE: Handle register names with or without % prefix
+    char full_reg_name[16];
+    if (reg_name[0] != '%') {
+        snprintf(full_reg_name, sizeof(full_reg_name), "%%%s", reg_name);
+    } else {
+        strncpy(full_reg_name, reg_name, sizeof(full_reg_name) - 1);
+        full_reg_name[sizeof(full_reg_name) - 1] = '\0';
+    }
+    
     // Basic register parsing - check if it's a valid x86_64 register
-    if (x86_64_is_valid_register(reg_name)) {
+    if (x86_64_is_valid_register(full_reg_name)) {
         reg->id = 0; // Simplified - would need proper mapping
-        reg->name = strdup(reg_name);
+        reg->name = strdup(full_reg_name);
         reg->encoding = 0;
         
         // Determine register size based on register name
