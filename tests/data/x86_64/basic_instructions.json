@@ -9,13 +9,55 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "movq %rax, %rbx", "description": "64-bit register to register"},
-        {"syntax": "movl %eax, %ebx", "description": "32-bit register to register"}, 
-        {"syntax": "movw %ax, %bx", "description": "16-bit register to register"},
-        {"syntax": "movb %al, %bl", "description": "8-bit register to register"},
-        {"syntax": "movq $0x1234, %rax", "description": "Immediate to 64-bit register"},
-        {"syntax": "movq %rax, (%rbx)", "description": "Register to memory"},
-        {"syntax": "movq (%rax), %rbx", "description": "Memory to register"}
+        {
+          "syntax": "movq %rax, %rbx", 
+          "description": "64-bit register to register",
+          "expected_encoding": "48 89 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 89 /r (MOV r64, r/m64)"
+        },
+        {
+          "syntax": "movl %eax, %ebx", 
+          "description": "32-bit register to register",
+          "expected_encoding": "89 C3",
+          "encoding_length": 2,
+          "intel_reference": "89 /r (MOV r32, r/m32)"
+        }, 
+        {
+          "syntax": "movw %ax, %bx", 
+          "description": "16-bit register to register",
+          "expected_encoding": "66 89 C3",
+          "encoding_length": 3,
+          "intel_reference": "66 89 /r (MOV r16, r/m16)"
+        },
+        {
+          "syntax": "movb %al, %bl", 
+          "description": "8-bit register to register",
+          "expected_encoding": "88 C3",
+          "encoding_length": 2,
+          "intel_reference": "88 /r (MOV r8, r/m8)"
+        },
+        {
+          "syntax": "movq $0x1234, %rax", 
+          "description": "Immediate to 64-bit register",
+          "expected_encoding": "48 B8 34 12 00 00 00 00 00 00",
+          "encoding_length": 10,
+          "intel_reference": "REX.W + B8+rd io (MOV imm64, r64)"
+        },
+        {
+          "syntax": "movq %rax, (%rbx)", 
+          "description": "Register to memory",
+          "expected_encoding": "48 89 03",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 89 /r (MOV r64, r/m64)"
+        },
+        {
+          "syntax": "movq (%rax), %rbx", 
+          "description": "Memory to register",
+          "expected_encoding": "48 8B 18",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 8B /r (MOV r/m64, r64)"
+        }
       ]
     },
     {
@@ -24,12 +66,48 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "addq %rax, %rbx", "description": "64-bit register addition"},
-        {"syntax": "addl %eax, %ebx", "description": "32-bit register addition"},
-        {"syntax": "addw %ax, %bx", "description": "16-bit register addition"},
-        {"syntax": "addb %al, %bl", "description": "8-bit register addition"},
-        {"syntax": "addq $10, %rax", "description": "Immediate addition"},
-        {"syntax": "addq (%rax), %rbx", "description": "Memory to register addition"}
+        {
+          "syntax": "addq %rax, %rbx", 
+          "description": "64-bit register addition",
+          "expected_encoding": "48 01 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 01 /r (ADD r64, r/m64)"
+        },
+        {
+          "syntax": "addl %eax, %ebx", 
+          "description": "32-bit register addition",
+          "expected_encoding": "01 C3",
+          "encoding_length": 2,
+          "intel_reference": "01 /r (ADD r32, r/m32)"
+        },
+        {
+          "syntax": "addw %ax, %bx", 
+          "description": "16-bit register addition",
+          "expected_encoding": "66 01 C3",
+          "encoding_length": 3,
+          "intel_reference": "66 01 /r (ADD r16, r/m16)"
+        },
+        {
+          "syntax": "addb %al, %bl", 
+          "description": "8-bit register addition",
+          "expected_encoding": "00 C3",
+          "encoding_length": 2,
+          "intel_reference": "00 /r (ADD r8, r/m8)"
+        },
+        {
+          "syntax": "addq $10, %rax", 
+          "description": "Immediate addition",
+          "expected_encoding": "48 83 C0 0A",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 83 /0 ib (ADD r/m64, imm8)"
+        },
+        {
+          "syntax": "addq (%rax), %rbx", 
+          "description": "Memory to register addition",
+          "expected_encoding": "48 03 18",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 03 /r (ADD r/m64, r64)"
+        }
       ]
     },
     {
@@ -38,9 +116,27 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "subq %rax, %rbx", "description": "64-bit register subtraction"},
-        {"syntax": "subl %eax, %ebx", "description": "32-bit register subtraction"},
-        {"syntax": "subq $5, %rax", "description": "Immediate subtraction"}
+        {
+          "syntax": "subq %rax, %rbx", 
+          "description": "64-bit register subtraction",
+          "expected_encoding": "48 29 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 29 /r (SUB r64, r/m64)"
+        },
+        {
+          "syntax": "subl %eax, %ebx", 
+          "description": "32-bit register subtraction",
+          "expected_encoding": "29 C3",
+          "encoding_length": 2,
+          "intel_reference": "29 /r (SUB r32, r/m32)"
+        },
+        {
+          "syntax": "subq $5, %rax", 
+          "description": "Immediate subtraction",
+          "expected_encoding": "48 83 E8 05",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 83 /5 ib (SUB r/m64, imm8)"
+        }
       ]
     },
     {

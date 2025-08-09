@@ -9,13 +9,62 @@
       "operand_types": ["reg", "mem", "imm"],
       "sizes": ["16", "32", "64"],
       "test_cases": [
-        {"syntax": "pushq %rax", "description": "Push 64-bit register"},
-        {"syntax": "pushl %eax", "description": "Push 32-bit register"},
-        {"syntax": "pushw %ax", "description": "Push 16-bit register"},
-        {"syntax": "pushq (%rax)", "description": "Push memory operand"},
-        {"syntax": "pushq $0x1234", "description": "Push immediate value"},
-        {"syntax": "pushq %r8", "description": "Push extended register"},
-        {"syntax": "pushq variable(%rip)", "description": "Push RIP-relative memory"}
+        {
+          "syntax": "pushq %rax", 
+          "description": "Push 64-bit register",
+          "expected_encoding": "50",
+          "encoding_length": 1,
+          "intel_reference": "50+rd (PUSH r64)",
+          "note": "Single-byte opcode 50 + register encoding"
+        },
+        {
+          "syntax": "pushl %eax", 
+          "description": "Push 32-bit register",
+          "expected_encoding": "50",
+          "encoding_length": 1,
+          "intel_reference": "50+rd (PUSH r32)",
+          "note": "Single-byte opcode, defaults to 64-bit operand size in 64-bit mode"
+        },
+        {
+          "syntax": "pushw %ax", 
+          "description": "Push 16-bit register",
+          "expected_encoding": "66 50",
+          "encoding_length": 2,
+          "intel_reference": "66 50+rw (PUSH r16)",
+          "note": "Operand-size prefix 66 + single-byte opcode"
+        },
+        {
+          "syntax": "pushq (%rax)", 
+          "description": "Push memory operand",
+          "expected_encoding": "FF 30",
+          "encoding_length": 2,
+          "intel_reference": "FF /6 (PUSH r/m64)",
+          "note": "FF /6 + ModR/M=30 (mod=00 reg=110 r/m=000)"
+        },
+        {
+          "syntax": "pushq $0x1234", 
+          "description": "Push immediate value",
+          "expected_encoding": "68 34 12 00 00",
+          "encoding_length": 5,
+          "intel_reference": "68 id (PUSH imm32)",
+          "note": "68 + 32-bit immediate, sign-extended to 64-bit"
+        },
+        {
+          "syntax": "pushq %r8", 
+          "description": "Push extended register",
+          "expected_encoding": "41 50",
+          "encoding_length": 2,
+          "intel_reference": "REX.B + 50+rd (PUSH r64)",
+          "note": "REX.B=1 (41) + opcode 50"
+        },
+        {
+          "syntax": "pushq variable(%rip)", 
+          "description": "Push RIP-relative memory",
+          "expected_encoding": "FF 35 00 00 00 00",
+          "encoding_length": 6,
+          "intel_reference": "FF /6 (PUSH r/m64)",
+          "note": "FF /6 + ModR/M=35 + 32-bit RIP-relative displacement"
+        }
       ]
     },
     {
@@ -24,11 +73,46 @@
       "operand_types": ["reg", "mem"],
       "sizes": ["16", "32", "64"],
       "test_cases": [
-        {"syntax": "popq %rax", "description": "Pop to 64-bit register"},
-        {"syntax": "popl %eax", "description": "Pop to 32-bit register"},
-        {"syntax": "popw %ax", "description": "Pop to 16-bit register"},
-        {"syntax": "popq (%rax)", "description": "Pop to memory operand"},
-        {"syntax": "popq %r15", "description": "Pop to extended register"}
+        {
+          "syntax": "popq %rax", 
+          "description": "Pop to 64-bit register",
+          "expected_encoding": "58",
+          "encoding_length": 1,
+          "intel_reference": "58+rd (POP r64)",
+          "note": "Single-byte opcode 58 + register encoding"
+        },
+        {
+          "syntax": "popl %eax", 
+          "description": "Pop to 32-bit register",
+          "expected_encoding": "58",
+          "encoding_length": 1,
+          "intel_reference": "58+rd (POP r32)",
+          "note": "Single-byte opcode, defaults to 64-bit operand size in 64-bit mode"
+        },
+        {
+          "syntax": "popw %ax", 
+          "description": "Pop to 16-bit register",
+          "expected_encoding": "66 58",
+          "encoding_length": 2,
+          "intel_reference": "66 58+rw (POP r16)",
+          "note": "Operand-size prefix 66 + single-byte opcode"
+        },
+        {
+          "syntax": "popq (%rax)", 
+          "description": "Pop to memory operand",
+          "expected_encoding": "8F 00",
+          "encoding_length": 2,
+          "intel_reference": "8F /0 (POP r/m64)",
+          "note": "8F /0 + ModR/M=00 (mod=00 reg=000 r/m=000)"
+        },
+        {
+          "syntax": "popq %r15", 
+          "description": "Pop to extended register",
+          "expected_encoding": "41 5F",
+          "encoding_length": 2,
+          "intel_reference": "REX.B + 5F (POP r64)",
+          "note": "REX.B=1 (41) + opcode 5F (58+7 for R15)"
+        }
       ]
     },
     {
@@ -37,9 +121,30 @@
       "operand_types": ["none"],
       "sizes": ["16", "32", "64"],
       "test_cases": [
-        {"syntax": "pushfq", "description": "Push 64-bit flags (RFLAGS)"},
-        {"syntax": "pushfl", "description": "Push 32-bit flags (EFLAGS)"},
-        {"syntax": "pushfw", "description": "Push 16-bit flags (FLAGS)"}
+        {
+          "syntax": "pushfq", 
+          "description": "Push 64-bit flags (RFLAGS)",
+          "expected_encoding": "9C",
+          "encoding_length": 1,
+          "intel_reference": "9C (PUSHF)",
+          "note": "Single-byte opcode, pushes 64-bit RFLAGS in 64-bit mode"
+        },
+        {
+          "syntax": "pushfl", 
+          "description": "Push 32-bit flags (EFLAGS)",
+          "expected_encoding": "9C",
+          "encoding_length": 1,
+          "intel_reference": "9C (PUSHF)",
+          "note": "Same opcode, but pushes 64-bit RFLAGS in 64-bit mode"
+        },
+        {
+          "syntax": "pushfw", 
+          "description": "Push 16-bit flags (FLAGS)",
+          "expected_encoding": "66 9C",
+          "encoding_length": 2,
+          "intel_reference": "66 9C (PUSHF)",
+          "note": "Operand-size prefix 66 + 9C for 16-bit flags"
+        }
       ]
     },
     {
@@ -48,9 +153,30 @@
       "operand_types": ["none"],
       "sizes": ["16", "32", "64"],
       "test_cases": [
-        {"syntax": "popfq", "description": "Pop to 64-bit flags (RFLAGS)"},
-        {"syntax": "popfl", "description": "Pop to 32-bit flags (EFLAGS)"},
-        {"syntax": "popfw", "description": "Pop to 16-bit flags (FLAGS)"}
+        {
+          "syntax": "popfq", 
+          "description": "Pop to 64-bit flags (RFLAGS)",
+          "expected_encoding": "9D",
+          "encoding_length": 1,
+          "intel_reference": "9D (POPF)",
+          "note": "Single-byte opcode, pops to 64-bit RFLAGS in 64-bit mode"
+        },
+        {
+          "syntax": "popfl", 
+          "description": "Pop to 32-bit flags (EFLAGS)",
+          "expected_encoding": "9D",
+          "encoding_length": 1,
+          "intel_reference": "9D (POPF)",
+          "note": "Same opcode, but pops to 64-bit RFLAGS in 64-bit mode"
+        },
+        {
+          "syntax": "popfw", 
+          "description": "Pop to 16-bit flags (FLAGS)",
+          "expected_encoding": "66 9D",
+          "encoding_length": 2,
+          "intel_reference": "66 9D (POPF)",
+          "note": "Operand-size prefix 66 + 9D for 16-bit flags"
+        }
       ]
     },
     {
@@ -78,10 +204,38 @@
       "operand_types": ["none"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "movsq", "description": "Move quadword from [RSI] to [RDI]"},
-        {"syntax": "movsl", "description": "Move doubleword from [RSI] to [RDI]"},
-        {"syntax": "movsw", "description": "Move word from [RSI] to [RDI]"},
-        {"syntax": "movsb", "description": "Move byte from [RSI] to [RDI]"}
+        {
+          "syntax": "movsq", 
+          "description": "Move quadword from [RSI] to [RDI]",
+          "expected_encoding": "48 A5",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + A5 (MOVS m64, m64)",
+          "note": "REX.W + A5 for 64-bit string move"
+        },
+        {
+          "syntax": "movsl", 
+          "description": "Move doubleword from [RSI] to [RDI]",
+          "expected_encoding": "A5",
+          "encoding_length": 1,
+          "intel_reference": "A5 (MOVS m32, m32)",
+          "note": "Single-byte opcode for 32-bit string move"
+        },
+        {
+          "syntax": "movsw", 
+          "description": "Move word from [RSI] to [RDI]",
+          "expected_encoding": "66 A5",
+          "encoding_length": 2,
+          "intel_reference": "66 A5 (MOVS m16, m16)",
+          "note": "Operand-size prefix + A5 for 16-bit string move"
+        },
+        {
+          "syntax": "movsb", 
+          "description": "Move byte from [RSI] to [RDI]",
+          "expected_encoding": "A4",
+          "encoding_length": 1,
+          "intel_reference": "A4 (MOVS m8, m8)",
+          "note": "Single-byte opcode for 8-bit string move"
+        }
       ]
     },
     {

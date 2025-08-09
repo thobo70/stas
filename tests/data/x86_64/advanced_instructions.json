@@ -9,9 +9,30 @@
       "operand_types": ["xmm", "xmm_mem"],
       "sizes": ["128"],
       "test_cases": [
-        {"syntax": "movaps %xmm0, %xmm1", "description": "XMM register to register"},
-        {"syntax": "movaps (%rax), %xmm0", "description": "Memory to XMM register"},
-        {"syntax": "movaps %xmm1, (%rbx)", "description": "XMM register to memory"}
+        {
+          "syntax": "movaps %xmm0, %xmm1", 
+          "description": "XMM register to register",
+          "expected_encoding": "0F 28 C8",
+          "encoding_length": 3,
+          "intel_reference": "0F 28 /r (MOVAPS xmm1, xmm2/m128)",
+          "note": "0F 28 + ModR/M=C8 (mod=11 reg=001 r/m=000)"
+        },
+        {
+          "syntax": "movaps (%rax), %xmm0", 
+          "description": "Memory to XMM register",
+          "expected_encoding": "0F 28 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 28 /r (MOVAPS xmm1, xmm2/m128)",
+          "note": "0F 28 + ModR/M=00 (mod=00 reg=000 r/m=000)"
+        },
+        {
+          "syntax": "movaps %xmm1, (%rbx)", 
+          "description": "XMM register to memory",
+          "expected_encoding": "0F 29 0B",
+          "encoding_length": 3,
+          "intel_reference": "0F 29 /r (MOVAPS xmm2/m128, xmm1)",
+          "note": "0F 29 + ModR/M=0B (mod=00 reg=001 r/m=011)"
+        }
       ]
     },
     {
@@ -20,8 +41,22 @@
       "operand_types": ["xmm", "xmm_mem"],
       "sizes": ["128"],
       "test_cases": [
-        {"syntax": "movups %xmm0, %xmm1", "description": "XMM register to register"},
-        {"syntax": "movups (%rax), %xmm0", "description": "Unaligned memory to XMM"}
+        {
+          "syntax": "movups %xmm0, %xmm1", 
+          "description": "XMM register to register",
+          "expected_encoding": "0F 10 C8",
+          "encoding_length": 3,
+          "intel_reference": "0F 10 /r (MOVUPS xmm1, xmm2/m128)",
+          "note": "0F 10 + ModR/M=C8 (mod=11 reg=001 r/m=000)"
+        },
+        {
+          "syntax": "movups (%rax), %xmm0", 
+          "description": "Unaligned memory to XMM",
+          "expected_encoding": "0F 10 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 10 /r (MOVUPS xmm1, xmm2/m128)",
+          "note": "0F 10 + ModR/M=00 (mod=00 reg=000 r/m=000)"
+        }
       ]
     },
     {

@@ -239,6 +239,7 @@ test: $(TARGET)
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(TESTBIN_DIR)
 	rm -f test_x86_64_completeness test_x86_64_completeness_*
+	rm -f test_x86_64_encoding_completeness test_x86_64_encoding_completeness_*
 	rm -f test_x86_64_data_driven test_instruction_database test_stas_compliance
 	@echo "Cleaned build artifacts and removed legacy test binaries from project root"
 
@@ -275,6 +276,7 @@ help:
 	@echo "  test-unit-all - Run all unit tests (modern Unity framework)"
 	@echo "  test-comprehensive - Run complete test suite"
 	@echo "  test-x86_64-completeness - Run x86-64 instruction set completeness test"
+	@echo "  test-x86_64-encoding-completeness - Run CPU-accurate encoding completeness test"
 	@echo "  test-x86_64-data-driven - Run data-driven x86-64 instruction tests"
 	@echo "  test-instruction-database - Validate instruction database files"
 	@echo "  test-stas-compliance - Test STAS assembler CPU compliance (REAL VALIDATION)"
@@ -583,6 +585,20 @@ test-x86_64-completeness: $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "=== Running x86-64 Instruction Set Completeness Test ==="
 	@$(TESTBIN_DIR)/test_x86_64_completeness
 	@echo "x86-64 instruction completeness test completed"
+
+# x86-64 CPU-Accurate Encoding Completeness Test (Enhanced JSON Database)
+test-x86_64-encoding-completeness: $(OBJECTS) | $(TESTBIN_DIR)
+	@echo "=== Building x86-64 CPU-Accurate Encoding Completeness Test ==="
+	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
+		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
+		tests/unit/arch/test_x86_64_encoding_completeness.c tests/unity/src/unity.c \
+		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
+		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
+		obj/core/symbols.o obj/utils/utils.o \
+		-o $(TESTBIN_DIR)/test_x86_64_encoding_completeness
+	@echo "=== Running x86-64 CPU-Accurate Encoding Completeness Test ==="
+	@$(TESTBIN_DIR)/test_x86_64_encoding_completeness
+	@echo "x86-64 CPU-accurate encoding completeness test completed"
 
 # Data-driven x86-64 Instruction Set Test (Unity Framework)
 test-x86_64-data-driven: $(OBJECTS) | $(TESTBIN_DIR)

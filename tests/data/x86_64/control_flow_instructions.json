@@ -9,9 +9,28 @@
       "operand_types": ["rel", "reg", "mem"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jmp label", "description": "Direct jump to label"},
-        {"syntax": "jmp *%rax", "description": "Indirect jump through register"},
-        {"syntax": "jmp *(%rax)", "description": "Indirect jump through memory"}
+        {
+          "syntax": "jmp label", 
+          "description": "Direct jump to label",
+          "expected_encoding": "EB 00",
+          "encoding_length": 2,
+          "intel_reference": "EB cb (JMP rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        },
+        {
+          "syntax": "jmp *%rax", 
+          "description": "Indirect jump through register",
+          "expected_encoding": "FF E0",
+          "encoding_length": 2,
+          "intel_reference": "FF /4 (JMP r/m64)"
+        },
+        {
+          "syntax": "jmp *(%rax)", 
+          "description": "Indirect jump through memory",
+          "expected_encoding": "FF 20",
+          "encoding_length": 2,
+          "intel_reference": "FF /4 (JMP r/m64)"
+        }
       ]
     },
     {
@@ -20,7 +39,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "je label", "description": "Jump if equal"}
+        {
+          "syntax": "je label", 
+          "description": "Jump if equal",
+          "expected_encoding": "74 00",
+          "encoding_length": 2,
+          "intel_reference": "74 cb (JE rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
       ]
     },
     {
@@ -29,7 +55,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jz label", "description": "Jump if zero"}
+        {
+          "syntax": "jz label", 
+          "description": "Jump if zero",
+          "expected_encoding": "74 00",
+          "encoding_length": 2,
+          "intel_reference": "74 cb (JZ rel8 - same as JE)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
       ]
     },
     {
@@ -38,7 +71,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jne label", "description": "Jump if not equal"}
+        {
+          "syntax": "jne label", 
+          "description": "Jump if not equal",
+          "expected_encoding": "75 00",
+          "encoding_length": 2,
+          "intel_reference": "75 cb (JNE rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
       ]
     },
     {
@@ -47,7 +87,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnz label", "description": "Jump if not zero"}
+        {
+          "syntax": "jnz label", 
+          "description": "Jump if not zero",
+          "expected_encoding": "75 00",
+          "encoding_length": 2,
+          "intel_reference": "75 cb (JNZ rel8 - alias for JNE)",
+          "note": "Same encoding as JNE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -56,7 +103,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jl label", "description": "Jump if less (signed)"}
+        {
+          "syntax": "jl label", 
+          "description": "Jump if less (signed)",
+          "expected_encoding": "7C 00",
+          "encoding_length": 2,
+          "intel_reference": "7C cb (JL rel8)",
+          "note": "Jump if SF≠OF, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -65,7 +119,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnge label", "description": "Jump if not greater or equal"}
+        {
+          "syntax": "jnge label", 
+          "description": "Jump if not greater or equal",
+          "expected_encoding": "7C 00",
+          "encoding_length": 2,
+          "intel_reference": "7C cb (JNGE rel8 - alias for JL)",
+          "note": "Same encoding as JL, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -74,7 +135,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jle label", "description": "Jump if less or equal (signed)"}
+        {
+          "syntax": "jle label", 
+          "description": "Jump if less or equal (signed)",
+          "expected_encoding": "7E 00",
+          "encoding_length": 2,
+          "intel_reference": "7E cb (JLE rel8)",
+          "note": "Jump if ZF=1 or SF≠OF, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -83,7 +151,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jng label", "description": "Jump if not greater"}
+        {
+          "syntax": "jng label", 
+          "description": "Jump if not greater",
+          "expected_encoding": "7E 00",
+          "encoding_length": 2,
+          "intel_reference": "7E cb (JNG rel8 - alias for JLE)",
+          "note": "Same encoding as JLE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -92,7 +167,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jg label", "description": "Jump if greater (signed)"}
+        {
+          "syntax": "jg label", 
+          "description": "Jump if greater (signed)",
+          "expected_encoding": "7F 00",
+          "encoding_length": 2,
+          "intel_reference": "7F cb (JG rel8)",
+          "note": "Jump if ZF=0 and SF=OF, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -101,7 +183,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnle label", "description": "Jump if not less or equal"}
+        {
+          "syntax": "jnle label", 
+          "description": "Jump if not less or equal",
+          "expected_encoding": "7F 00",
+          "encoding_length": 2,
+          "intel_reference": "7F cb (JNLE rel8 - alias for JG)",
+          "note": "Same encoding as JG, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -110,7 +199,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jge label", "description": "Jump if greater or equal (signed)"}
+        {
+          "syntax": "jge label", 
+          "description": "Jump if greater or equal (signed)",
+          "expected_encoding": "7D 00",
+          "encoding_length": 2,
+          "intel_reference": "7D cb (JGE rel8)",
+          "note": "Jump if SF=OF, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -119,7 +215,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnl label", "description": "Jump if not less"}
+        {
+          "syntax": "jnl label", 
+          "description": "Jump if not less",
+          "expected_encoding": "7D 00",
+          "encoding_length": 2,
+          "intel_reference": "7D cb (JNL rel8 - alias for JGE)",
+          "note": "Same encoding as JGE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -128,7 +231,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jb label", "description": "Jump if below (unsigned)"}
+        {
+          "syntax": "jb label", 
+          "description": "Jump if below (unsigned)",
+          "expected_encoding": "72 00",
+          "encoding_length": 2,
+          "intel_reference": "72 cb (JB rel8)",
+          "note": "Jump if CF=1, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -137,7 +247,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnae label", "description": "Jump if not above or equal"}
+        {
+          "syntax": "jnae label", 
+          "description": "Jump if not above or equal",
+          "expected_encoding": "72 00",
+          "encoding_length": 2,
+          "intel_reference": "72 cb (JNAE rel8 - alias for JB)",
+          "note": "Same encoding as JB, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -146,7 +263,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jc label", "description": "Jump if carry flag set"}
+        {
+          "syntax": "jc label", 
+          "description": "Jump if carry flag set",
+          "expected_encoding": "72 00",
+          "encoding_length": 2,
+          "intel_reference": "72 cb (JC rel8 - alias for JB)",
+          "note": "Same encoding as JB, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -155,7 +279,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jbe label", "description": "Jump if below or equal (unsigned)"}
+        {
+          "syntax": "jbe label", 
+          "description": "Jump if below or equal (unsigned)",
+          "expected_encoding": "76 00",
+          "encoding_length": 2,
+          "intel_reference": "76 cb (JBE rel8)",
+          "note": "Jump if CF=1 or ZF=1, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -164,7 +295,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jna label", "description": "Jump if not above"}
+        {
+          "syntax": "jna label", 
+          "description": "Jump if not above",
+          "expected_encoding": "76 00",
+          "encoding_length": 2,
+          "intel_reference": "76 cb (JNA rel8 - alias for JBE)",
+          "note": "Same encoding as JBE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -173,7 +311,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "ja label", "description": "Jump if above (unsigned)"}
+        {
+          "syntax": "ja label", 
+          "description": "Jump if above (unsigned)",
+          "expected_encoding": "77 00",
+          "encoding_length": 2,
+          "intel_reference": "77 cb (JA rel8)",
+          "note": "Jump if CF=0 and ZF=0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -182,7 +327,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnbe label", "description": "Jump if not below or equal"}
+        {
+          "syntax": "jnbe label", 
+          "description": "Jump if not below or equal",
+          "expected_encoding": "77 00",
+          "encoding_length": 2,
+          "intel_reference": "77 cb (JNBE rel8 - alias for JA)",
+          "note": "Same encoding as JA, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -191,7 +343,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jae label", "description": "Jump if above or equal (unsigned)"}
+        {
+          "syntax": "jae label", 
+          "description": "Jump if above or equal (unsigned)",
+          "expected_encoding": "73 00",
+          "encoding_length": 2,
+          "intel_reference": "73 cb (JAE rel8)",
+          "note": "Jump if CF=0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -200,7 +359,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnb label", "description": "Jump if not below"}
+        {
+          "syntax": "jnb label", 
+          "description": "Jump if not below",
+          "expected_encoding": "73 00",
+          "encoding_length": 2,
+          "intel_reference": "73 cb (JNB rel8 - alias for JAE)",
+          "note": "Same encoding as JAE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -209,7 +375,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnc label", "description": "Jump if no carry flag"}
+        {
+          "syntax": "jnc label", 
+          "description": "Jump if no carry flag",
+          "expected_encoding": "73 00",
+          "encoding_length": 2,
+          "intel_reference": "73 cb (JNC rel8 - alias for JAE)",
+          "note": "Same encoding as JAE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -218,7 +391,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "js label", "description": "Jump if sign flag set"}
+        {
+          "syntax": "js label", 
+          "description": "Jump if sign flag set",
+          "expected_encoding": "78 00",
+          "encoding_length": 2,
+          "intel_reference": "78 cb (JS rel8)",
+          "note": "Jump if SF=1, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -227,7 +407,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jns label", "description": "Jump if sign flag clear"}
+        {
+          "syntax": "jns label", 
+          "description": "Jump if sign flag clear",
+          "expected_encoding": "79 00",
+          "encoding_length": 2,
+          "intel_reference": "79 cb (JNS rel8)",
+          "note": "Jump if SF=0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -236,7 +423,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jo label", "description": "Jump if overflow flag set"}
+        {
+          "syntax": "jo label", 
+          "description": "Jump if overflow flag set",
+          "expected_encoding": "70 00",
+          "encoding_length": 2,
+          "intel_reference": "70 cb (JO rel8)",
+          "note": "Jump if OF=1, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -245,7 +439,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jno label", "description": "Jump if overflow flag clear"}
+        {
+          "syntax": "jno label", 
+          "description": "Jump if overflow flag clear",
+          "expected_encoding": "71 00",
+          "encoding_length": 2,
+          "intel_reference": "71 cb (JNO rel8)",
+          "note": "Jump if OF=0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -254,7 +455,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jp label", "description": "Jump if parity flag set"}
+        {
+          "syntax": "jp label", 
+          "description": "Jump if parity flag set",
+          "expected_encoding": "7A 00",
+          "encoding_length": 2,
+          "intel_reference": "7A cb (JP rel8)",
+          "note": "Jump if PF=1, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -263,7 +471,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jpe label", "description": "Jump if parity even"}
+        {
+          "syntax": "jpe label", 
+          "description": "Jump if parity even",
+          "expected_encoding": "7A 00",
+          "encoding_length": 2,
+          "intel_reference": "7A cb (JPE rel8 - alias for JP)",
+          "note": "Same encoding as JP, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -272,7 +487,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jnp label", "description": "Jump if parity flag clear"}
+        {
+          "syntax": "jnp label", 
+          "description": "Jump if parity flag clear",
+          "expected_encoding": "7B 00",
+          "encoding_length": 2,
+          "intel_reference": "7B cb (JNP rel8)",
+          "note": "Jump if PF=0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -281,7 +503,14 @@
       "operand_types": ["rel"],
       "sizes": ["8", "32"],
       "test_cases": [
-        {"syntax": "jpo label", "description": "Jump if parity odd"}
+        {
+          "syntax": "jpo label", 
+          "description": "Jump if parity odd",
+          "expected_encoding": "7B 00",
+          "encoding_length": 2,
+          "intel_reference": "7B cb (JPO rel8 - alias for JNP)",
+          "note": "Same encoding as JNP, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -290,7 +519,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "jcxz label", "description": "Jump if CX is zero"}
+        {
+          "syntax": "jcxz label", 
+          "description": "Jump if CX is zero",
+          "expected_encoding": "E3 00",
+          "encoding_length": 2,
+          "intel_reference": "E3 cb (JCXZ rel8)",
+          "note": "16-bit mode version, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -299,7 +535,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "jecxz label", "description": "Jump if ECX is zero"}
+        {
+          "syntax": "jecxz label", 
+          "description": "Jump if ECX is zero",
+          "expected_encoding": "67 E3 00",
+          "encoding_length": 3,
+          "intel_reference": "67 E3 cb (JECXZ rel8 in 64-bit mode)",
+          "note": "32-bit mode version with address-size prefix, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -308,7 +551,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "jrcxz label", "description": "Jump if RCX is zero"}
+        {
+          "syntax": "jrcxz label", 
+          "description": "Jump if RCX is zero",
+          "expected_encoding": "E3 00",
+          "encoding_length": 2,
+          "intel_reference": "E3 cb (JRCXZ rel8 in 64-bit mode)",
+          "note": "64-bit mode default, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -317,9 +567,30 @@
       "operand_types": ["rel", "reg", "mem"],
       "sizes": ["32"],
       "test_cases": [
-        {"syntax": "call label", "description": "Direct call to label"},
-        {"syntax": "call *%rax", "description": "Indirect call through register"},
-        {"syntax": "call *(%rax)", "description": "Indirect call through memory"}
+        {
+          "syntax": "call label", 
+          "description": "Direct call to label",
+          "expected_encoding": "E8 00 00 00 00",
+          "encoding_length": 5,
+          "intel_reference": "E8 cd (CALL rel32)",
+          "note": "32-bit displacement to label, displacement will be resolved by linker"
+        },
+        {
+          "syntax": "call *%rax", 
+          "description": "Indirect call through register",
+          "expected_encoding": "FF D0",
+          "encoding_length": 2,
+          "intel_reference": "FF /2 (CALL r/m64)",
+          "note": "ModR/M byte D0: mod=11 reg=010 r/m=000 (call *%rax)"
+        },
+        {
+          "syntax": "call *(%rax)", 
+          "description": "Indirect call through memory",
+          "expected_encoding": "FF 10",
+          "encoding_length": 2,
+          "intel_reference": "FF /2 (CALL r/m64)",
+          "note": "ModR/M byte 10: mod=00 reg=010 r/m=000 (call *(%rax))"
+        }
       ]
     },
     {
@@ -328,8 +599,22 @@
       "operand_types": ["none", "imm"],
       "sizes": ["none"],
       "test_cases": [
-        {"syntax": "ret", "description": "Return from procedure"},
-        {"syntax": "ret $16", "description": "Return and pop 16 bytes from stack"}
+        {
+          "syntax": "ret", 
+          "description": "Return from procedure",
+          "expected_encoding": "C3",
+          "encoding_length": 1,
+          "intel_reference": "C3 (RET)",
+          "note": "Near return to calling procedure"
+        },
+        {
+          "syntax": "ret $16", 
+          "description": "Return and pop 16 bytes from stack",
+          "expected_encoding": "C2 10 00",
+          "encoding_length": 3,
+          "intel_reference": "C2 iw (RET imm16)",
+          "note": "Return and pop 16 bytes (0x0010) from stack"
+        }
       ]
     },
     {
@@ -338,7 +623,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "loop label", "description": "Loop while RCX != 0"}
+        {
+          "syntax": "loop label", 
+          "description": "Loop while RCX != 0",
+          "expected_encoding": "E2 00",
+          "encoding_length": 2,
+          "intel_reference": "E2 cb (LOOP rel8)",
+          "note": "Decrement RCX and jump if RCX != 0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -347,7 +639,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "loope label", "description": "Loop while equal"}
+        {
+          "syntax": "loope label", 
+          "description": "Loop while equal",
+          "expected_encoding": "E1 00",
+          "encoding_length": 2,
+          "intel_reference": "E1 cb (LOOPE rel8)",
+          "note": "Decrement RCX and jump if RCX != 0 and ZF=1, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -356,7 +655,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "loopz label", "description": "Loop while zero"}
+        {
+          "syntax": "loopz label", 
+          "description": "Loop while zero",
+          "expected_encoding": "E1 00",
+          "encoding_length": 2,
+          "intel_reference": "E1 cb (LOOPZ rel8 - alias for LOOPE)",
+          "note": "Same encoding as LOOPE, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -365,7 +671,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "loopne label", "description": "Loop while not equal"}
+        {
+          "syntax": "loopne label", 
+          "description": "Loop while not equal",
+          "expected_encoding": "E0 00",
+          "encoding_length": 2,
+          "intel_reference": "E0 cb (LOOPNE rel8)",
+          "note": "Decrement RCX and jump if RCX != 0 and ZF=0, displacement 00 is placeholder"
+        }
       ]
     },
     {
@@ -374,7 +687,14 @@
       "operand_types": ["rel"],
       "sizes": ["8"],
       "test_cases": [
-        {"syntax": "loopnz label", "description": "Loop while not zero"}
+        {
+          "syntax": "loopnz label", 
+          "description": "Loop while not zero",
+          "expected_encoding": "E0 00",
+          "encoding_length": 2,
+          "intel_reference": "E0 cb (LOOPNZ rel8 - alias for LOOPNE)",
+          "note": "Same encoding as LOOPNE, displacement 00 is placeholder"
+        }
       ]
     }
   ]
