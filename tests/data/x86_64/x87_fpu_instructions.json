@@ -1,0 +1,347 @@
+{
+  "instruction_set": "x86_64_x87_fpu",
+  "description": "x87 Floating Point Unit instructions",
+  "reference": "Intel SDM Volume 2A/2B",
+  "instructions": [
+    {
+      "mnemonic": "FADD",
+      "description": "Add floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fadd %st(1), %st",
+          "description": "Add ST(1) to ST(0)",
+          "expected_encoding": "D8 C1",
+          "encoding_length": 2,
+          "intel_reference": "D8 C0+i (FADD ST(0), ST(i))"
+        },
+        {
+          "syntax": "faddp %st, %st(1)",
+          "description": "Add and pop",
+          "expected_encoding": "DE C1",
+          "encoding_length": 2,
+          "intel_reference": "DE C0+i (FADDP ST(i), ST(0))"
+        },
+        {
+          "syntax": "fadds (%rax)",
+          "description": "Add 32-bit memory",
+          "expected_encoding": "D8 00",
+          "encoding_length": 2,
+          "intel_reference": "D8 /0 (FADD m32fp)"
+        },
+        {
+          "syntax": "faddl (%rax)",
+          "description": "Add 64-bit memory",
+          "expected_encoding": "DC 00",
+          "encoding_length": 2,
+          "intel_reference": "DC /0 (FADD m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FSUB",
+      "description": "Subtract floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fsub %st(1), %st",
+          "description": "Subtract ST(1) from ST(0)",
+          "expected_encoding": "D8 E1",
+          "encoding_length": 2,
+          "intel_reference": "D8 E0+i (FSUB ST(0), ST(i))"
+        },
+        {
+          "syntax": "fsubp %st, %st(1)",
+          "description": "Subtract and pop",
+          "expected_encoding": "DE E1",
+          "encoding_length": 2,
+          "intel_reference": "DE E0+i (FSUBP ST(i), ST(0))"
+        },
+        {
+          "syntax": "fsubs (%rax)",
+          "description": "Subtract 32-bit memory",
+          "expected_encoding": "D8 20",
+          "encoding_length": 2,
+          "intel_reference": "D8 /4 (FSUB m32fp)"
+        },
+        {
+          "syntax": "fsubl (%rax)",
+          "description": "Subtract 64-bit memory",
+          "expected_encoding": "DC 20",
+          "encoding_length": 2,
+          "intel_reference": "DC /4 (FSUB m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FMUL",
+      "description": "Multiply floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fmul %st(1), %st",
+          "description": "Multiply ST(0) by ST(1)",
+          "expected_encoding": "D8 C9",
+          "encoding_length": 2,
+          "intel_reference": "D8 C8+i (FMUL ST(0), ST(i))"
+        },
+        {
+          "syntax": "fmulp %st, %st(1)",
+          "description": "Multiply and pop",
+          "expected_encoding": "DE C9",
+          "encoding_length": 2,
+          "intel_reference": "DE C8+i (FMULP ST(i), ST(0))"
+        },
+        {
+          "syntax": "fmuls (%rax)",
+          "description": "Multiply 32-bit memory",
+          "expected_encoding": "D8 08",
+          "encoding_length": 2,
+          "intel_reference": "D8 /1 (FMUL m32fp)"
+        },
+        {
+          "syntax": "fmull (%rax)",
+          "description": "Multiply 64-bit memory",
+          "expected_encoding": "DC 08",
+          "encoding_length": 2,
+          "intel_reference": "DC /1 (FMUL m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FDIV",
+      "description": "Divide floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fdiv %st(1), %st",
+          "description": "Divide ST(0) by ST(1)",
+          "expected_encoding": "D8 F1",
+          "encoding_length": 2,
+          "intel_reference": "D8 F0+i (FDIV ST(0), ST(i))"
+        },
+        {
+          "syntax": "fdivp %st, %st(1)",
+          "description": "Divide and pop",
+          "expected_encoding": "DE F1",
+          "encoding_length": 2,
+          "intel_reference": "DE F0+i (FDIVP ST(i), ST(0))"
+        },
+        {
+          "syntax": "fdivs (%rax)",
+          "description": "Divide by 32-bit memory",
+          "expected_encoding": "D8 30",
+          "encoding_length": 2,
+          "intel_reference": "D8 /6 (FDIV m32fp)"
+        },
+        {
+          "syntax": "fdivl (%rax)",
+          "description": "Divide by 64-bit memory",
+          "expected_encoding": "DC 30",
+          "encoding_length": 2,
+          "intel_reference": "DC /6 (FDIV m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FLD",
+      "description": "Load floating point",
+      "operand_types": ["st", "mem32", "mem64", "mem80"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fld %st(1)",
+          "description": "Load ST(1) onto stack",
+          "expected_encoding": "D9 C1",
+          "encoding_length": 2,
+          "intel_reference": "D9 C0+i (FLD ST(i))"
+        },
+        {
+          "syntax": "flds (%rax)",
+          "description": "Load 32-bit memory",
+          "expected_encoding": "D9 00",
+          "encoding_length": 2,
+          "intel_reference": "D9 /0 (FLD m32fp)"
+        },
+        {
+          "syntax": "fldl (%rax)",
+          "description": "Load 64-bit memory",
+          "expected_encoding": "DD 00",
+          "encoding_length": 2,
+          "intel_reference": "DD /0 (FLD m64fp)"
+        },
+        {
+          "syntax": "fldt (%rax)",
+          "description": "Load 80-bit memory",
+          "expected_encoding": "DB 28",
+          "encoding_length": 2,
+          "intel_reference": "DB /5 (FLD m80fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FST",
+      "description": "Store floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fst %st(1)",
+          "description": "Store ST(0) to ST(1)",
+          "expected_encoding": "DD D1",
+          "encoding_length": 2,
+          "intel_reference": "DD D0+i (FST ST(i))"
+        },
+        {
+          "syntax": "fsts (%rax)",
+          "description": "Store to 32-bit memory",
+          "expected_encoding": "D9 10",
+          "encoding_length": 2,
+          "intel_reference": "D9 /2 (FST m32fp)"
+        },
+        {
+          "syntax": "fstl (%rax)",
+          "description": "Store to 64-bit memory",
+          "expected_encoding": "DD 10",
+          "encoding_length": 2,
+          "intel_reference": "DD /2 (FST m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FSTP",
+      "description": "Store and pop floating point",
+      "operand_types": ["st", "mem32", "mem64", "mem80"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fstp %st(1)",
+          "description": "Store and pop to ST(1)",
+          "expected_encoding": "DD D9",
+          "encoding_length": 2,
+          "intel_reference": "DD D8+i (FSTP ST(i))"
+        },
+        {
+          "syntax": "fstps (%rax)",
+          "description": "Store and pop to 32-bit memory",
+          "expected_encoding": "D9 18",
+          "encoding_length": 2,
+          "intel_reference": "D9 /3 (FSTP m32fp)"
+        },
+        {
+          "syntax": "fstpl (%rax)",
+          "description": "Store and pop to 64-bit memory",
+          "expected_encoding": "DD 18",
+          "encoding_length": 2,
+          "intel_reference": "DD /3 (FSTP m64fp)"
+        },
+        {
+          "syntax": "fstpt (%rax)",
+          "description": "Store and pop to 80-bit memory",
+          "expected_encoding": "DB 38",
+          "encoding_length": 2,
+          "intel_reference": "DB /7 (FSTP m80fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FCOM",
+      "description": "Compare floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fcom %st(1)",
+          "description": "Compare ST(0) with ST(1)",
+          "expected_encoding": "D8 D1",
+          "encoding_length": 2,
+          "intel_reference": "D8 D0+i (FCOM ST(i))"
+        },
+        {
+          "syntax": "fcoms (%rax)",
+          "description": "Compare with 32-bit memory",
+          "expected_encoding": "D8 10",
+          "encoding_length": 2,
+          "intel_reference": "D8 /2 (FCOM m32fp)"
+        },
+        {
+          "syntax": "fcoml (%rax)",
+          "description": "Compare with 64-bit memory",
+          "expected_encoding": "DC 10",
+          "encoding_length": 2,
+          "intel_reference": "DC /2 (FCOM m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FCOMP",
+      "description": "Compare and pop floating point",
+      "operand_types": ["st", "mem32", "mem64"],
+      "sizes": ["32", "64", "80"],
+      "test_cases": [
+        {
+          "syntax": "fcomp %st(1)",
+          "description": "Compare and pop ST(1)",
+          "expected_encoding": "D8 D9",
+          "encoding_length": 2,
+          "intel_reference": "D8 D8+i (FCOMP ST(i))"
+        },
+        {
+          "syntax": "fcomps (%rax)",
+          "description": "Compare and pop 32-bit memory",
+          "expected_encoding": "D8 18",
+          "encoding_length": 2,
+          "intel_reference": "D8 /3 (FCOMP m32fp)"
+        },
+        {
+          "syntax": "fcompl (%rax)",
+          "description": "Compare and pop 64-bit memory",
+          "expected_encoding": "DC 18",
+          "encoding_length": 2,
+          "intel_reference": "DC /3 (FCOMP m64fp)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FCOMPP",
+      "description": "Compare and pop twice",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {
+          "syntax": "fcompp",
+          "description": "Compare ST(0) with ST(1) and pop twice",
+          "expected_encoding": "DE D9",
+          "encoding_length": 2,
+          "intel_reference": "DE D9 (FCOMPP)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "FINIT",
+      "description": "Initialize FPU",
+      "operand_types": ["none"],
+      "sizes": ["none"],
+      "test_cases": [
+        {
+          "syntax": "finit",
+          "description": "Initialize floating point unit",
+          "expected_encoding": "9B DB E3",
+          "encoding_length": 3,
+          "intel_reference": "9B DB E3 (FINIT)"
+        },
+        {
+          "syntax": "fninit",
+          "description": "Initialize FPU (no wait)",
+          "expected_encoding": "DB E3",
+          "encoding_length": 2,
+          "intel_reference": "DB E3 (FNINIT)"
+        }
+      ]
+    }
+  ]
+}

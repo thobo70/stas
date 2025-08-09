@@ -696,6 +696,278 @@
           "note": "Same encoding as LOOPNE, displacement 00 is placeholder"
         }
       ]
+    },
+    {
+      "mnemonic": "JL",
+      "description": "Jump if less (SF≠OF)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jl label",
+          "description": "Jump if less (signed)",
+          "expected_encoding": "7C 00",
+          "encoding_length": 2,
+          "intel_reference": "7C cb (JL rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JLE",
+      "description": "Jump if less or equal (ZF=1 or SF≠OF)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jle label",
+          "description": "Jump if less or equal (signed)",
+          "expected_encoding": "7E 00",
+          "encoding_length": 2,
+          "intel_reference": "7E cb (JLE rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JG",
+      "description": "Jump if greater (ZF=0 and SF=OF)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jg label",
+          "description": "Jump if greater (signed)",
+          "expected_encoding": "7F 00",
+          "encoding_length": 2,
+          "intel_reference": "7F cb (JG rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JGE",
+      "description": "Jump if greater or equal (SF=OF)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jge label",
+          "description": "Jump if greater or equal (signed)",
+          "expected_encoding": "7D 00",
+          "encoding_length": 2,
+          "intel_reference": "7D cb (JGE rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JB",
+      "description": "Jump if below (CF=1)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jb label",
+          "description": "Jump if below (unsigned)",
+          "expected_encoding": "72 00",
+          "encoding_length": 2,
+          "intel_reference": "72 cb (JB rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JBE",
+      "description": "Jump if below or equal (CF=1 or ZF=1)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jbe label",
+          "description": "Jump if below or equal (unsigned)",
+          "expected_encoding": "76 00",
+          "encoding_length": 2,
+          "intel_reference": "76 cb (JBE rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JA",
+      "description": "Jump if above (CF=0 and ZF=0)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "ja label",
+          "description": "Jump if above (unsigned)",
+          "expected_encoding": "77 00",
+          "encoding_length": 2,
+          "intel_reference": "77 cb (JA rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JAE",
+      "description": "Jump if above or equal (CF=0)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jae label",
+          "description": "Jump if above or equal (unsigned)",
+          "expected_encoding": "73 00",
+          "encoding_length": 2,
+          "intel_reference": "73 cb (JAE rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JS",
+      "description": "Jump if sign (SF=1)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "js label",
+          "description": "Jump if sign flag set",
+          "expected_encoding": "78 00",
+          "encoding_length": 2,
+          "intel_reference": "78 cb (JS rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JNS",
+      "description": "Jump if not sign (SF=0)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jns label",
+          "description": "Jump if sign flag clear",
+          "expected_encoding": "79 00",
+          "encoding_length": 2,
+          "intel_reference": "79 cb (JNS rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JO",
+      "description": "Jump if overflow (OF=1)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jo label",
+          "description": "Jump if overflow flag set",
+          "expected_encoding": "70 00",
+          "encoding_length": 2,
+          "intel_reference": "70 cb (JO rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JNO",
+      "description": "Jump if not overflow (OF=0)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jno label",
+          "description": "Jump if overflow flag clear",
+          "expected_encoding": "71 00",
+          "encoding_length": 2,
+          "intel_reference": "71 cb (JNO rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JP",
+      "description": "Jump if parity (PF=1)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jp label",
+          "description": "Jump if parity flag set",
+          "expected_encoding": "7A 00",
+          "encoding_length": 2,
+          "intel_reference": "7A cb (JP rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JNP",
+      "description": "Jump if not parity (PF=0)",
+      "operand_types": ["rel8", "rel32"],
+      "sizes": ["8", "32"],
+      "test_cases": [
+        {
+          "syntax": "jnp label",
+          "description": "Jump if parity flag clear",
+          "expected_encoding": "7B 00",
+          "encoding_length": 2,
+          "intel_reference": "7B cb (JNP rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JCXZ",
+      "description": "Jump if CX register is zero",
+      "operand_types": ["rel8"],
+      "sizes": ["8"],
+      "test_cases": [
+        {
+          "syntax": "jcxz label",
+          "description": "Jump if CX is zero (16-bit)",
+          "expected_encoding": "67 E3 00",
+          "encoding_length": 3,
+          "intel_reference": "67 E3 cb (JCXZ rel8)",
+          "note": "67h prefix for 16-bit address size"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JECXZ",
+      "description": "Jump if ECX register is zero",
+      "operand_types": ["rel8"],
+      "sizes": ["8"],
+      "test_cases": [
+        {
+          "syntax": "jecxz label",
+          "description": "Jump if ECX is zero (32-bit)",
+          "expected_encoding": "E3 00",
+          "encoding_length": 2,
+          "intel_reference": "E3 cb (JECXZ rel8)",
+          "note": "Displacement 00 is placeholder for linker resolution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "JRCXZ",
+      "description": "Jump if RCX register is zero",
+      "operand_types": ["rel8"],
+      "sizes": ["8"],
+      "test_cases": [
+        {
+          "syntax": "jrcxz label",
+          "description": "Jump if RCX is zero (64-bit)",
+          "expected_encoding": "48 E3 00",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + E3 cb (JRCXZ rel8)",
+          "note": "REX.W prefix for 64-bit address size"
+        }
+      ]
     }
   ]
 }

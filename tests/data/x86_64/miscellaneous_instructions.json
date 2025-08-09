@@ -1,0 +1,375 @@
+{
+  "miscellaneous_instructions": "x86_64_miscellaneous",
+  "description": "Miscellaneous x86-64 instructions to complete Phase 1",
+  "reference": "Intel SDM Volume 2A/2B/2C Miscellaneous Instructions",
+  "instructions": [
+    {
+      "mnemonic": "LEA",
+      "description": "Load effective address",
+      "test_cases": [
+        {
+          "syntax": "leaq (%rax), %rbx",
+          "description": "LEA with register indirect",
+          "expected_encoding": "48 8D 18",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)",
+          "note": "Load effective address [RAX] into RBX"
+        },
+        {
+          "syntax": "leaq 8(%rax), %rbx",
+          "description": "LEA with displacement",
+          "expected_encoding": "48 8D 58 08",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)",
+          "note": "Load effective address [RAX+8] into RBX"
+        },
+        {
+          "syntax": "leaq (%rax,%rbx,2), %rcx",
+          "description": "LEA with SIB addressing",
+          "expected_encoding": "48 8D 0C 58",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)",
+          "note": "Load effective address [RAX+RBX*2] into RCX"
+        },
+        {
+          "syntax": "leaq 16(%rax,%rbx,4), %rcx",
+          "description": "LEA with SIB and displacement",
+          "expected_encoding": "48 8D 4C 98 10",
+          "encoding_length": 5,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)",
+          "note": "Load effective address [RAX+RBX*4+16] into RCX"
+        },
+        {
+          "syntax": "leal (%eax), %ebx",
+          "description": "LEA 32-bit with register indirect",
+          "expected_encoding": "8D 18",
+          "encoding_length": 2,
+          "intel_reference": "8D /r (LEA r32, m)",
+          "note": "Load effective address [EAX] into EBX"
+        },
+        {
+          "syntax": "leal (%eax,%ebx,2), %ecx",
+          "description": "LEA 32-bit with SIB addressing",
+          "expected_encoding": "8D 0C 58",
+          "encoding_length": 3,
+          "intel_reference": "8D /r (LEA r32, m)",
+          "note": "Load effective address [EAX+EBX*2] into ECX"
+        },
+        {
+          "syntax": "leaw (%ax), %bx",
+          "description": "LEA 16-bit with register indirect",
+          "expected_encoding": "66 8D 18",
+          "encoding_length": 3,
+          "intel_reference": "66 8D /r (LEA r16, m)",
+          "note": "Load effective address [AX] into BX"
+        }
+      ]
+    },
+    {
+      "mnemonic": "ENTER",
+      "description": "Make stack frame for procedure parameters",
+      "test_cases": [
+        {
+          "syntax": "enter $16, $0",
+          "description": "ENTER with 16-byte allocation, level 0",
+          "expected_encoding": "C8 10 00 00",
+          "encoding_length": 4,
+          "intel_reference": "C8 iw 00 (ENTER imm16, 0)",
+          "note": "Create stack frame with 16 bytes local space"
+        },
+        {
+          "syntax": "enter $32, $1",
+          "description": "ENTER with 32-byte allocation, level 1",
+          "expected_encoding": "C8 20 00 01",
+          "encoding_length": 4,
+          "intel_reference": "C8 iw ib (ENTER imm16, imm8)",
+          "note": "Create stack frame with 32 bytes, nesting level 1"
+        },
+        {
+          "syntax": "enter $0, $0",
+          "description": "ENTER with no allocation",
+          "expected_encoding": "C8 00 00 00",
+          "encoding_length": 4,
+          "intel_reference": "C8 iw 00 (ENTER imm16, 0)",
+          "note": "Create simple stack frame"
+        }
+      ]
+    },
+    {
+      "mnemonic": "LEAVE",
+      "description": "High level procedure exit",
+      "test_cases": [
+        {
+          "syntax": "leave",
+          "description": "Leave procedure",
+          "expected_encoding": "C9",
+          "encoding_length": 1,
+          "intel_reference": "C9 (LEAVE)",
+          "note": "Restore stack frame (MOV RBP,RSP; POP RBP)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BOUND",
+      "description": "Check array index against bounds",
+      "test_cases": [
+        {
+          "syntax": "boundl %eax, (%ebx)",
+          "description": "Bound check 32-bit",
+          "expected_encoding": "62 03",
+          "encoding_length": 2,
+          "intel_reference": "62 /r (BOUND r32, m32&32)",
+          "note": "Check EAX against bounds at [EBX] (legacy)"
+        },
+        {
+          "syntax": "boundw %ax, (%bx)",
+          "description": "Bound check 16-bit",
+          "expected_encoding": "66 62 07",
+          "encoding_length": 3,
+          "intel_reference": "66 62 /r (BOUND r16, m16&16)",
+          "note": "Check AX against bounds at [BX] (legacy)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "XLAT",
+      "description": "Table look-up translation",
+      "test_cases": [
+        {
+          "syntax": "xlatb",
+          "description": "Translate byte in AL",
+          "expected_encoding": "D7",
+          "encoding_length": 1,
+          "intel_reference": "D7 (XLAT/XLATB)",
+          "note": "Translate AL using table at [RBX+AL]"
+        },
+        {
+          "syntax": "xlat",
+          "description": "Translate byte (alternative syntax)",
+          "expected_encoding": "D7",
+          "encoding_length": 1,
+          "intel_reference": "D7 (XLAT/XLATB)",
+          "note": "Same as XLATB - translate AL using table"
+        }
+      ]
+    },
+    {
+      "mnemonic": "LOCK",
+      "description": "Assert LOCK# signal prefix",
+      "test_cases": [
+        {
+          "syntax": "lock addq $1, (%rax)",
+          "description": "Locked atomic add",
+          "expected_encoding": "F0 48 83 00 01",
+          "encoding_length": 5,
+          "intel_reference": "F0 REX.W + 83 /0 ib (LOCK ADD m64, imm8)",
+          "note": "Atomic locked addition to memory"
+        },
+        {
+          "syntax": "lock incl (%eax)",
+          "description": "Locked atomic increment",
+          "expected_encoding": "F0 FF 00",
+          "encoding_length": 3,
+          "intel_reference": "F0 FF /0 (LOCK INC m32)",
+          "note": "Atomic locked increment of memory"
+        },
+        {
+          "syntax": "lock xchgq %rax, (%rbx)",
+          "description": "Locked atomic exchange",
+          "expected_encoding": "F0 48 87 03",
+          "encoding_length": 4,
+          "intel_reference": "F0 REX.W + 87 /r (LOCK XCHG m64, r64)",
+          "note": "Atomic locked exchange (LOCK prefix implicit for XCHG mem)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "WAIT",
+      "description": "Wait for FPU ready",
+      "test_cases": [
+        {
+          "syntax": "wait",
+          "description": "Wait for x87 FPU",
+          "expected_encoding": "9B",
+          "encoding_length": 1,
+          "intel_reference": "9B (WAIT/FWAIT)",
+          "note": "Wait for x87 FPU to complete operations"
+        },
+        {
+          "syntax": "fwait",
+          "description": "FPU wait (alternative mnemonic)",
+          "expected_encoding": "9B",
+          "encoding_length": 1,
+          "intel_reference": "9B (WAIT/FWAIT)",
+          "note": "Same as WAIT - wait for x87 FPU"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BSWAP",
+      "description": "Byte swap (already in basic_instructions but adding more variants)",
+      "test_cases": [
+        {
+          "syntax": "bswapq %r8",
+          "description": "Byte swap extended 64-bit register",
+          "expected_encoding": "49 0F C8",
+          "encoding_length": 3,
+          "intel_reference": "REX.B + 0F C8+rd (BSWAP r64)",
+          "note": "Byte swap R8 (extended register with REX.B)"
+        },
+        {
+          "syntax": "bswapl %r8d",
+          "description": "Byte swap extended 32-bit register",
+          "expected_encoding": "41 0F C8",
+          "encoding_length": 3,
+          "intel_reference": "REX.B + 0F C8+rd (BSWAP r32)",
+          "note": "Byte swap R8D (extended register with REX.B)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "PREFETCH",
+      "description": "Prefetch data into cache",
+      "test_cases": [
+        {
+          "syntax": "prefetcht0 (%rax)",
+          "description": "Prefetch to T0 cache level",
+          "expected_encoding": "0F 18 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 18 /1 (PREFETCHT0 m8)",
+          "note": "Prefetch data to all cache levels"
+        },
+        {
+          "syntax": "prefetcht1 (%rax)",
+          "description": "Prefetch to T1 cache level",
+          "expected_encoding": "0F 18 08",
+          "encoding_length": 3,
+          "intel_reference": "0F 18 /2 (PREFETCHT1 m8)",
+          "note": "Prefetch data to L2 and L3 cache"
+        },
+        {
+          "syntax": "prefetcht2 (%rax)",
+          "description": "Prefetch to T2 cache level",
+          "expected_encoding": "0F 18 10",
+          "encoding_length": 3,
+          "intel_reference": "0F 18 /3 (PREFETCHT2 m8)",
+          "note": "Prefetch data to L3 cache only"
+        },
+        {
+          "syntax": "prefetchnta (%rax)",
+          "description": "Prefetch non-temporal",
+          "expected_encoding": "0F 18 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 18 /0 (PREFETCHNTA m8)",
+          "note": "Prefetch data with minimal cache pollution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "SFENCE",
+      "description": "Store fence",
+      "test_cases": [
+        {
+          "syntax": "sfence",
+          "description": "Store memory fence",
+          "expected_encoding": "0F AE F8",
+          "encoding_length": 3,
+          "intel_reference": "0F AE F8 (SFENCE)",
+          "note": "Serialize store operations"
+        }
+      ]
+    },
+    {
+      "mnemonic": "LFENCE",
+      "description": "Load fence",
+      "test_cases": [
+        {
+          "syntax": "lfence",
+          "description": "Load memory fence",
+          "expected_encoding": "0F AE E8",
+          "encoding_length": 3,
+          "intel_reference": "0F AE E8 (LFENCE)",
+          "note": "Serialize load operations"
+        }
+      ]
+    },
+    {
+      "mnemonic": "MFENCE",
+      "description": "Memory fence",
+      "test_cases": [
+        {
+          "syntax": "mfence",
+          "description": "Full memory fence",
+          "expected_encoding": "0F AE F0",
+          "encoding_length": 3,
+          "intel_reference": "0F AE F0 (MFENCE)",
+          "note": "Serialize all memory operations"
+        }
+      ]
+    },
+    {
+      "mnemonic": "PAUSE",
+      "description": "Spin loop hint",
+      "test_cases": [
+        {
+          "syntax": "pause",
+          "description": "Pause instruction for spin loops",
+          "expected_encoding": "F3 90",
+          "encoding_length": 2,
+          "intel_reference": "F3 90 (PAUSE)",
+          "note": "Hint processor that this is a spin loop"
+        }
+      ]
+    },
+    {
+      "mnemonic": "UD2",
+      "description": "Undefined instruction",
+      "test_cases": [
+        {
+          "syntax": "ud2",
+          "description": "Undefined instruction (guaranteed exception)",
+          "expected_encoding": "0F 0B",
+          "encoding_length": 2,
+          "intel_reference": "0F 0B (UD2)",
+          "note": "Generate invalid opcode exception"
+        }
+      ]
+    },
+    {
+      "mnemonic": "SYSCALL",
+      "description": "Fast system call",
+      "test_cases": [
+        {
+          "syntax": "syscall",
+          "description": "Fast system call (64-bit)",
+          "expected_encoding": "0F 05",
+          "encoding_length": 2,
+          "intel_reference": "0F 05 (SYSCALL)",
+          "note": "Fast system call to kernel"
+        }
+      ]
+    },
+    {
+      "mnemonic": "SYSRET",
+      "description": "Return from fast system call",
+      "test_cases": [
+        {
+          "syntax": "sysretq",
+          "description": "64-bit return from system call",
+          "expected_encoding": "48 0F 07",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 0F 07 (SYSRET)",
+          "note": "Return from 64-bit system call"
+        },
+        {
+          "syntax": "sysretl",
+          "description": "32-bit return from system call",
+          "expected_encoding": "0F 07",
+          "encoding_length": 2,
+          "intel_reference": "0F 07 (SYSRET)",
+          "note": "Return from 32-bit system call"
+        }
+      ]
+    }
+  ]
+}

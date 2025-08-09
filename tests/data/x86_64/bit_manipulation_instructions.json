@@ -1,0 +1,340 @@
+{
+  "instruction_set": "x86_64_bit_manipulation",
+  "description": "Bit manipulation and rotate instructions",
+  "reference": "Intel SDM Volume 2A/2B",
+  "instructions": [
+    {
+      "mnemonic": "ROL",
+      "description": "Rotate left",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "rolq $1, %rax",
+          "description": "Rotate left by 1",
+          "expected_encoding": "48 D1 C0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /0 (ROL r/m64, 1)"
+        },
+        {
+          "syntax": "rolq %cl, %rax",
+          "description": "Rotate left by CL",
+          "expected_encoding": "48 D3 C0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /0 (ROL r/m64, CL)"
+        },
+        {
+          "syntax": "rolq $5, %rax",
+          "description": "Rotate left by immediate",
+          "expected_encoding": "48 C1 C0 05",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + C1 /0 ib (ROL r/m64, imm8)"
+        },
+        {
+          "syntax": "roll $1, %eax",
+          "description": "Rotate left 32-bit by 1",
+          "expected_encoding": "D1 C0",
+          "encoding_length": 2,
+          "intel_reference": "D1 /0 (ROL r/m32, 1)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "ROR",
+      "description": "Rotate right",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "rorq $1, %rax",
+          "description": "Rotate right by 1",
+          "expected_encoding": "48 D1 C8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /1 (ROR r/m64, 1)"
+        },
+        {
+          "syntax": "rorq %cl, %rax",
+          "description": "Rotate right by CL",
+          "expected_encoding": "48 D3 C8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /1 (ROR r/m64, CL)"
+        },
+        {
+          "syntax": "rorq $5, %rax",
+          "description": "Rotate right by immediate",
+          "expected_encoding": "48 C1 C8 05",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + C1 /1 ib (ROR r/m64, imm8)"
+        },
+        {
+          "syntax": "rorl $1, %eax",
+          "description": "Rotate right 32-bit by 1",
+          "expected_encoding": "D1 C8",
+          "encoding_length": 2,
+          "intel_reference": "D1 /1 (ROR r/m32, 1)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "RCL",
+      "description": "Rotate through carry left",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "rclq $1, %rax",
+          "description": "Rotate through carry left by 1",
+          "expected_encoding": "48 D1 D0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /2 (RCL r/m64, 1)"
+        },
+        {
+          "syntax": "rclq %cl, %rax",
+          "description": "Rotate through carry left by CL",
+          "expected_encoding": "48 D3 D0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /2 (RCL r/m64, CL)"
+        },
+        {
+          "syntax": "rcll $1, %eax",
+          "description": "Rotate through carry left 32-bit",
+          "expected_encoding": "D1 D0",
+          "encoding_length": 2,
+          "intel_reference": "D1 /2 (RCL r/m32, 1)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "RCR",
+      "description": "Rotate through carry right",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["8", "16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "rcrq $1, %rax",
+          "description": "Rotate through carry right by 1",
+          "expected_encoding": "48 D1 D8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /3 (RCR r/m64, 1)"
+        },
+        {
+          "syntax": "rcrq %cl, %rax",
+          "description": "Rotate through carry right by CL",
+          "expected_encoding": "48 D3 D8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /3 (RCR r/m64, CL)"
+        },
+        {
+          "syntax": "rcrl $1, %eax",
+          "description": "Rotate through carry right 32-bit",
+          "expected_encoding": "D1 D8",
+          "encoding_length": 2,
+          "intel_reference": "D1 /3 (RCR r/m32, 1)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BT",
+      "description": "Bit test",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "btq %rax, %rbx",
+          "description": "Bit test register",
+          "expected_encoding": "48 0F A3 C3",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F A3 /r (BT r/m64, r64)"
+        },
+        {
+          "syntax": "btl %eax, %ebx",
+          "description": "Bit test 32-bit register",
+          "expected_encoding": "0F A3 C3",
+          "encoding_length": 3,
+          "intel_reference": "0F A3 /r (BT r/m32, r32)"
+        },
+        {
+          "syntax": "btq $5, %rax",
+          "description": "Bit test immediate",
+          "expected_encoding": "48 0F BA E0 05",
+          "encoding_length": 5,
+          "intel_reference": "REX.W + 0F BA /4 ib (BT r/m64, imm8)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BTC",
+      "description": "Bit test and complement",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "btcq %rax, %rbx",
+          "description": "Bit test and complement register",
+          "expected_encoding": "48 0F BB C3",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F BB /r (BTC r/m64, r64)"
+        },
+        {
+          "syntax": "btcl %eax, %ebx",
+          "description": "Bit test and complement 32-bit",
+          "expected_encoding": "0F BB C3",
+          "encoding_length": 3,
+          "intel_reference": "0F BB /r (BTC r/m32, r32)"
+        },
+        {
+          "syntax": "btcq $5, %rax",
+          "description": "Bit test and complement immediate",
+          "expected_encoding": "48 0F BA F8 05",
+          "encoding_length": 5,
+          "intel_reference": "REX.W + 0F BA /7 ib (BTC r/m64, imm8)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BTR",
+      "description": "Bit test and reset",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "btrq %rax, %rbx",
+          "description": "Bit test and reset register",
+          "expected_encoding": "48 0F B3 C3",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F B3 /r (BTR r/m64, r64)"
+        },
+        {
+          "syntax": "btrl %eax, %ebx",
+          "description": "Bit test and reset 32-bit",
+          "expected_encoding": "0F B3 C3",
+          "encoding_length": 3,
+          "intel_reference": "0F B3 /r (BTR r/m32, r32)"
+        },
+        {
+          "syntax": "btrq $5, %rax",
+          "description": "Bit test and reset immediate",
+          "expected_encoding": "48 0F BA F0 05",
+          "encoding_length": 5,
+          "intel_reference": "REX.W + 0F BA /6 ib (BTR r/m64, imm8)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BTS",
+      "description": "Bit test and set",
+      "operand_types": ["reg", "reg_mem", "imm"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "btsq %rax, %rbx",
+          "description": "Bit test and set register",
+          "expected_encoding": "48 0F AB C3",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F AB /r (BTS r/m64, r64)"
+        },
+        {
+          "syntax": "btsl %eax, %ebx",
+          "description": "Bit test and set 32-bit",
+          "expected_encoding": "0F AB C3",
+          "encoding_length": 3,
+          "intel_reference": "0F AB /r (BTS r/m32, r32)"
+        },
+        {
+          "syntax": "btsq $5, %rax",
+          "description": "Bit test and set immediate",
+          "expected_encoding": "48 0F BA E8 05",
+          "encoding_length": 5,
+          "intel_reference": "REX.W + 0F BA /5 ib (BTS r/m64, imm8)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BSF",
+      "description": "Bit scan forward",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "bsfq %rax, %rbx",
+          "description": "Bit scan forward 64-bit",
+          "expected_encoding": "48 0F BC D8",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F BC /r (BSF r64, r/m64)"
+        },
+        {
+          "syntax": "bsfl %eax, %ebx",
+          "description": "Bit scan forward 32-bit",
+          "expected_encoding": "0F BC D8",
+          "encoding_length": 3,
+          "intel_reference": "0F BC /r (BSF r32, r/m32)"
+        },
+        {
+          "syntax": "bsfw %ax, %bx",
+          "description": "Bit scan forward 16-bit",
+          "expected_encoding": "66 0F BC D8",
+          "encoding_length": 4,
+          "intel_reference": "66 0F BC /r (BSF r16, r/m16)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "BSR",
+      "description": "Bit scan reverse",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "bsrq %rax, %rbx",
+          "description": "Bit scan reverse 64-bit",
+          "expected_encoding": "48 0F BD D8",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F BD /r (BSR r64, r/m64)"
+        },
+        {
+          "syntax": "bsrl %eax, %ebx",
+          "description": "Bit scan reverse 32-bit",
+          "expected_encoding": "0F BD D8",
+          "encoding_length": 3,
+          "intel_reference": "0F BD /r (BSR r32, r/m32)"
+        },
+        {
+          "syntax": "bsrw %ax, %bx",
+          "description": "Bit scan reverse 16-bit",
+          "expected_encoding": "66 0F BD D8",
+          "encoding_length": 4,
+          "intel_reference": "66 0F BD /r (BSR r16, r/m16)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "POPCNT",
+      "description": "Population count (count set bits)",
+      "operand_types": ["reg", "reg_mem"],
+      "sizes": ["16", "32", "64"],
+      "test_cases": [
+        {
+          "syntax": "popcntq %rax, %rbx",
+          "description": "Population count 64-bit",
+          "expected_encoding": "F3 48 0F B8 D8",
+          "encoding_length": 5,
+          "intel_reference": "F3 REX.W + 0F B8 /r (POPCNT r64, r/m64)"
+        },
+        {
+          "syntax": "popcntl %eax, %ebx",
+          "description": "Population count 32-bit",
+          "expected_encoding": "F3 0F B8 D8",
+          "encoding_length": 4,
+          "intel_reference": "F3 0F B8 /r (POPCNT r32, r/m32)"
+        },
+        {
+          "syntax": "popcntw %ax, %bx",
+          "description": "Population count 16-bit",
+          "expected_encoding": "66 F3 0F B8 D8",
+          "encoding_length": 5,
+          "intel_reference": "66 F3 0F B8 /r (POPCNT r16, r/m16)"
+        }
+      ]
+    }
+  ]
+}

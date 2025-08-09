@@ -1,0 +1,463 @@
+{
+  "system_instructions": "x86_64_system_level",
+  "description": "System-level instructions for x86-64 architecture",
+  "reference": "Intel SDM Volume 2A/2B System Instructions, AMD64 Architecture Manual",
+  "instructions": [
+    {
+      "mnemonic": "NOP",
+      "description": "No Operation",
+      "test_cases": [
+        {
+          "syntax": "nop",
+          "description": "Single-byte NOP",
+          "expected_encoding": "90",
+          "encoding_length": 1,
+          "intel_reference": "90 (NOP)",
+          "note": "Classic single-byte no-operation"
+        },
+        {
+          "syntax": "nopw %ax",
+          "description": "2-byte NOP (16-bit operand)",
+          "expected_encoding": "66 90",
+          "encoding_length": 2,
+          "intel_reference": "66 90 (NOP)",
+          "note": "16-bit operand size prefix + NOP"
+        },
+        {
+          "syntax": "nopl (%rax)",
+          "description": "Multi-byte NOP with ModR/M",
+          "expected_encoding": "0F 1F 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 1F /0 (NOP r/m32)",
+          "note": "3-byte NOP using 0F 1F prefix"
+        },
+        {
+          "syntax": "nopw (%rax)",
+          "description": "4-byte NOP with 16-bit operand",
+          "expected_encoding": "66 0F 1F 00",
+          "encoding_length": 4,
+          "intel_reference": "66 0F 1F /0 (NOP r/m16)",
+          "note": "4-byte NOP with operand size override"
+        },
+        {
+          "syntax": "nopl 8(%rax)",
+          "description": "5-byte NOP with displacement",
+          "expected_encoding": "0F 1F 40 08",
+          "encoding_length": 4,
+          "intel_reference": "0F 1F /0 (NOP r/m32)",
+          "note": "4-byte NOP with 8-bit displacement"
+        }
+      ]
+    },
+    {
+      "mnemonic": "HLT",
+      "description": "Halt processor",
+      "test_cases": [
+        {
+          "syntax": "hlt",
+          "description": "Halt instruction",
+          "expected_encoding": "F4",
+          "encoding_length": 1,
+          "intel_reference": "F4 (HLT)",
+          "note": "Halt processor execution"
+        }
+      ]
+    },
+    {
+      "mnemonic": "INT",
+      "description": "Software interrupt",
+      "test_cases": [
+        {
+          "syntax": "int $0x80",
+          "description": "Software interrupt 0x80",
+          "expected_encoding": "CD 80",
+          "encoding_length": 2,
+          "intel_reference": "CD ib (INT imm8)",
+          "note": "Software interrupt with immediate byte"
+        },
+        {
+          "syntax": "int $3",
+          "description": "Breakpoint interrupt",
+          "expected_encoding": "CD 03",
+          "encoding_length": 2,
+          "intel_reference": "CD ib (INT imm8)",
+          "note": "Debugger breakpoint interrupt"
+        },
+        {
+          "syntax": "int3",
+          "description": "Single-byte breakpoint",
+          "expected_encoding": "CC",
+          "encoding_length": 1,
+          "intel_reference": "CC (INT 3)",
+          "note": "Single-byte breakpoint instruction"
+        }
+      ]
+    },
+    {
+      "mnemonic": "IRET",
+      "description": "Interrupt return",
+      "test_cases": [
+        {
+          "syntax": "iretw",
+          "description": "16-bit interrupt return",
+          "expected_encoding": "66 CF",
+          "encoding_length": 2,
+          "intel_reference": "66 CF (IRET)",
+          "note": "16-bit operand size interrupt return"
+        },
+        {
+          "syntax": "iretl",
+          "description": "32-bit interrupt return",
+          "expected_encoding": "CF",
+          "encoding_length": 1,
+          "intel_reference": "CF (IRET)",
+          "note": "32-bit interrupt return"
+        },
+        {
+          "syntax": "iretq",
+          "description": "64-bit interrupt return",
+          "expected_encoding": "48 CF",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + CF (IRETQ)",
+          "note": "64-bit interrupt return"
+        }
+      ]
+    },
+    {
+      "mnemonic": "STI",
+      "description": "Set interrupt flag",
+      "test_cases": [
+        {
+          "syntax": "sti",
+          "description": "Enable interrupts",
+          "expected_encoding": "FB",
+          "encoding_length": 1,
+          "intel_reference": "FB (STI)",
+          "note": "Set interrupt flag to enable interrupts"
+        }
+      ]
+    },
+    {
+      "mnemonic": "CLI",
+      "description": "Clear interrupt flag",
+      "test_cases": [
+        {
+          "syntax": "cli",
+          "description": "Disable interrupts",
+          "expected_encoding": "FA",
+          "encoding_length": 1,
+          "intel_reference": "FA (CLI)",
+          "note": "Clear interrupt flag to disable interrupts"
+        }
+      ]
+    },
+    {
+      "mnemonic": "CLD",
+      "description": "Clear direction flag",
+      "test_cases": [
+        {
+          "syntax": "cld",
+          "description": "Clear direction flag",
+          "expected_encoding": "FC",
+          "encoding_length": 1,
+          "intel_reference": "FC (CLD)",
+          "note": "Clear direction flag for string operations"
+        }
+      ]
+    },
+    {
+      "mnemonic": "STD",
+      "description": "Set direction flag",
+      "test_cases": [
+        {
+          "syntax": "std",
+          "description": "Set direction flag",
+          "expected_encoding": "FD",
+          "encoding_length": 1,
+          "intel_reference": "FD (STD)",
+          "note": "Set direction flag for string operations"
+        }
+      ]
+    },
+    {
+      "mnemonic": "LAHF",
+      "description": "Load AH from flags",
+      "test_cases": [
+        {
+          "syntax": "lahf",
+          "description": "Load AH with flags",
+          "expected_encoding": "9F",
+          "encoding_length": 1,
+          "intel_reference": "9F (LAHF)",
+          "note": "Load AH with low byte of flags register"
+        }
+      ]
+    },
+    {
+      "mnemonic": "SAHF",
+      "description": "Store AH into flags",
+      "test_cases": [
+        {
+          "syntax": "sahf",
+          "description": "Store AH into flags",
+          "expected_encoding": "9E",
+          "encoding_length": 1,
+          "intel_reference": "9E (SAHF)",
+          "note": "Store AH into low byte of flags register"
+        }
+      ]
+    },
+    {
+      "mnemonic": "PUSHF",
+      "description": "Push flags register",
+      "test_cases": [
+        {
+          "syntax": "pushfw",
+          "description": "Push 16-bit flags",
+          "expected_encoding": "66 9C",
+          "encoding_length": 2,
+          "intel_reference": "66 9C (PUSHF)",
+          "note": "Push 16-bit flags register"
+        },
+        {
+          "syntax": "pushfl",
+          "description": "Push 32-bit flags",
+          "expected_encoding": "9C",
+          "encoding_length": 1,
+          "intel_reference": "9C (PUSHFD)",
+          "note": "Push 32-bit flags register"
+        },
+        {
+          "syntax": "pushfq",
+          "description": "Push 64-bit flags",
+          "expected_encoding": "9C",
+          "encoding_length": 1,
+          "intel_reference": "9C (PUSHFQ)",
+          "note": "Push 64-bit flags register (default in 64-bit mode)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "POPF",
+      "description": "Pop flags register",
+      "test_cases": [
+        {
+          "syntax": "popfw",
+          "description": "Pop 16-bit flags",
+          "expected_encoding": "66 9D",
+          "encoding_length": 2,
+          "intel_reference": "66 9D (POPF)",
+          "note": "Pop 16-bit flags register"
+        },
+        {
+          "syntax": "popfl",
+          "description": "Pop 32-bit flags",
+          "expected_encoding": "9D",
+          "encoding_length": 1,
+          "intel_reference": "9D (POPFD)",
+          "note": "Pop 32-bit flags register"
+        },
+        {
+          "syntax": "popfq",
+          "description": "Pop 64-bit flags",
+          "expected_encoding": "9D",
+          "encoding_length": 1,
+          "intel_reference": "9D (POPFQ)",
+          "note": "Pop 64-bit flags register (default in 64-bit mode)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "CLC",
+      "description": "Clear carry flag",
+      "test_cases": [
+        {
+          "syntax": "clc",
+          "description": "Clear carry flag",
+          "expected_encoding": "F8",
+          "encoding_length": 1,
+          "intel_reference": "F8 (CLC)",
+          "note": "Clear carry flag (CF=0)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "STC",
+      "description": "Set carry flag",
+      "test_cases": [
+        {
+          "syntax": "stc",
+          "description": "Set carry flag",
+          "expected_encoding": "F9",
+          "encoding_length": 1,
+          "intel_reference": "F9 (STC)",
+          "note": "Set carry flag (CF=1)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "CMC",
+      "description": "Complement carry flag",
+      "test_cases": [
+        {
+          "syntax": "cmc",
+          "description": "Complement carry flag",
+          "expected_encoding": "F5",
+          "encoding_length": 1,
+          "intel_reference": "F5 (CMC)",
+          "note": "Complement carry flag (CF = !CF)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "IN",
+      "description": "Input from port",
+      "test_cases": [
+        {
+          "syntax": "inb $0x60, %al",
+          "description": "Input byte from immediate port",
+          "expected_encoding": "E4 60",
+          "encoding_length": 2,
+          "intel_reference": "E4 ib (IN AL, imm8)",
+          "note": "Input byte from port 0x60 to AL"
+        },
+        {
+          "syntax": "inw $0x64, %ax",
+          "description": "Input word from immediate port",
+          "expected_encoding": "66 E5 64",
+          "encoding_length": 3,
+          "intel_reference": "66 E5 ib (IN AX, imm8)",
+          "note": "Input word from port 0x64 to AX"
+        },
+        {
+          "syntax": "inl $0x3F8, %eax",
+          "description": "Input dword from immediate port",
+          "expected_encoding": "E5 3F8",
+          "encoding_length": 2,
+          "intel_reference": "E5 ib (IN EAX, imm8)",
+          "note": "Input dword from port 0x3F8 to EAX"
+        },
+        {
+          "syntax": "inb (%dx), %al",
+          "description": "Input byte from DX port",
+          "expected_encoding": "EC",
+          "encoding_length": 1,
+          "intel_reference": "EC (IN AL, DX)",
+          "note": "Input byte from port in DX to AL"
+        },
+        {
+          "syntax": "inw (%dx), %ax",
+          "description": "Input word from DX port",
+          "expected_encoding": "66 ED",
+          "encoding_length": 2,
+          "intel_reference": "66 ED (IN AX, DX)",
+          "note": "Input word from port in DX to AX"
+        },
+        {
+          "syntax": "inl (%dx), %eax",
+          "description": "Input dword from DX port",
+          "expected_encoding": "ED",
+          "encoding_length": 1,
+          "intel_reference": "ED (IN EAX, DX)",
+          "note": "Input dword from port in DX to EAX"
+        }
+      ]
+    },
+    {
+      "mnemonic": "OUT",
+      "description": "Output to port",
+      "test_cases": [
+        {
+          "syntax": "outb %al, $0x60",
+          "description": "Output byte to immediate port",
+          "expected_encoding": "E6 60",
+          "encoding_length": 2,
+          "intel_reference": "E6 ib (OUT imm8, AL)",
+          "note": "Output AL to port 0x60"
+        },
+        {
+          "syntax": "outw %ax, $0x64",
+          "description": "Output word to immediate port",
+          "expected_encoding": "66 E7 64",
+          "encoding_length": 3,
+          "intel_reference": "66 E7 ib (OUT imm8, AX)",
+          "note": "Output AX to port 0x64"
+        },
+        {
+          "syntax": "outl %eax, $0x3F8",
+          "description": "Output dword to immediate port",
+          "expected_encoding": "E7 3F8",
+          "encoding_length": 2,
+          "intel_reference": "E7 ib (OUT imm8, EAX)",
+          "note": "Output EAX to port 0x3F8"
+        },
+        {
+          "syntax": "outb %al, (%dx)",
+          "description": "Output byte to DX port",
+          "expected_encoding": "EE",
+          "encoding_length": 1,
+          "intel_reference": "EE (OUT DX, AL)",
+          "note": "Output AL to port in DX"
+        },
+        {
+          "syntax": "outw %ax, (%dx)",
+          "description": "Output word to DX port",
+          "expected_encoding": "66 EF",
+          "encoding_length": 2,
+          "intel_reference": "66 EF (OUT DX, AX)",
+          "note": "Output AX to port in DX"
+        },
+        {
+          "syntax": "outl %eax, (%dx)",
+          "description": "Output dword to DX port",
+          "expected_encoding": "EF",
+          "encoding_length": 1,
+          "intel_reference": "EF (OUT DX, EAX)",
+          "note": "Output EAX to port in DX"
+        }
+      ]
+    },
+    {
+      "mnemonic": "CPUID",
+      "description": "CPU identification",
+      "test_cases": [
+        {
+          "syntax": "cpuid",
+          "description": "CPU identification instruction",
+          "expected_encoding": "0F A2",
+          "encoding_length": 2,
+          "intel_reference": "0F A2 (CPUID)",
+          "note": "CPU identification and feature information"
+        }
+      ]
+    },
+    {
+      "mnemonic": "RDTSC",
+      "description": "Read time-stamp counter",
+      "test_cases": [
+        {
+          "syntax": "rdtsc",
+          "description": "Read time-stamp counter",
+          "expected_encoding": "0F 31",
+          "encoding_length": 2,
+          "intel_reference": "0F 31 (RDTSC)",
+          "note": "Read time-stamp counter into EDX:EAX"
+        }
+      ]
+    },
+    {
+      "mnemonic": "RDTSCP",
+      "description": "Read time-stamp counter and processor ID",
+      "test_cases": [
+        {
+          "syntax": "rdtscp",
+          "description": "Read time-stamp counter and processor ID",
+          "expected_encoding": "0F 01 F9",
+          "encoding_length": 3,
+          "intel_reference": "0F 01 F9 (RDTSCP)",
+          "note": "Read TSC and processor ID into EDX:EAX, ECX"
+        }
+      ]
+    }
+  ]
+}

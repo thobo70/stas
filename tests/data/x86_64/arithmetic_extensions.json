@@ -1,0 +1,329 @@
+{
+  "arithmetic_extensions": "x86_64_extended_arithmetic",
+  "description": "Extended arithmetic operations for x86-64 architecture",
+  "reference": "Intel SDM Volume 2A/2B Arithmetic Instructions",
+  "instructions": [
+    {
+      "mnemonic": "IMUL",
+      "description": "Signed multiply (extended forms)",
+      "test_cases": [
+        {
+          "syntax": "imulq %rbx, %rax",
+          "description": "64-bit signed multiply two operands",
+          "expected_encoding": "48 0F AF C3",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F AF /r (IMUL r64, r/m64)",
+          "note": "Two operand form: RAX = RAX * RBX"
+        },
+        {
+          "syntax": "imull %ebx, %eax",
+          "description": "32-bit signed multiply two operands",
+          "expected_encoding": "0F AF C3",
+          "encoding_length": 3,
+          "intel_reference": "0F AF /r (IMUL r32, r/m32)",
+          "note": "Two operand form: EAX = EAX * EBX"
+        },
+        {
+          "syntax": "imulw %bx, %ax",
+          "description": "16-bit signed multiply two operands",
+          "expected_encoding": "66 0F AF C3",
+          "encoding_length": 4,
+          "intel_reference": "66 0F AF /r (IMUL r16, r/m16)",
+          "note": "Two operand form: AX = AX * BX"
+        },
+        {
+          "syntax": "imulq $10, %rax",
+          "description": "64-bit signed multiply with immediate",
+          "expected_encoding": "48 6B C0 0A",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 6B /r ib (IMUL r64, r/m64, imm8)",
+          "note": "RAX = RAX * 10 (sign-extended immediate)"
+        },
+        {
+          "syntax": "imulq $1000, %rax",
+          "description": "64-bit signed multiply with 32-bit immediate",
+          "expected_encoding": "48 69 C0 E8 03 00 00",
+          "encoding_length": 7,
+          "intel_reference": "REX.W + 69 /r id (IMUL r64, r/m64, imm32)",
+          "note": "RAX = RAX * 1000 (32-bit immediate)"
+        },
+        {
+          "syntax": "imull $10, %eax",
+          "description": "32-bit signed multiply with immediate",
+          "expected_encoding": "6B C0 0A",
+          "encoding_length": 3,
+          "intel_reference": "6B /r ib (IMUL r32, r/m32, imm8)",
+          "note": "EAX = EAX * 10"
+        },
+        {
+          "syntax": "imulw $10, %ax",
+          "description": "16-bit signed multiply with immediate",
+          "expected_encoding": "66 6B C0 0A",
+          "encoding_length": 4,
+          "intel_reference": "66 6B /r ib (IMUL r16, r/m16, imm8)",
+          "note": "AX = AX * 10"
+        },
+        {
+          "syntax": "imulq %rbx, %rax, %rcx",
+          "description": "64-bit three-operand signed multiply",
+          "expected_encoding": "48 0F AF CB",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F AF /r (IMUL r64, r/m64)",
+          "note": "RCX = RBX * RAX (three operand form)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "MUL",
+      "description": "Unsigned multiply",
+      "test_cases": [
+        {
+          "syntax": "mulq %rbx",
+          "description": "64-bit unsigned multiply",
+          "expected_encoding": "48 F7 E3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /4 (MUL r/m64)",
+          "note": "RDX:RAX = RAX * RBX"
+        },
+        {
+          "syntax": "mull %ebx",
+          "description": "32-bit unsigned multiply",
+          "expected_encoding": "F7 E3",
+          "encoding_length": 2,
+          "intel_reference": "F7 /4 (MUL r/m32)",
+          "note": "EDX:EAX = EAX * EBX"
+        },
+        {
+          "syntax": "mulw %bx",
+          "description": "16-bit unsigned multiply",
+          "expected_encoding": "66 F7 E3",
+          "encoding_length": 3,
+          "intel_reference": "66 F7 /4 (MUL r/m16)",
+          "note": "DX:AX = AX * BX"
+        },
+        {
+          "syntax": "mulb %bl",
+          "description": "8-bit unsigned multiply",
+          "expected_encoding": "F6 E3",
+          "encoding_length": 2,
+          "intel_reference": "F6 /4 (MUL r/m8)",
+          "note": "AX = AL * BL"
+        }
+      ]
+    },
+    {
+      "mnemonic": "IDIV",
+      "description": "Signed divide",
+      "test_cases": [
+        {
+          "syntax": "idivq %rbx",
+          "description": "64-bit signed divide",
+          "expected_encoding": "48 F7 FB",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /7 (IDIV r/m64)",
+          "note": "RAX = RDX:RAX / RBX, RDX = remainder"
+        },
+        {
+          "syntax": "idivl %ebx",
+          "description": "32-bit signed divide",
+          "expected_encoding": "F7 FB",
+          "encoding_length": 2,
+          "intel_reference": "F7 /7 (IDIV r/m32)",
+          "note": "EAX = EDX:EAX / EBX, EDX = remainder"
+        },
+        {
+          "syntax": "idivw %bx",
+          "description": "16-bit signed divide",
+          "expected_encoding": "66 F7 FB",
+          "encoding_length": 3,
+          "intel_reference": "66 F7 /7 (IDIV r/m16)",
+          "note": "AX = DX:AX / BX, DX = remainder"
+        },
+        {
+          "syntax": "idivb %bl",
+          "description": "8-bit signed divide",
+          "expected_encoding": "F6 FB",
+          "encoding_length": 2,
+          "intel_reference": "F6 /7 (IDIV r/m8)",
+          "note": "AL = AX / BL, AH = remainder"
+        }
+      ]
+    },
+    {
+      "mnemonic": "DIV",
+      "description": "Unsigned divide",
+      "test_cases": [
+        {
+          "syntax": "divq %rbx",
+          "description": "64-bit unsigned divide",
+          "expected_encoding": "48 F7 F3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /6 (DIV r/m64)",
+          "note": "RAX = RDX:RAX / RBX, RDX = remainder"
+        },
+        {
+          "syntax": "divl %ebx",
+          "description": "32-bit unsigned divide",
+          "expected_encoding": "F7 F3",
+          "encoding_length": 2,
+          "intel_reference": "F7 /6 (DIV r/m32)",
+          "note": "EAX = EDX:EAX / EBX, EDX = remainder"
+        },
+        {
+          "syntax": "divw %bx",
+          "description": "16-bit unsigned divide",
+          "expected_encoding": "66 F7 F3",
+          "encoding_length": 3,
+          "intel_reference": "66 F7 /6 (DIV r/m16)",
+          "note": "AX = DX:AX / BX, DX = remainder"
+        },
+        {
+          "syntax": "divb %bl",
+          "description": "8-bit unsigned divide",
+          "expected_encoding": "F6 F3",
+          "encoding_length": 2,
+          "intel_reference": "F6 /6 (DIV r/m8)",
+          "note": "AL = AX / BL, AH = remainder"
+        }
+      ]
+    },
+    {
+      "mnemonic": "CDQ",
+      "description": "Convert double to quad",
+      "test_cases": [
+        {
+          "syntax": "cqo",
+          "description": "Convert quad word to octal word",
+          "expected_encoding": "48 99",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + 99 (CQO)",
+          "note": "Sign-extend RAX to RDX:RAX"
+        },
+        {
+          "syntax": "cdq",
+          "description": "Convert double word to quad word",
+          "expected_encoding": "99",
+          "encoding_length": 1,
+          "intel_reference": "99 (CDQ)",
+          "note": "Sign-extend EAX to EDX:EAX"
+        },
+        {
+          "syntax": "cwd",
+          "description": "Convert word to double word",
+          "expected_encoding": "66 99",
+          "encoding_length": 2,
+          "intel_reference": "66 99 (CWD)",
+          "note": "Sign-extend AX to DX:AX"
+        },
+        {
+          "syntax": "cbw",
+          "description": "Convert byte to word",
+          "expected_encoding": "66 98",
+          "encoding_length": 2,
+          "intel_reference": "66 98 (CBW)",
+          "note": "Sign-extend AL to AX"
+        },
+        {
+          "syntax": "cwde",
+          "description": "Convert word to double word extended",
+          "expected_encoding": "98",
+          "encoding_length": 1,
+          "intel_reference": "98 (CWDE)",
+          "note": "Sign-extend AX to EAX"
+        },
+        {
+          "syntax": "cdqe",
+          "description": "Convert double word to quad word extended",
+          "expected_encoding": "48 98",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + 98 (CDQE)",
+          "note": "Sign-extend EAX to RAX"
+        }
+      ]
+    },
+    {
+      "mnemonic": "AAA",
+      "description": "ASCII adjust after addition",
+      "test_cases": [
+        {
+          "syntax": "aaa",
+          "description": "ASCII adjust AL after addition",
+          "expected_encoding": "37",
+          "encoding_length": 1,
+          "intel_reference": "37 (AAA)",
+          "note": "ASCII adjust AL after addition (legacy)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "AAS",
+      "description": "ASCII adjust after subtraction",
+      "test_cases": [
+        {
+          "syntax": "aas",
+          "description": "ASCII adjust AL after subtraction",
+          "expected_encoding": "3F",
+          "encoding_length": 1,
+          "intel_reference": "3F (AAS)",
+          "note": "ASCII adjust AL after subtraction (legacy)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "AAM",
+      "description": "ASCII adjust after multiply",
+      "test_cases": [
+        {
+          "syntax": "aam",
+          "description": "ASCII adjust AX after multiply",
+          "expected_encoding": "D4 0A",
+          "encoding_length": 2,
+          "intel_reference": "D4 0A (AAM)",
+          "note": "ASCII adjust AX after multiply (legacy)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "AAD",
+      "description": "ASCII adjust before division",
+      "test_cases": [
+        {
+          "syntax": "aad",
+          "description": "ASCII adjust AX before division",
+          "expected_encoding": "D5 0A",
+          "encoding_length": 2,
+          "intel_reference": "D5 0A (AAD)",
+          "note": "ASCII adjust AX before division (legacy)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "DAA",
+      "description": "Decimal adjust after addition",
+      "test_cases": [
+        {
+          "syntax": "daa",
+          "description": "Decimal adjust AL after addition",
+          "expected_encoding": "27",
+          "encoding_length": 1,
+          "intel_reference": "27 (DAA)",
+          "note": "Decimal adjust AL after addition (legacy)"
+        }
+      ]
+    },
+    {
+      "mnemonic": "DAS",
+      "description": "Decimal adjust after subtraction",
+      "test_cases": [
+        {
+          "syntax": "das",
+          "description": "Decimal adjust AL after subtraction",
+          "expected_encoding": "2F",
+          "encoding_length": 1,
+          "intel_reference": "2F (DAS)",
+          "note": "Decimal adjust AL after subtraction (legacy)"
+        }
+      ]
+    }
+  ]
+}
