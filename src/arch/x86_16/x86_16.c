@@ -74,6 +74,7 @@ bool x86_16_validate_instruction(const char *mnemonic, const operand_t *operands
     
     // Two-operand instructions
     if (strcasecmp_c99(mnemonic, "mov") == 0 ||
+        strcasecmp_c99(mnemonic, "movb") == 0 ||
         strcasecmp_c99(mnemonic, "add") == 0 ||
         strcasecmp_c99(mnemonic, "sub") == 0 ||
         strcasecmp_c99(mnemonic, "cmp") == 0 ||
@@ -604,6 +605,54 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
         return true;
     }
     
+    // CPU-ACCURATE: MOVB instruction (8-bit MOV for AT&T syntax compatibility)
+    if (strcasecmp_c99(mnemonic, "movb") == 0 && operand_count == 2) {
+        // MOVB immediate to 8-bit register
+        if (operands[0].type == OPERAND_IMMEDIATE && operands[1].type == OPERAND_REGISTER) {
+            if (operands[1].value.reg.name != NULL) {
+                uint8_t reg_encoding, reg_size;
+                if (x86_16_find_register(operands[1].value.reg.name, &reg_encoding, &reg_size) == 0) {
+                    if (reg_size == 1) { // Must be 8-bit register
+                        int64_t imm = operands[0].value.immediate;
+                        
+                        // Intel 8086 Manual: MOV reg8, imm8
+                        if (reg_encoding >= 4) {
+                            // High byte register (AH, BH, CH, DH) - opcodes B4-B7
+                            output[pos++] = 0xB4 + (reg_encoding - 4);
+                        } else {
+                            // Low byte register (AL, BL, CL, DL) - opcodes B0-B3
+                            output[pos++] = 0xB0 + reg_encoding;
+                        }
+                        x86_16_encode_immediate(output, &pos, imm, 1);
+                        *output_size = pos;
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        // MOVB register to register
+        else if (operands[0].type == OPERAND_REGISTER && operands[1].type == OPERAND_REGISTER) {
+            if (operands[0].value.reg.name != NULL && operands[1].value.reg.name != NULL) {
+                uint8_t src_encoding, src_size, dst_encoding, dst_size;
+                if (x86_16_find_register(operands[0].value.reg.name, &src_encoding, &src_size) == 0 &&
+                    x86_16_find_register(operands[1].value.reg.name, &dst_encoding, &dst_size) == 0) {
+                    
+                    if (src_size == dst_size && src_size == 1) { // Both must be 8-bit registers
+                        // Intel 8086 Manual: MOV reg8, reg8 (opcode 88h + ModR/M)
+                        output[pos++] = 0x88; // MOV r8, r/m8
+                        output[pos++] = 0xC0 | (src_encoding << 3) | dst_encoding; // ModR/M byte
+                        *output_size = pos;
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        // Unsupported MOVB variant
+        return false;
+    }
+    
     // PUSH instruction (already implemented)
     if (strcasecmp_c99(mnemonic, "push") == 0 && operand_count == 1) {
         output[pos++] = 0x50; // PUSH AX (simplified)
@@ -885,8 +934,16 @@ bool x86_16_encode_instruction(const char *mnemonic, const operand_t *operands, 
     // SYSTEM INSTRUCTIONS (11 total)
     // ===========================================
     
-    // INT instruction (already implemented)
+    // INT instruction (CPU-ACCURATE: Use actual operand value per Intel 8086 manual)
     if (strcasecmp_c99(mnemonic, "int") == 0 && operand_count == 1) {
+        if (operands[0].type == OPERAND_IMMEDIATE) {
+            output[pos++] = 0xCD; // INT imm8
+            output[pos++] = (uint8_t)(operands[0].value.immediate & 0xFF); // Use actual operand value
+            *output_size = pos;
+            return true;
+        }
+        
+        // Fallback for non-immediate operands
         output[pos++] = 0xCD; // INT imm8
         output[pos++] = 0x21; // Default to INT 21h
         *output_size = pos;
