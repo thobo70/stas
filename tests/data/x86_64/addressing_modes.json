@@ -19,7 +19,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq %rax, %rbx", 
+          "syntax": "movq %rax, %rbx", 
           "description": "64-bit register to register",
           "expected_encoding": "48 89 C3",
           "encoding_length": 3,
@@ -27,7 +27,7 @@
           "note": "REX.W=1 (48), ModR/M=C3 (mod=11 reg=000 r/m=011)"
         },
         {
-          "instruction": "movl %eax, %ebx", 
+          "syntax": "movl %eax, %ebx", 
           "description": "32-bit register to register",
           "expected_encoding": "89 C3",
           "encoding_length": 2,
@@ -35,7 +35,7 @@
           "note": "ModR/M=C3 (mod=11 reg=000 r/m=011)"
         },
         {
-          "instruction": "movw %ax, %bx", 
+          "syntax": "movw %ax, %bx", 
           "description": "16-bit register to register",
           "expected_encoding": "66 89 C3",
           "encoding_length": 3,
@@ -43,7 +43,7 @@
           "note": "Operand-size prefix 66, ModR/M=C3"
         },
         {
-          "instruction": "movb %al, %bl", 
+          "syntax": "movb %al, %bl", 
           "description": "8-bit register to register",
           "expected_encoding": "88 C3",
           "encoding_length": 2,
@@ -51,7 +51,7 @@
           "note": "ModR/M=C3 (mod=11 reg=000 r/m=011)"
         },
         {
-          "instruction": "movq %r8, %r15", 
+          "syntax": "movq %r8, %r15", 
           "description": "Extended 64-bit registers",
           "expected_encoding": "4D 89 C7",
           "encoding_length": 3,
@@ -59,7 +59,7 @@
           "note": "REX.W=1,R=1,B=1 (4D), ModR/M=C7 (r8->r15)"
         },
         {
-          "instruction": "movl %r8d, %r15d", 
+          "syntax": "movl %r8d, %r15d", 
           "description": "Extended 32-bit registers",
           "expected_encoding": "45 89 C7",
           "encoding_length": 3,
@@ -67,7 +67,7 @@
           "note": "REX.R=1,B=1 (45), ModR/M=C7"
         },
         {
-          "instruction": "movw %r8w, %r15w", 
+          "syntax": "movw %r8w, %r15w", 
           "description": "Extended 16-bit registers",
           "expected_encoding": "66 45 89 C7",
           "encoding_length": 4,
@@ -75,7 +75,7 @@
           "note": "Operand-size prefix + REX.R=1,B=1"
         },
         {
-          "instruction": "movb %r8b, %r15b", 
+          "syntax": "movb %r8b, %r15b", 
           "description": "Extended 8-bit registers",
           "expected_encoding": "45 88 C7",
           "encoding_length": 3,
@@ -83,7 +83,7 @@
           "note": "REX.R=1,B=1 (45), ModR/M=C7"
         },
         {
-          "instruction": "movb %sil, %dil", 
+          "syntax": "movb %sil, %dil", 
           "description": "Low 8-bit of index registers",
           "expected_encoding": "40 88 F7",
           "encoding_length": 3,
@@ -100,7 +100,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq $0x1234567890ABCDEF, %rax", 
+          "syntax": "movq $0x1234567890ABCDEF, %rax", 
           "description": "64-bit immediate",
           "expected_encoding": "48 B8 EF CD AB 90 78 56 34 12",
           "encoding_length": 10,
@@ -108,7 +108,7 @@
           "note": "REX.W + opcode B8 + 8-byte immediate in little-endian"
         },
         {
-          "instruction": "movl $0x12345678, %eax", 
+          "syntax": "movl $0x12345678, %eax", 
           "description": "32-bit immediate",
           "expected_encoding": "B8 78 56 34 12",
           "encoding_length": 5,
@@ -116,7 +116,7 @@
           "note": "Opcode B8 + 4-byte immediate in little-endian"
         },
         {
-          "instruction": "movw $0x1234, %ax", 
+          "syntax": "movw $0x1234, %ax", 
           "description": "16-bit immediate",
           "expected_encoding": "66 B8 34 12",
           "encoding_length": 4,
@@ -124,7 +124,7 @@
           "note": "Operand-size prefix + B8 + 2-byte immediate"
         },
         {
-          "instruction": "movb $0x12, %al", 
+          "syntax": "movb $0x12, %al", 
           "description": "8-bit immediate",
           "expected_encoding": "B0 12",
           "encoding_length": 2,
@@ -132,7 +132,7 @@
           "note": "Opcode B0 for AL + 1-byte immediate"
         },
         {
-          "instruction": "addq $1, %rax", 
+          "syntax": "addq $1, %rax", 
           "description": "Small immediate addition",
           "expected_encoding": "48 83 C0 01",
           "encoding_length": 4,
@@ -140,7 +140,7 @@
           "note": "REX.W + 83 /0 + sign-extended 8-bit immediate"
         },
         {
-          "instruction": "addq $-128, %rax", 
+          "syntax": "addq $-128, %rax", 
           "description": "Negative immediate",
           "expected_encoding": "48 83 C0 80",
           "encoding_length": 4,
@@ -148,7 +148,7 @@
           "note": "REX.W + 83 /0 + 0x80 (-128 as signed byte)"
         },
         {
-          "instruction": "cmpq $0, %rax", 
+          "syntax": "cmpq $0, %rax", 
           "description": "Compare with zero immediate",
           "expected_encoding": "48 83 F8 00",
           "encoding_length": 4,
@@ -165,7 +165,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq (%rax), %rbx", 
+          "syntax": "movq (%rax), %rbx", 
           "description": "Register indirect",
           "expected_encoding": "48 8B 18",
           "encoding_length": 3,
@@ -173,7 +173,7 @@
           "note": "REX.W + 8B + ModR/M=18 (mod=00 reg=011 r/m=000)"
         },
         {
-          "instruction": "movq (%r8), %rbx", 
+          "syntax": "movq (%r8), %rbx", 
           "description": "Extended register indirect",
           "expected_encoding": "49 8B 18",
           "encoding_length": 3,
@@ -181,7 +181,7 @@
           "note": "REX.W=1,B=1 (49) + ModR/M=18"
         },
         {
-          "instruction": "movq 8(%rax), %rbx", 
+          "syntax": "movq 8(%rax), %rbx", 
           "description": "Register indirect with 8-bit displacement",
           "expected_encoding": "48 8B 58 08",
           "encoding_length": 4,
@@ -189,7 +189,7 @@
           "note": "REX.W + 8B + ModR/M=58 (mod=01) + disp8=08"
         },
         {
-          "instruction": "movq 256(%rax), %rbx", 
+          "syntax": "movq 256(%rax), %rbx", 
           "description": "Register indirect with 32-bit displacement",
           "expected_encoding": "48 8B 98 00 01 00 00",
           "encoding_length": 7,
@@ -197,7 +197,7 @@
           "note": "REX.W + 8B + ModR/M=98 (mod=10) + disp32=0x00000100"
         },
         {
-          "instruction": "movq -8(%rax), %rbx", 
+          "syntax": "movq -8(%rax), %rbx", 
           "description": "Register indirect with negative displacement",
           "expected_encoding": "48 8B 58 F8",
           "encoding_length": 4,
@@ -205,7 +205,7 @@
           "note": "REX.W + 8B + ModR/M=58 + disp8=F8 (-8)"
         },
         {
-          "instruction": "movq (%rsp), %rax", 
+          "syntax": "movq (%rsp), %rax", 
           "description": "Stack pointer indirect",
           "expected_encoding": "48 8B 04 24",
           "encoding_length": 4,
@@ -213,7 +213,7 @@
           "note": "REX.W + 8B + ModR/M=04 + SIB=24 (RSP needs SIB)"
         },
         {
-          "instruction": "movq (%rbp), %rax", 
+          "syntax": "movq (%rbp), %rax", 
           "description": "Base pointer indirect",
           "expected_encoding": "48 8B 45 00",
           "encoding_length": 4,
@@ -221,7 +221,7 @@
           "note": "REX.W + 8B + ModR/M=45 + disp8=00 (RBP needs displacement)"
         },
         {
-          "instruction": "movq 16(%rbp), %rax", 
+          "syntax": "movq 16(%rbp), %rax", 
           "description": "Stack frame access",
           "expected_encoding": "48 8B 45 10",
           "encoding_length": 4,
@@ -238,7 +238,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq variable(%rip), %rax", 
+          "syntax": "movq variable(%rip), %rax", 
           "description": "RIP-relative variable access",
           "expected_encoding": "48 8B 05 00 00 00 00",
           "encoding_length": 7,
@@ -246,7 +246,7 @@
           "note": "REX.W + 8B + ModR/M=05 + disp32 (RIP-relative)"
         },
         {
-          "instruction": "leaq string(%rip), %rdi", 
+          "syntax": "leaq string(%rip), %rdi", 
           "description": "RIP-relative address loading",
           "expected_encoding": "48 8D 3D 00 00 00 00",
           "encoding_length": 7,
@@ -254,7 +254,7 @@
           "note": "REX.W + 8D + ModR/M=3D + disp32 (RIP-relative LEA)"
         },
         {
-          "instruction": "callq function(%rip)", 
+          "syntax": "callq function(%rip)", 
           "description": "RIP-relative function call",
           "expected_encoding": "E8 00 00 00 00",
           "encoding_length": 5,
@@ -262,7 +262,7 @@
           "note": "Direct call with 32-bit relative displacement"
         },
         {
-          "instruction": "cmpq $0, flag(%rip)", 
+          "syntax": "cmpq $0, flag(%rip)", 
           "description": "RIP-relative comparison",
           "expected_encoding": "48 83 3D 00 00 00 00 00",
           "encoding_length": 8,
@@ -270,7 +270,7 @@
           "note": "REX.W + 83 /7 + ModR/M=3D + disp32 + imm8=00"
         },
         {
-          "instruction": "addq data(%rip), %rax", 
+          "syntax": "addq data(%rip), %rax", 
           "description": "RIP-relative arithmetic",
           "expected_encoding": "48 03 05 00 00 00 00",
           "encoding_length": 7,
@@ -278,7 +278,7 @@
           "note": "REX.W + 03 + ModR/M=05 + disp32 (RIP-relative)"
         },
         {
-          "instruction": "movq %rax, result(%rip)", 
+          "syntax": "movq %rax, result(%rip)", 
           "description": "RIP-relative store operation",
           "expected_encoding": "48 89 05 00 00 00 00",
           "encoding_length": 7,
@@ -286,7 +286,7 @@
           "note": "REX.W + 89 + ModR/M=05 + disp32 (RIP-relative store)"
         },
         {
-          "instruction": "pushq value(%rip)", 
+          "syntax": "pushq value(%rip)", 
           "description": "RIP-relative push",
           "expected_encoding": "FF 35 00 00 00 00",
           "encoding_length": 6,
@@ -304,7 +304,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq (%rax,%rbx,1), %rcx", 
+          "syntax": "movq (%rax,%rbx,1), %rcx", 
           "description": "SIB with scale 1",
           "expected_encoding": "48 8B 0C 18",
           "encoding_length": 4,
@@ -312,7 +312,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=18 (scale=00,index=011,base=000)"
         },
         {
-          "instruction": "movq (%rax,%rbx,2), %rcx", 
+          "syntax": "movq (%rax,%rbx,2), %rcx", 
           "description": "SIB with scale 2",
           "expected_encoding": "48 8B 0C 58",
           "encoding_length": 4,
@@ -320,7 +320,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=58 (scale=01,index=011,base=000)"
         },
         {
-          "instruction": "movq (%rax,%rbx,4), %rcx", 
+          "syntax": "movq (%rax,%rbx,4), %rcx", 
           "description": "SIB with scale 4",
           "expected_encoding": "48 8B 0C 98",
           "encoding_length": 4,
@@ -328,7 +328,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=98 (scale=10,index=011,base=000)"
         },
         {
-          "instruction": "movq (%rax,%rbx,8), %rcx", 
+          "syntax": "movq (%rax,%rbx,8), %rcx", 
           "description": "SIB with scale 8",
           "expected_encoding": "48 8B 0C D8",
           "encoding_length": 4,
@@ -336,7 +336,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=D8 (scale=11,index=011,base=000)"
         },
         {
-          "instruction": "movq 16(%rax,%rbx,4), %rcx", 
+          "syntax": "movq 16(%rax,%rbx,4), %rcx", 
           "description": "SIB with displacement",
           "expected_encoding": "48 8B 4C 98 10",
           "encoding_length": 5,
@@ -344,7 +344,7 @@
           "note": "REX.W + 8B + ModR/M=4C + SIB=98 + disp8=10"
         },
         {
-          "instruction": "movq -8(%rax,%rbx,2), %rcx", 
+          "syntax": "movq -8(%rax,%rbx,2), %rcx", 
           "description": "SIB with negative displacement",
           "expected_encoding": "48 8B 4C 58 F8",
           "encoding_length": 5,
@@ -352,7 +352,7 @@
           "note": "REX.W + 8B + ModR/M=4C + SIB=58 + disp8=F8 (-8)"
         },
         {
-          "instruction": "movq (,%rbx,4), %rcx", 
+          "syntax": "movq (,%rbx,4), %rcx", 
           "description": "SIB without base register",
           "expected_encoding": "48 8B 0C 9D 00 00 00 00",
           "encoding_length": 8,
@@ -360,7 +360,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=9D + disp32=00000000"
         },
         {
-          "instruction": "movq 100(,%rbx,8), %rcx", 
+          "syntax": "movq 100(,%rbx,8), %rcx", 
           "description": "SIB without base, with displacement",
           "expected_encoding": "48 8B 0C DD 64 00 00 00",
           "encoding_length": 8,
@@ -368,7 +368,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=DD + disp32=00000064"
         },
         {
-          "instruction": "movq (%rax,%r8,4), %rcx", 
+          "syntax": "movq (%rax,%r8,4), %rcx", 
           "description": "SIB with extended index register",
           "expected_encoding": "4A 8B 0C 80",
           "encoding_length": 4,
@@ -376,7 +376,7 @@
           "note": "REX.W=1,X=1 (4A) + 8B + ModR/M=0C + SIB=80"
         },
         {
-          "instruction": "movq (%r9,%rbx,2), %rcx", 
+          "syntax": "movq (%r9,%rbx,2), %rcx", 
           "description": "SIB with extended base register",
           "expected_encoding": "49 8B 0C 59",
           "encoding_length": 4,
@@ -384,7 +384,7 @@
           "note": "REX.W=1,B=1 (49) + 8B + ModR/M=0C + SIB=59"
         },
         {
-          "instruction": "movq (%r9,%r8,4), %rcx", 
+          "syntax": "movq (%r9,%r8,4), %rcx", 
           "description": "SIB with both extended registers",
           "expected_encoding": "4B 8B 0C 81",
           "encoding_length": 4,
@@ -401,7 +401,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq %rax, (%rbx,%rcx,2)", 
+          "syntax": "movq %rax, (%rbx,%rcx,2)", 
           "description": "Register to SIB memory",
           "expected_encoding": "48 89 04 4B",
           "encoding_length": 4,
@@ -409,7 +409,7 @@
           "note": "REX.W + 89 + ModR/M=04 + SIB=4B (scale=01,index=001,base=011)"
         },
         {
-          "instruction": "addq 8(%rsp,%rax,4), %rbx", 
+          "syntax": "addq 8(%rsp,%rax,4), %rbx", 
           "description": "SIB stack access with arithmetic",
           "expected_encoding": "48 03 5C 84 08",
           "encoding_length": 5,
@@ -417,7 +417,7 @@
           "note": "REX.W + 03 + ModR/M=5C + SIB=84 + disp8=08"
         },
         {
-          "instruction": "leaq 64(%rdi,%rsi,8), %rax", 
+          "syntax": "leaq 64(%rdi,%rsi,8), %rax", 
           "description": "Complex LEA with SIB",
           "expected_encoding": "48 8D 44 F7 40",
           "encoding_length": 5,
@@ -425,7 +425,7 @@
           "note": "REX.W + 8D + ModR/M=44 + SIB=F7 + disp8=40"
         },
         {
-          "instruction": "movq (%rax,%rbx,1), %rcx", 
+          "syntax": "movq (%rax,%rbx,1), %rcx", 
           "description": "Array element access",
           "expected_encoding": "48 8B 0C 18",
           "encoding_length": 4,
@@ -433,7 +433,7 @@
           "note": "REX.W + 8B + ModR/M=0C + SIB=18"
         },
         {
-          "instruction": "movq 4(%rax,%rbx,4), %rcx", 
+          "syntax": "movq 4(%rax,%rbx,4), %rcx", 
           "description": "Array of 4-byte elements",
           "expected_encoding": "48 8B 4C 98 04",
           "encoding_length": 5,
@@ -441,7 +441,7 @@
           "note": "REX.W + 8B + ModR/M=4C + SIB=98 + disp8=04"
         },
         {
-          "instruction": "movq 8(%rax,%rbx,8), %rcx", 
+          "syntax": "movq 8(%rax,%rbx,8), %rcx", 
           "description": "Array of 8-byte elements",
           "expected_encoding": "48 8B 4C D8 08",
           "encoding_length": 5,
@@ -458,7 +458,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "movq %fs:0, %rax", 
+          "syntax": "movq %fs:0, %rax", 
           "description": "FS segment override",
           "expected_encoding": "64 48 8B 04 25 00 00 00 00",
           "encoding_length": 9,
@@ -466,7 +466,7 @@
           "note": "FS prefix 64 + REX.W + 8B + ModR/M=04 + SIB=25 + disp32=00000000"
         },
         {
-          "instruction": "movq %gs:0, %rax", 
+          "syntax": "movq %gs:0, %rax", 
           "description": "GS segment override",
           "expected_encoding": "65 48 8B 04 25 00 00 00 00",
           "encoding_length": 9,
@@ -474,7 +474,7 @@
           "note": "GS prefix 65 + REX.W + 8B + ModR/M=04 + SIB=25 + disp32=00000000"
         },
         {
-          "instruction": "movq %fs:8(%rax), %rbx", 
+          "syntax": "movq %fs:8(%rax), %rbx", 
           "description": "FS override with register indirect",
           "expected_encoding": "64 48 8B 58 08",
           "encoding_length": 5,
@@ -482,7 +482,7 @@
           "note": "FS prefix 64 + REX.W + 8B + ModR/M=58 + disp8=08"
         },
         {
-          "instruction": "movq %gs:(%rax,%rbx,1), %rcx", 
+          "syntax": "movq %gs:(%rax,%rbx,1), %rcx", 
           "description": "GS override with SIB",
           "expected_encoding": "65 48 8B 0C 18",
           "encoding_length": 5,
@@ -499,7 +499,7 @@
       ],
       "test_cases": [
         {
-          "instruction": "addr32 movq (%eax), %rbx", 
+          "syntax": "addr32 movq (%eax), %rbx", 
           "description": "32-bit address size override",
           "expected_encoding": "67 48 8B 18",
           "encoding_length": 4,
@@ -507,7 +507,7 @@
           "note": "Address-size prefix 67 + REX.W + 8B + ModR/M=18"
         },
         {
-          "instruction": "addr32 movq 4(%eax,%ebx,2), %rcx", 
+          "syntax": "addr32 movq 4(%eax,%ebx,2), %rcx", 
           "description": "32-bit SIB addressing",
           "expected_encoding": "67 48 8B 4C 58 04",
           "encoding_length": 6,

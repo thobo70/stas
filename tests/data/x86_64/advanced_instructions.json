@@ -1,16 +1,21 @@
 {
   "instruction_set": "x86_64_advanced",
-  "description": "Advanced x86-64 instructions - SSE, AVX, system instructions", 
+  "description": "Advanced x86-64 instructions - SSE, AVX, system instructions",
   "reference": "Intel SDM Volume 2B/2C/2D",
   "instructions": [
     {
       "mnemonic": "MOVAPS",
       "description": "Move Aligned Packed Single-Precision FP Values",
-      "operand_types": ["xmm", "xmm_mem"],
-      "sizes": ["128"],
+      "operand_types": [
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
         {
-          "syntax": "movaps %xmm0, %xmm1", 
+          "syntax": "movaps %xmm0, %xmm1",
           "description": "XMM register to register",
           "expected_encoding": "0F 28 C8",
           "encoding_length": 3,
@@ -18,7 +23,7 @@
           "note": "0F 28 + ModR/M=C8 (mod=11 reg=001 r/m=000)"
         },
         {
-          "syntax": "movaps (%rax), %xmm0", 
+          "syntax": "movaps (%rax), %xmm0",
           "description": "Memory to XMM register",
           "expected_encoding": "0F 28 00",
           "encoding_length": 3,
@@ -26,7 +31,7 @@
           "note": "0F 28 + ModR/M=00 (mod=00 reg=000 r/m=000)"
         },
         {
-          "syntax": "movaps %xmm1, (%rbx)", 
+          "syntax": "movaps %xmm1, (%rbx)",
           "description": "XMM register to memory",
           "expected_encoding": "0F 29 0B",
           "encoding_length": 3,
@@ -36,13 +41,18 @@
       ]
     },
     {
-      "mnemonic": "MOVUPS", 
+      "mnemonic": "MOVUPS",
       "description": "Move Unaligned Packed Single-Precision FP Values",
-      "operand_types": ["xmm", "xmm_mem"],
-      "sizes": ["128"],
+      "operand_types": [
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
         {
-          "syntax": "movups %xmm0, %xmm1", 
+          "syntax": "movups %xmm0, %xmm1",
           "description": "XMM register to register",
           "expected_encoding": "0F 10 C8",
           "encoding_length": 3,
@@ -50,7 +60,7 @@
           "note": "0F 10 + ModR/M=C8 (mod=11 reg=001 r/m=000)"
         },
         {
-          "syntax": "movups (%rax), %xmm0", 
+          "syntax": "movups (%rax), %xmm0",
           "description": "Unaligned memory to XMM",
           "expected_encoding": "0F 10 00",
           "encoding_length": 3,
@@ -62,231 +72,591 @@
     {
       "mnemonic": "ADDPS",
       "description": "Add Packed Single-Precision FP Values",
-      "operand_types": ["xmm", "xmm_mem"],
-      "sizes": ["128"],
+      "operand_types": [
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "addps %xmm1, %xmm0", "description": "XMM addition"},
-        {"syntax": "addps (%rax), %xmm0", "description": "Memory to XMM addition"}
+        {
+          "syntax": "addps %xmm1, %xmm0",
+          "description": "XMM addition",
+          "expected_encoding": "0F 58 C1",
+          "encoding_length": 3,
+          "intel_reference": "0F 58 /r (ADDPS xmm1, xmm2/m128)"
+        },
+        {
+          "syntax": "addps (%rax), %xmm0",
+          "description": "Memory to XMM addition",
+          "expected_encoding": "0F 58 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 58 /r (ADDPS xmm1, xmm2/m128)"
+        }
       ]
     },
     {
       "mnemonic": "MULPS",
       "description": "Multiply Packed Single-Precision FP Values",
-      "operand_types": ["xmm", "xmm_mem"],
-      "sizes": ["128"],
+      "operand_types": [
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "mulps %xmm1, %xmm0", "description": "XMM multiplication"},
-        {"syntax": "mulps (%rax), %xmm0", "description": "Memory to XMM multiplication"}
+        {
+          "syntax": "mulps %xmm1, %xmm0",
+          "description": "XMM multiplication",
+          "expected_encoding": "0F 59 C1",
+          "encoding_length": 3,
+          "intel_reference": "0F 59 /r (MULPS xmm1, xmm2/m128)"
+        },
+        {
+          "syntax": "mulps (%rax), %xmm0",
+          "description": "Memory to XMM multiplication",
+          "expected_encoding": "0F 59 00",
+          "encoding_length": 3,
+          "intel_reference": "0F 59 /r (MULPS xmm1, xmm2/m128)"
+        }
       ]
     },
     {
       "mnemonic": "CVTSI2SS",
       "description": "Convert Doubleword Integer to Scalar Single-Precision FP",
-      "operand_types": ["reg32", "xmm"],
-      "sizes": ["32"],
+      "operand_types": [
+        "reg32",
+        "xmm"
+      ],
+      "sizes": [
+        "32"
+      ],
       "test_cases": [
-        {"syntax": "cvtsi2ss %eax, %xmm0", "description": "Integer to single-precision float"},
-        {"syntax": "cvtsi2ss (%rax), %xmm0", "description": "Memory integer to float"}
+        {
+          "syntax": "cvtsi2ss %eax, %xmm0",
+          "description": "Integer to single-precision float",
+          "expected_encoding": "F3 0F 2A C0",
+          "encoding_length": 4,
+          "intel_reference": "F3 0F 2A /r (CVTSI2SS xmm, r/m32)"
+        },
+        {
+          "syntax": "cvtsi2ss (%rax), %xmm0",
+          "description": "Memory integer to float",
+          "expected_encoding": "F3 0F 2A 00",
+          "encoding_length": 4,
+          "intel_reference": "F3 0F 2A /r (CVTSI2SS xmm, r/m32)"
+        }
       ]
     },
     {
       "mnemonic": "VADDPD",
       "description": "Add Packed Double-Precision FP Values (AVX)",
-      "operand_types": ["ymm", "ymm", "ymm_mem"],
-      "sizes": ["256"],
+      "operand_types": [
+        "ymm",
+        "ymm",
+        "ymm_mem"
+      ],
+      "sizes": [
+        "256"
+      ],
       "test_cases": [
-        {"syntax": "vaddpd %ymm1, %ymm2, %ymm0", "description": "AVX YMM addition"},
-        {"syntax": "vaddpd (%rax), %ymm1, %ymm0", "description": "AVX memory addition"}
+        {
+          "syntax": "vaddpd %ymm1, %ymm2, %ymm0",
+          "description": "AVX YMM addition",
+          "expected_encoding": "C5 ED 58 C1",
+          "encoding_length": 4,
+          "intel_reference": "VEX.NDS.256.66.0F.WIG 58 /r (VADDPD ymm1, ymm2, ymm3/m256)"
+        },
+        {
+          "syntax": "vaddpd (%rax), %ymm1, %ymm0",
+          "description": "AVX memory addition",
+          "expected_encoding": "C5 F5 58 00",
+          "encoding_length": 4,
+          "intel_reference": "VEX.NDS.256.66.0F.WIG 58 /r (VADDPD ymm1, ymm2, ymm3/m256)"
+        }
       ]
     },
     {
-      "mnemonic": "VMULSS", 
+      "mnemonic": "VMULSS",
       "description": "Multiply Scalar Single-Precision FP Values (AVX)",
-      "operand_types": ["xmm", "xmm", "xmm_mem"],
-      "sizes": ["32"],
+      "operand_types": [
+        "xmm",
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "32"
+      ],
       "test_cases": [
-        {"syntax": "vmulss %xmm1, %xmm2, %xmm0", "description": "AVX scalar multiplication"},
-        {"syntax": "vmulss (%rax), %xmm1, %xmm0", "description": "AVX scalar memory multiplication"}
+        {
+          "syntax": "vmulss %xmm1, %xmm2, %xmm0",
+          "description": "AVX scalar multiplication",
+          "expected_encoding": "C5 EA 59 C1",
+          "encoding_length": 4,
+          "intel_reference": "VEX.NDS.LIG.F3.0F.WIG 59 /r (VMULSS xmm1, xmm2, xmm3/m32)"
+        },
+        {
+          "syntax": "vmulss (%rax), %xmm1, %xmm0",
+          "description": "AVX scalar memory multiplication",
+          "expected_encoding": "C5 F2 59 00",
+          "encoding_length": 4,
+          "intel_reference": "VEX.NDS.LIG.F3.0F.WIG 59 /r (VMULSS xmm1, xmm2, xmm3/m32)"
+        }
       ]
     },
     {
       "mnemonic": "VPXOR",
       "description": "Logical Exclusive OR (AVX)",
-      "operand_types": ["ymm", "ymm", "ymm_mem"],
-      "sizes": ["256"],
+      "operand_types": [
+        "ymm",
+        "ymm",
+        "ymm_mem"
+      ],
+      "sizes": [
+        "256"
+      ],
       "test_cases": [
-        {"syntax": "vpxor %ymm1, %ymm2, %ymm0", "description": "AVX YMM XOR"},
-        {"syntax": "vpxor %ymm0, %ymm0, %ymm0", "description": "AVX register zeroing"}
+        {
+          "syntax": "vpxor %ymm1, %ymm2, %ymm0",
+          "description": "AVX YMM XOR",
+          "expected_encoding": "C5 ED EF C1",
+          "encoding_length": 4,
+          "intel_reference": "VEX.NDS.256.66.0F.WIG EF /r (VPXOR ymm1, ymm2, ymm3/m256)"
+        },
+        {
+          "syntax": "vpxor %ymm0, %ymm0, %ymm0",
+          "description": "AVX register zeroing",
+          "expected_encoding": "C5 FD EF C0",
+          "encoding_length": 4,
+          "intel_reference": "VEX.NDS.256.66.0F.WIG EF /r (VPXOR ymm1, ymm2, ymm3/m256)"
+        }
       ]
     },
     {
       "mnemonic": "PADDB",
       "description": "Add Packed Integers (MMX/SSE2)",
-      "operand_types": ["mmx", "mmx_mem", "xmm", "xmm_mem"],
-      "sizes": ["64", "128"],
+      "operand_types": [
+        "mmx",
+        "mmx_mem",
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "64",
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "paddb %mm1, %mm0", "description": "MMX byte addition"},
-        {"syntax": "paddb %xmm1, %xmm0", "description": "SSE2 byte addition"}
+        {
+          "syntax": "paddb %mm1, %mm0",
+          "description": "MMX byte addition",
+          "expected_encoding": "0F FC C1",
+          "encoding_length": 3,
+          "intel_reference": "0F FC /r (PADDB mm, mm/m64)"
+        },
+        {
+          "syntax": "paddb %xmm1, %xmm0",
+          "description": "SSE2 byte addition",
+          "expected_encoding": "66 0F FC C1",
+          "encoding_length": 4,
+          "intel_reference": "66 0F FC /r (PADDB xmm1, xmm2/m128)"
+        }
       ]
     },
     {
       "mnemonic": "PMULLW",
       "description": "Multiply Packed Signed Integers and Store Low Result",
-      "operand_types": ["mmx", "mmx_mem", "xmm", "xmm_mem"],
-      "sizes": ["64", "128"],
+      "operand_types": [
+        "mmx",
+        "mmx_mem",
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "64",
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "pmullw %mm1, %mm0", "description": "MMX word multiplication"},
-        {"syntax": "pmullw %xmm1, %xmm0", "description": "SSE2 word multiplication"}
+        {
+          "syntax": "pmullw %mm1, %mm0",
+          "description": "MMX word multiplication",
+          "expected_encoding": "0F D5 C1",
+          "encoding_length": 3,
+          "intel_reference": "0F D5 /r (PMULLW mm, mm/m64)"
+        },
+        {
+          "syntax": "pmullw %xmm1, %xmm0",
+          "description": "SSE2 word multiplication",
+          "expected_encoding": "66 0F D5 C1",
+          "encoding_length": 4,
+          "intel_reference": "66 0F D5 /r (PMULLW xmm1, xmm2/m128)"
+        }
       ]
     },
     {
       "mnemonic": "PXOR",
       "description": "Logical Exclusive OR (MMX/SSE2)",
-      "operand_types": ["mmx", "mmx_mem", "xmm", "xmm_mem"],
-      "sizes": ["64", "128"],
+      "operand_types": [
+        "mmx",
+        "mmx_mem",
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "64",
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "pxor %mm0, %mm0", "description": "MMX register zeroing"},
-        {"syntax": "pxor %xmm0, %xmm0", "description": "SSE2 register zeroing"}
+        {
+          "syntax": "pxor %mm0, %mm0",
+          "description": "MMX register zeroing",
+          "expected_encoding": "0F EF C0",
+          "encoding_length": 3,
+          "intel_reference": "0F EF /r (PXOR mm, mm/m64)"
+        },
+        {
+          "syntax": "pxor %xmm0, %xmm0",
+          "description": "SSE2 register zeroing",
+          "expected_encoding": "66 0F EF C0",
+          "encoding_length": 4,
+          "intel_reference": "66 0F EF /r (PXOR xmm1, xmm2/m128)"
+        }
       ]
     },
     {
       "mnemonic": "CPUID",
       "description": "CPU Identification",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "cpuid", "description": "Get CPU information"}
+        {
+          "syntax": "cpuid",
+          "description": "Get CPU information",
+          "expected_encoding": "0F A2",
+          "encoding_length": 2,
+          "intel_reference": "0F A2 (CPUID)"
+        }
       ]
     },
     {
       "mnemonic": "RDTSC",
       "description": "Read Time-Stamp Counter",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "rdtsc", "description": "Read timestamp counter"}
+        {
+          "syntax": "rdtsc",
+          "description": "Read timestamp counter",
+          "expected_encoding": "0F 31",
+          "encoding_length": 2,
+          "intel_reference": "0F 31 (RDTSC)"
+        }
       ]
     },
     {
       "mnemonic": "WRMSR",
       "description": "Write to Model Specific Register",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "wrmsr", "description": "Write MSR"}
+        {
+          "syntax": "wrmsr",
+          "description": "Write MSR",
+          "expected_encoding": "0F 30",
+          "encoding_length": 2,
+          "intel_reference": "0F 30 (WRMSR)"
+        }
       ]
     },
     {
       "mnemonic": "RDMSR",
       "description": "Read from Model Specific Register",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "rdmsr", "description": "Read MSR"}
+        {
+          "syntax": "rdmsr",
+          "description": "Read MSR",
+          "expected_encoding": "0F 32",
+          "encoding_length": 2,
+          "intel_reference": "0F 32 (RDMSR)"
+        }
       ]
     },
     {
       "mnemonic": "SWAPGS",
       "description": "Swap GS Base Register (x86-64 only)",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "swapgs", "description": "Swap GS base register"}
+        {
+          "syntax": "swapgs",
+          "description": "Swap GS base register",
+          "expected_encoding": "0F 01 F8",
+          "encoding_length": 3,
+          "intel_reference": "0F 01 F8 (SWAPGS)"
+        }
       ]
     },
     {
       "mnemonic": "SYSCALL",
       "description": "Fast System Call (x86-64)",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "syscall", "description": "System call"}
+        {
+          "syntax": "syscall",
+          "description": "System call",
+          "expected_encoding": "0F 05",
+          "encoding_length": 2,
+          "intel_reference": "0F 05 (SYSCALL)"
+        }
       ]
     },
     {
       "mnemonic": "SYSRET",
       "description": "Return From Fast System Call (x86-64)",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "sysret", "description": "Return from system call"}
+        {
+          "syntax": "sysret",
+          "description": "Return from system call",
+          "expected_encoding": "0F 07",
+          "encoding_length": 2,
+          "intel_reference": "0F 07 (SYSRET)"
+        }
       ]
     },
     {
       "mnemonic": "CMPXCHG",
       "description": "Compare and Exchange",
-      "operand_types": ["reg", "reg_mem"],
-      "sizes": ["8", "16", "32", "64"],
+      "operand_types": [
+        "reg",
+        "reg_mem"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "cmpxchg %ebx, %eax", "description": "32-bit compare and exchange"},
-        {"syntax": "cmpxchg %rbx, %rax", "description": "64-bit compare and exchange"},
-        {"syntax": "lock cmpxchg %ebx, (%rax)", "description": "Atomic compare and exchange"}
+        {
+          "syntax": "cmpxchg %ebx, %eax",
+          "description": "32-bit compare and exchange",
+          "expected_encoding": "0F B1 D8",
+          "encoding_length": 3,
+          "intel_reference": "0F B1 /r (CMPXCHG r/m32, r32)"
+        },
+        {
+          "syntax": "cmpxchg %rbx, %rax",
+          "description": "64-bit compare and exchange",
+          "expected_encoding": "48 0F B1 D8",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F B1 /r (CMPXCHG r/m64, r64)"
+        },
+        {
+          "syntax": "lock cmpxchg %ebx, (%rax)",
+          "description": "Atomic compare and exchange",
+          "expected_encoding": "F0 0F B1 18",
+          "encoding_length": 4,
+          "intel_reference": "F0 0F B1 /r (LOCK CMPXCHG r/m32, r32)"
+        }
       ]
     },
     {
       "mnemonic": "CMPXCHG8B",
       "description": "Compare and Exchange 8 Bytes",
-      "operand_types": ["mem64"],
-      "sizes": ["64"],
+      "operand_types": [
+        "mem64"
+      ],
+      "sizes": [
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "cmpxchg8b (%rax)", "description": "8-byte atomic compare and exchange"}
+        {
+          "syntax": "cmpxchg8b (%rax)",
+          "description": "8-byte atomic compare and exchange",
+          "expected_encoding": "0F C7 08",
+          "encoding_length": 3,
+          "intel_reference": "0F C7 /1 m64 (CMPXCHG8B m64)"
+        }
       ]
     },
     {
       "mnemonic": "CMPXCHG16B",
       "description": "Compare and Exchange 16 Bytes (x86-64)",
-      "operand_types": ["mem128"],
-      "sizes": ["128"],
+      "operand_types": [
+        "mem128"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "cmpxchg16b (%rax)", "description": "16-byte atomic compare and exchange"}
+        {
+          "syntax": "cmpxchg16b (%rax)",
+          "description": "16-byte atomic compare and exchange",
+          "expected_encoding": "48 0F C7 08",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F C7 /1 m128 (CMPXCHG16B m128)"
+        }
       ]
     },
     {
       "mnemonic": "XADD",
-      "description": "Exchange and Add", 
-      "operand_types": ["reg", "reg_mem"],
-      "sizes": ["8", "16", "32", "64"],
+      "description": "Exchange and Add",
+      "operand_types": [
+        "reg",
+        "reg_mem"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "xadd %eax, %ebx", "description": "Exchange and add registers"},
-        {"syntax": "lock xadd %eax, (%rbx)", "description": "Atomic exchange and add"}
+        {
+          "syntax": "xadd %eax, %ebx",
+          "description": "Exchange and add registers",
+          "expected_encoding": "0F C1 C3",
+          "encoding_length": 3,
+          "intel_reference": "0F C1 /r (XADD r/m32, r32)"
+        },
+        {
+          "syntax": "lock xadd %eax, (%rbx)",
+          "description": "Atomic exchange and add",
+          "expected_encoding": "F0 0F C1 03",
+          "encoding_length": 4,
+          "intel_reference": "F0 0F C1 /r (LOCK XADD r/m32, r32)"
+        }
       ]
     },
     {
       "mnemonic": "ANDN",
       "description": "Logical AND NOT (BMI1)",
-      "operand_types": ["reg", "reg", "reg_mem"],
-      "sizes": ["32", "64"],
+      "operand_types": [
+        "reg",
+        "reg",
+        "reg_mem"
+      ],
+      "sizes": [
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "andn %eax, %ebx, %ecx", "description": "32-bit AND NOT"},
-        {"syntax": "andn %rax, %rbx, %rcx", "description": "64-bit AND NOT"}
+        {
+          "syntax": "andn %eax, %ebx, %ecx",
+          "description": "32-bit AND NOT",
+          "expected_encoding": "C4 E2 70 F2 CB",
+          "encoding_length": 5,
+          "intel_reference": "VEX.NDS.LZ.0F38.W0 F2 /r (ANDN r32a, r32b, r/m32)"
+        },
+        {
+          "syntax": "andn %rax, %rbx, %rcx",
+          "description": "64-bit AND NOT",
+          "expected_encoding": "C4 E2 F0 F2 CB",
+          "encoding_length": 5,
+          "intel_reference": "VEX.NDS.LZ.0F38.W1 F2 /r (ANDN r64a, r64b, r/m64)"
+        }
       ]
     },
     {
       "mnemonic": "BLSI",
       "description": "Extract Lowest Set Isolated Bit (BMI1)",
-      "operand_types": ["reg", "reg_mem"],
-      "sizes": ["32", "64"],
+      "operand_types": [
+        "reg",
+        "reg_mem"
+      ],
+      "sizes": [
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "blsi %eax, %ebx", "description": "32-bit extract lowest set bit"},
-        {"syntax": "blsi %rax, %rbx", "description": "64-bit extract lowest set bit"}
+        {
+          "syntax": "blsi %eax, %ebx",
+          "description": "32-bit extract lowest set bit",
+          "expected_encoding": "C4 E2 78 F3 DB",
+          "encoding_length": 5,
+          "intel_reference": "VEX.NDD.LZ.0F38.W0 F3 /3 (BLSI r32, r/m32)"
+        },
+        {
+          "syntax": "blsi %rax, %rbx",
+          "description": "64-bit extract lowest set bit",
+          "expected_encoding": "C4 E2 F8 F3 DB",
+          "encoding_length": 5,
+          "intel_reference": "VEX.NDD.LZ.0F38.W1 F3 /3 (BLSI r64, r/m64)"
+        }
       ]
     },
     {
       "mnemonic": "AESENC",
       "description": "Perform One Round of an AES Encryption Flow",
-      "operand_types": ["xmm", "xmm_mem"],
-      "sizes": ["128"],
+      "operand_types": [
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "aesenc %xmm1, %xmm0", "description": "AES encryption round"}
+        {
+          "syntax": "aesenc %xmm1, %xmm0",
+          "description": "AES encryption round",
+          "expected_encoding": "66 0F 38 DC C1",
+          "encoding_length": 5,
+          "intel_reference": "66 0F 38 DC /r (AESENC xmm1, xmm2/m128)"
+        }
       ]
     },
     {
       "mnemonic": "AESDEC",
       "description": "Perform One Round of an AES Decryption Flow",
-      "operand_types": ["xmm", "xmm_mem"],
-      "sizes": ["128"],
+      "operand_types": [
+        "xmm",
+        "xmm_mem"
+      ],
+      "sizes": [
+        "128"
+      ],
       "test_cases": [
-        {"syntax": "aesdec %xmm1, %xmm0", "description": "AES decryption round"}
+        {
+          "syntax": "aesdec %xmm1, %xmm0",
+          "description": "AES decryption round",
+          "expected_encoding": "66 0F 38 DE C1",
+          "encoding_length": 5,
+          "intel_reference": "66 0F 38 DE /r (AESDEC xmm1, xmm2/m128)"
+        }
       ]
     }
   ]

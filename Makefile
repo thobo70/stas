@@ -12,6 +12,12 @@ STATIC_CFLAGS = -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -static -DSTATIC_B
 LDFLAGS = -ldl
 STATIC_LDFLAGS = 
 
+# Third-party libraries
+CJSON_DIR = third_party/cJSON
+CJSON_SRC = $(CJSON_DIR)/cJSON.c
+CJSON_OBJ = $(OBJ_DIR)/third_party/cJSON.o
+CJSON_INCLUDES = -I$(CJSON_DIR)
+
 # Architecture-specific defines
 ARCH_X86_16_CFLAGS = -DARCH_# Execution test compilation - specific rules for each architecture
 $(TESTBIN_DIR)/execution_test_x86_16_basic: tests/execution/x86_16/test_basic.c $(UNICORN_FRAMEWORK) tests/unity/src/unity.c $(OBJECTS) | $(TESTBIN_DIR)
@@ -93,7 +99,7 @@ MAIN_OBJECT = $(OBJ_DIR)/main.o
 
 # All sources and objects for dynamic build
 SOURCES = $(CORE_SOURCES) $(SRC_DIR)/include.c $(FORMAT_SOURCES) $(UTIL_SOURCES) $(ARCH_X86_64_SOURCES) $(ARCH_X86_32_SOURCES) $(ARCH_X86_16_SOURCES) $(ARCH_ARM64_SOURCES) $(ARCH_RISCV_SOURCES) $(MAIN_SOURCE)
-OBJECTS = $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(ARCH_ARM64_OBJECTS) $(ARCH_RISCV_OBJECTS) $(MAIN_OBJECT)
+OBJECTS = $(CORE_OBJECTS) $(FORMAT_OBJECTS) $(UTIL_OBJECTS) $(ARCH_X86_64_OBJECTS) $(ARCH_X86_32_OBJECTS) $(ARCH_X86_16_OBJECTS) $(ARCH_ARM64_OBJECTS) $(ARCH_RISCV_OBJECTS) $(MAIN_OBJECT) $(CJSON_OBJ)
 
 # Target executable
 TARGET = $(BIN_DIR)/$(PROJECT_NAME)
@@ -169,6 +175,11 @@ $(OBJ_DIR)/arch/arm64/%.o: $(SRC_DIR)/arch/arm64/%.c | $(OBJ_DIR)
 
 $(OBJ_DIR)/arch/riscv/%.o: $(SRC_DIR)/arch/riscv/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Third-party library compilation rules
+$(CJSON_OBJ): $(CJSON_SRC) | $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)/third_party
+	$(CC) $(CFLAGS) $(CJSON_INCLUDES) -c $< -o $@
 
 # Legacy compilation rule (for compatibility)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
@@ -589,12 +600,12 @@ test-x86_64-completeness: $(OBJECTS) | $(TESTBIN_DIR)
 # x86-64 CPU-Accurate Encoding Completeness Test (Enhanced JSON Database)
 test-x86_64-encoding-completeness: $(OBJECTS) | $(TESTBIN_DIR)
 	@echo "=== Building x86-64 CPU-Accurate Encoding Completeness Test ==="
-	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests \
+	@gcc -std=c99 -Wall -Wextra -Wpedantic -Werror -O2 -Iinclude -Isrc/core -Isrc/arch -Itests $(CJSON_INCLUDES) \
 		-DUNITY_INCLUDE_DOUBLE=0 -DUNITY_EXCLUDE_FLOAT \
 		tests/unit/arch/test_x86_64_encoding_completeness.c tests/unity/src/unity.c \
 		obj/arch/x86_64/x86_64_unified.o obj/arch/x86_64/x86_64_interface.o \
 		obj/arch/x86_64/x86_64_parser.o obj/arch/x86_64/x86_64_addressing.o \
-		obj/core/symbols.o obj/utils/utils.o \
+		obj/core/symbols.o obj/utils/utils.o $(CJSON_OBJ) \
 		-o $(TESTBIN_DIR)/test_x86_64_encoding_completeness
 	@echo "=== Running x86-64 CPU-Accurate Encoding Completeness Test ==="
 	@$(TESTBIN_DIR)/test_x86_64_encoding_completeness

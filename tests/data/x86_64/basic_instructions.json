@@ -145,8 +145,20 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "mulq %rbx", "description": "64-bit unsigned multiply"},
-        {"syntax": "mull %ebx", "description": "32-bit unsigned multiply"}
+        {
+          "syntax": "mulq %rbx", 
+          "description": "64-bit unsigned multiply",
+          "expected_encoding": "48 F7 E3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /4 (MUL r/m64)"
+        },
+        {
+          "syntax": "mull %ebx", 
+          "description": "32-bit unsigned multiply",
+          "expected_encoding": "F7 E3",
+          "encoding_length": 2,
+          "intel_reference": "F7 /4 (MUL r/m32)"
+        }
       ]
     },
     {
@@ -155,9 +167,27 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["16", "32", "64"],
       "test_cases": [
-        {"syntax": "imulq %rbx", "description": "64-bit signed multiply"},
-        {"syntax": "imulq %rax, %rbx", "description": "64-bit signed multiply with two operands"},
-        {"syntax": "imulq $10, %rax, %rbx", "description": "64-bit signed multiply with immediate"}
+        {
+          "syntax": "imulq %rbx", 
+          "description": "64-bit signed multiply",
+          "expected_encoding": "48 F7 EB",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /5 (IMUL r/m64)"
+        },
+        {
+          "syntax": "imulq %rax, %rbx", 
+          "description": "64-bit signed multiply with two operands",
+          "expected_encoding": "48 0F AF D8",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 0F AF /r (IMUL r64, r/m64)"
+        },
+        {
+          "syntax": "imulq $10, %rax, %rbx", 
+          "description": "64-bit signed multiply with immediate",
+          "expected_encoding": "48 6B D8 0A",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 6B /r ib (IMUL r64, r/m64, imm8)"
+        }
       ]
     },
     {
@@ -166,8 +196,20 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "divq %rbx", "description": "64-bit unsigned divide"},
-        {"syntax": "divl %ebx", "description": "32-bit unsigned divide"}
+        {
+          "syntax": "divq %rbx", 
+          "description": "64-bit unsigned divide",
+          "expected_encoding": "48 F7 F3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /6 (DIV r/m64)"
+        },
+        {
+          "syntax": "divl %ebx", 
+          "description": "32-bit unsigned divide",
+          "expected_encoding": "F7 F3",
+          "encoding_length": 2,
+          "intel_reference": "F7 /6 (DIV r/m32)"
+        }
       ]
     },
     {
@@ -176,8 +218,20 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "idivq %rbx", "description": "64-bit signed divide"},
-        {"syntax": "idivl %ebx", "description": "32-bit signed divide"}
+        {
+          "syntax": "idivq %rbx", 
+          "description": "64-bit signed divide",
+          "expected_encoding": "48 F7 FB",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /7 (IDIV r/m64)"
+        },
+        {
+          "syntax": "idivl %ebx", 
+          "description": "32-bit signed divide",
+          "expected_encoding": "F7 FB",
+          "encoding_length": 2,
+          "intel_reference": "F7 /7 (IDIV r/m32)"
+        }
       ]
     },
     {
@@ -186,8 +240,20 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "andq %rax, %rbx", "description": "64-bit bitwise AND"},
-        {"syntax": "andq $0xFF, %rax", "description": "AND with immediate"}
+        {
+          "syntax": "andq %rax, %rbx", 
+          "description": "64-bit bitwise AND",
+          "expected_encoding": "48 21 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 21 /r (AND r/m64, r64)"
+        },
+        {
+          "syntax": "andq $0xFF, %rax", 
+          "description": "AND with immediate",
+          "expected_encoding": "48 83 E0 FF",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 83 /4 ib (AND r/m64, imm8)"
+        }
       ]
     },
     {
@@ -196,8 +262,20 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "orq %rax, %rbx", "description": "64-bit bitwise OR"},
-        {"syntax": "orq $0xFF, %rax", "description": "OR with immediate"}
+        {
+          "syntax": "orq %rax, %rbx", 
+          "description": "64-bit bitwise OR",
+          "expected_encoding": "48 09 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 09 /r (OR r/m64, r64)"
+        },
+        {
+          "syntax": "orq $0xFF, %rax", 
+          "description": "OR with immediate",
+          "expected_encoding": "48 83 C8 FF",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 83 /1 ib (OR r/m64, imm8)"
+        }
       ]
     },
     {
@@ -206,8 +284,20 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "xorq %rax, %rbx", "description": "64-bit bitwise XOR"},
-        {"syntax": "xorq %rax, %rax", "description": "Register zeroing idiom"}
+        {
+          "syntax": "xorq %rax, %rbx", 
+          "description": "64-bit bitwise XOR",
+          "expected_encoding": "48 31 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 31 /r (XOR r/m64, r64)"
+        },
+        {
+          "syntax": "xorq %rax, %rax", 
+          "description": "Register zeroing idiom",
+          "expected_encoding": "48 31 C0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 31 /r (XOR r/m64, r64)"
+        }
       ]
     },
     {
@@ -216,7 +306,13 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "notq %rax", "description": "64-bit bitwise NOT"}
+        {
+          "syntax": "notq %rax", 
+          "description": "64-bit bitwise NOT",
+          "expected_encoding": "48 F7 D0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + F7 /2 (NOT r/m64)"
+        }
       ]
     },
     {
@@ -225,8 +321,20 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "shlq $1, %rax", "description": "Shift left by 1"},
-        {"syntax": "shlq %cl, %rax", "description": "Shift left by CL register"}
+        {
+          "syntax": "shlq $1, %rax", 
+          "description": "Shift left by 1",
+          "expected_encoding": "48 D1 E0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /4 (SHL r/m64, 1)"
+        },
+        {
+          "syntax": "shlq %cl, %rax", 
+          "description": "Shift left by CL register",
+          "expected_encoding": "48 D3 E0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /4 (SHL r/m64, CL)"
+        }
       ]
     },
     {
@@ -235,8 +343,20 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "shrq $1, %rax", "description": "Shift right by 1"},
-        {"syntax": "shrq %cl, %rax", "description": "Shift right by CL register"}
+        {
+          "syntax": "shrq $1, %rax", 
+          "description": "Shift right by 1",
+          "expected_encoding": "48 D1 E8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /5 (SHR r/m64, 1)"
+        },
+        {
+          "syntax": "shrq %cl, %rax", 
+          "description": "Shift right by CL register",
+          "expected_encoding": "48 D3 E8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /5 (SHR r/m64, CL)"
+        }
       ]
     },
     {
@@ -245,8 +365,20 @@
       "operand_types": ["reg", "reg_mem"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "sarq $1, %rax", "description": "Arithmetic shift right by 1"},
-        {"syntax": "sarq %cl, %rax", "description": "Arithmetic shift right by CL"}
+        {
+          "syntax": "sarq $1, %rax", 
+          "description": "Arithmetic shift right by 1",
+          "expected_encoding": "48 D1 F8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D1 /7 (SAR r/m64, 1)"
+        },
+        {
+          "syntax": "sarq %cl, %rax", 
+          "description": "Arithmetic shift right by CL",
+          "expected_encoding": "48 D3 F8",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + D3 /7 (SAR r/m64, CL)"
+        }
       ]
     },
     {
@@ -255,8 +387,20 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "cmpq %rax, %rbx", "description": "Compare 64-bit registers"},
-        {"syntax": "cmpq $0, %rax", "description": "Compare with immediate"}
+        {
+          "syntax": "cmpq %rax, %rbx", 
+          "description": "Compare 64-bit registers",
+          "expected_encoding": "48 39 C3",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 39 /r (CMP r/m64, r64)"
+        },
+        {
+          "syntax": "cmpq $0, %rax", 
+          "description": "Compare with immediate",
+          "expected_encoding": "48 83 F8 00",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 83 /7 ib (CMP r/m64, imm8)"
+        }
       ]
     },
     {
@@ -265,8 +409,20 @@
       "operand_types": ["reg", "reg_mem", "imm"],
       "sizes": ["8", "16", "32", "64"],
       "test_cases": [
-        {"syntax": "testq %rax, %rax", "description": "Test register against itself"},
-        {"syntax": "testq $0xFF, %rax", "description": "Test with immediate mask"}
+        {
+          "syntax": "testq %rax, %rax", 
+          "description": "Test register against itself",
+          "expected_encoding": "48 85 C0",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 85 /r (TEST r/m64, r64)"
+        },
+        {
+          "syntax": "testq $0xFF, %rax", 
+          "description": "Test with immediate mask",
+          "expected_encoding": "48 F7 C0 FF 00 00 00",
+          "encoding_length": 7,
+          "intel_reference": "REX.W + F7 /0 id (TEST r/m64, imm32)"
+        }
       ]
     }
   ]

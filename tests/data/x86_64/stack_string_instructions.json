@@ -6,11 +6,19 @@
     {
       "mnemonic": "PUSH",
       "description": "Push Word, Doubleword or Quadword Onto the Stack",
-      "operand_types": ["reg", "mem", "imm"],
-      "sizes": ["16", "32", "64"],
+      "operand_types": [
+        "reg",
+        "mem",
+        "imm"
+      ],
+      "sizes": [
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
         {
-          "syntax": "pushq %rax", 
+          "syntax": "pushq %rax",
           "description": "Push 64-bit register",
           "expected_encoding": "50",
           "encoding_length": 1,
@@ -18,7 +26,7 @@
           "note": "Single-byte opcode 50 + register encoding"
         },
         {
-          "syntax": "pushl %eax", 
+          "syntax": "pushl %eax",
           "description": "Push 32-bit register",
           "expected_encoding": "50",
           "encoding_length": 1,
@@ -26,7 +34,7 @@
           "note": "Single-byte opcode, defaults to 64-bit operand size in 64-bit mode"
         },
         {
-          "syntax": "pushw %ax", 
+          "syntax": "pushw %ax",
           "description": "Push 16-bit register",
           "expected_encoding": "66 50",
           "encoding_length": 2,
@@ -34,7 +42,7 @@
           "note": "Operand-size prefix 66 + single-byte opcode"
         },
         {
-          "syntax": "pushq (%rax)", 
+          "syntax": "pushq (%rax)",
           "description": "Push memory operand",
           "expected_encoding": "FF 30",
           "encoding_length": 2,
@@ -42,7 +50,7 @@
           "note": "FF /6 + ModR/M=30 (mod=00 reg=110 r/m=000)"
         },
         {
-          "syntax": "pushq $0x1234", 
+          "syntax": "pushq $0x1234",
           "description": "Push immediate value",
           "expected_encoding": "68 34 12 00 00",
           "encoding_length": 5,
@@ -50,7 +58,7 @@
           "note": "68 + 32-bit immediate, sign-extended to 64-bit"
         },
         {
-          "syntax": "pushq %r8", 
+          "syntax": "pushq %r8",
           "description": "Push extended register",
           "expected_encoding": "41 50",
           "encoding_length": 2,
@@ -58,7 +66,7 @@
           "note": "REX.B=1 (41) + opcode 50"
         },
         {
-          "syntax": "pushq variable(%rip)", 
+          "syntax": "pushq variable(%rip)",
           "description": "Push RIP-relative memory",
           "expected_encoding": "FF 35 00 00 00 00",
           "encoding_length": 6,
@@ -70,11 +78,18 @@
     {
       "mnemonic": "POP",
       "description": "Pop a Value from the Stack",
-      "operand_types": ["reg", "mem"],
-      "sizes": ["16", "32", "64"],
+      "operand_types": [
+        "reg",
+        "mem"
+      ],
+      "sizes": [
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
         {
-          "syntax": "popq %rax", 
+          "syntax": "popq %rax",
           "description": "Pop to 64-bit register",
           "expected_encoding": "58",
           "encoding_length": 1,
@@ -82,7 +97,7 @@
           "note": "Single-byte opcode 58 + register encoding"
         },
         {
-          "syntax": "popl %eax", 
+          "syntax": "popl %eax",
           "description": "Pop to 32-bit register",
           "expected_encoding": "58",
           "encoding_length": 1,
@@ -90,7 +105,7 @@
           "note": "Single-byte opcode, defaults to 64-bit operand size in 64-bit mode"
         },
         {
-          "syntax": "popw %ax", 
+          "syntax": "popw %ax",
           "description": "Pop to 16-bit register",
           "expected_encoding": "66 58",
           "encoding_length": 2,
@@ -98,7 +113,7 @@
           "note": "Operand-size prefix 66 + single-byte opcode"
         },
         {
-          "syntax": "popq (%rax)", 
+          "syntax": "popq (%rax)",
           "description": "Pop to memory operand",
           "expected_encoding": "8F 00",
           "encoding_length": 2,
@@ -106,7 +121,7 @@
           "note": "8F /0 + ModR/M=00 (mod=00 reg=000 r/m=000)"
         },
         {
-          "syntax": "popq %r15", 
+          "syntax": "popq %r15",
           "description": "Pop to extended register",
           "expected_encoding": "41 5F",
           "encoding_length": 2,
@@ -118,11 +133,17 @@
     {
       "mnemonic": "PUSHF",
       "description": "Push EFLAGS Register onto the Stack",
-      "operand_types": ["none"],
-      "sizes": ["16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
         {
-          "syntax": "pushfq", 
+          "syntax": "pushfq",
           "description": "Push 64-bit flags (RFLAGS)",
           "expected_encoding": "9C",
           "encoding_length": 1,
@@ -130,7 +151,7 @@
           "note": "Single-byte opcode, pushes 64-bit RFLAGS in 64-bit mode"
         },
         {
-          "syntax": "pushfl", 
+          "syntax": "pushfl",
           "description": "Push 32-bit flags (EFLAGS)",
           "expected_encoding": "9C",
           "encoding_length": 1,
@@ -138,7 +159,7 @@
           "note": "Same opcode, but pushes 64-bit RFLAGS in 64-bit mode"
         },
         {
-          "syntax": "pushfw", 
+          "syntax": "pushfw",
           "description": "Push 16-bit flags (FLAGS)",
           "expected_encoding": "66 9C",
           "encoding_length": 2,
@@ -150,11 +171,17 @@
     {
       "mnemonic": "POPF",
       "description": "Pop Stack into EFLAGS Register",
-      "operand_types": ["none"],
-      "sizes": ["16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
         {
-          "syntax": "popfq", 
+          "syntax": "popfq",
           "description": "Pop to 64-bit flags (RFLAGS)",
           "expected_encoding": "9D",
           "encoding_length": 1,
@@ -162,7 +189,7 @@
           "note": "Single-byte opcode, pops to 64-bit RFLAGS in 64-bit mode"
         },
         {
-          "syntax": "popfl", 
+          "syntax": "popfl",
           "description": "Pop to 32-bit flags (EFLAGS)",
           "expected_encoding": "9D",
           "encoding_length": 1,
@@ -170,7 +197,7 @@
           "note": "Same opcode, but pops to 64-bit RFLAGS in 64-bit mode"
         },
         {
-          "syntax": "popfw", 
+          "syntax": "popfw",
           "description": "Pop to 16-bit flags (FLAGS)",
           "expected_encoding": "66 9D",
           "encoding_length": 2,
@@ -182,30 +209,64 @@
     {
       "mnemonic": "ENTER",
       "description": "Make Stack Frame for Procedure Parameters",
-      "operand_types": ["imm16", "imm8"],
-      "sizes": ["none"],
+      "operand_types": [
+        "imm16",
+        "imm8"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "enter $16, $0", "description": "Simple stack frame"},
-        {"syntax": "enter $32, $1", "description": "Stack frame with nesting level"}
+        {
+          "syntax": "enter $16, $0",
+          "description": "Simple stack frame",
+          "expected_encoding": "C8 10 00 00",
+          "encoding_length": 4,
+          "intel_reference": "C8 iw ib (ENTER imm16, imm8)"
+        },
+        {
+          "syntax": "enter $32, $1",
+          "description": "Stack frame with nesting level",
+          "expected_encoding": "C8 20 00 01",
+          "encoding_length": 4,
+          "intel_reference": "C8 iw ib (ENTER imm16, imm8)"
+        }
       ]
     },
     {
       "mnemonic": "LEAVE",
       "description": "High Level Procedure Exit",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "leave", "description": "Restore stack frame"}
+        {
+          "syntax": "leave",
+          "description": "Restore stack frame",
+          "expected_encoding": "C9",
+          "encoding_length": 1,
+          "intel_reference": "C9 (LEAVE)"
+        }
       ]
     },
     {
       "mnemonic": "MOVS",
       "description": "Move Data from String to String",
-      "operand_types": ["none"],
-      "sizes": ["8", "16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
         {
-          "syntax": "movsq", 
+          "syntax": "movsq",
           "description": "Move quadword from [RSI] to [RDI]",
           "expected_encoding": "48 A5",
           "encoding_length": 2,
@@ -213,7 +274,7 @@
           "note": "REX.W + A5 for 64-bit string move"
         },
         {
-          "syntax": "movsl", 
+          "syntax": "movsl",
           "description": "Move doubleword from [RSI] to [RDI]",
           "expected_encoding": "A5",
           "encoding_length": 1,
@@ -221,7 +282,7 @@
           "note": "Single-byte opcode for 32-bit string move"
         },
         {
-          "syntax": "movsw", 
+          "syntax": "movsw",
           "description": "Move word from [RSI] to [RDI]",
           "expected_encoding": "66 A5",
           "encoding_length": 2,
@@ -229,7 +290,7 @@
           "note": "Operand-size prefix + A5 for 16-bit string move"
         },
         {
-          "syntax": "movsb", 
+          "syntax": "movsb",
           "description": "Move byte from [RSI] to [RDI]",
           "expected_encoding": "A4",
           "encoding_length": 1,
@@ -241,104 +302,341 @@
     {
       "mnemonic": "CMPS",
       "description": "Compare String Operands",
-      "operand_types": ["none"],
-      "sizes": ["8", "16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "cmpsq", "description": "Compare quadwords [RSI] and [RDI]"},
-        {"syntax": "cmpsl", "description": "Compare doublewords [RSI] and [RDI]"},
-        {"syntax": "cmpsw", "description": "Compare words [RSI] and [RDI]"},
-        {"syntax": "cmpsb", "description": "Compare bytes [RSI] and [RDI]"}
+        {
+          "syntax": "cmpsq",
+          "description": "Compare quadwords [RSI] and [RDI]",
+          "expected_encoding": "48 A7",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + A7 (CMPS m64, m64)"
+        },
+        {
+          "syntax": "cmpsl",
+          "description": "Compare doublewords [RSI] and [RDI]",
+          "expected_encoding": "A7",
+          "encoding_length": 1,
+          "intel_reference": "A7 (CMPS m32, m32)"
+        },
+        {
+          "syntax": "cmpsw",
+          "description": "Compare words [RSI] and [RDI]",
+          "expected_encoding": "66 A7",
+          "encoding_length": 2,
+          "intel_reference": "66 A7 (CMPS m16, m16)"
+        },
+        {
+          "syntax": "cmpsb",
+          "description": "Compare bytes [RSI] and [RDI]",
+          "expected_encoding": "A6",
+          "encoding_length": 1,
+          "intel_reference": "A6 (CMPS m8, m8)"
+        }
       ]
     },
     {
       "mnemonic": "SCAS",
       "description": "Scan String",
-      "operand_types": ["none"],
-      "sizes": ["8", "16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "scasq", "description": "Scan quadword in [RDI] against RAX"},
-        {"syntax": "scasl", "description": "Scan doubleword in [RDI] against EAX"},
-        {"syntax": "scasw", "description": "Scan word in [RDI] against AX"},
-        {"syntax": "scasb", "description": "Scan byte in [RDI] against AL"}
+        {
+          "syntax": "scasq",
+          "description": "Scan quadword in [RDI] against RAX",
+          "expected_encoding": "48 AF",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + AF (SCAS m64)"
+        },
+        {
+          "syntax": "scasl",
+          "description": "Scan doubleword in [RDI] against EAX",
+          "expected_encoding": "AF",
+          "encoding_length": 1,
+          "intel_reference": "AF (SCAS m32)"
+        },
+        {
+          "syntax": "scasw",
+          "description": "Scan word in [RDI] against AX",
+          "expected_encoding": "66 AF",
+          "encoding_length": 2,
+          "intel_reference": "66 AF (SCAS m16)"
+        },
+        {
+          "syntax": "scasb",
+          "description": "Scan byte in [RDI] against AL",
+          "expected_encoding": "AE",
+          "encoding_length": 1,
+          "intel_reference": "AE (SCAS m8)"
+        }
       ]
     },
     {
       "mnemonic": "LODS",
       "description": "Load String",
-      "operand_types": ["none"],
-      "sizes": ["8", "16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "lodsq", "description": "Load quadword from [RSI] to RAX"},
-        {"syntax": "lodsl", "description": "Load doubleword from [RSI] to EAX"},
-        {"syntax": "lodsw", "description": "Load word from [RSI] to AX"},
-        {"syntax": "lodsb", "description": "Load byte from [RSI] to AL"}
+        {
+          "syntax": "lodsq",
+          "description": "Load quadword from [RSI] to RAX",
+          "expected_encoding": "48 AD",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + AD (LODS m64)"
+        },
+        {
+          "syntax": "lodsl",
+          "description": "Load doubleword from [RSI] to EAX",
+          "expected_encoding": "AD",
+          "encoding_length": 1,
+          "intel_reference": "AD (LODS m32)"
+        },
+        {
+          "syntax": "lodsw",
+          "description": "Load word from [RSI] to AX",
+          "expected_encoding": "66 AD",
+          "encoding_length": 2,
+          "intel_reference": "66 AD (LODS m16)"
+        },
+        {
+          "syntax": "lodsb",
+          "description": "Load byte from [RSI] to AL",
+          "expected_encoding": "AC",
+          "encoding_length": 1,
+          "intel_reference": "AC (LODS m8)"
+        }
       ]
     },
     {
       "mnemonic": "STOS",
       "description": "Store String",
-      "operand_types": ["none"],
-      "sizes": ["8", "16", "32", "64"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "stosq", "description": "Store RAX to [RDI]"},
-        {"syntax": "stosl", "description": "Store EAX to [RDI]"},
-        {"syntax": "stosw", "description": "Store AX to [RDI]"},
-        {"syntax": "stosb", "description": "Store AL to [RDI]"}
+        {
+          "syntax": "stosq",
+          "description": "Store RAX to [RDI]",
+          "expected_encoding": "48 AB",
+          "encoding_length": 2,
+          "intel_reference": "REX.W + AB (STOS m64)"
+        },
+        {
+          "syntax": "stosl",
+          "description": "Store EAX to [RDI]",
+          "expected_encoding": "AB",
+          "encoding_length": 1,
+          "intel_reference": "AB (STOS m32)"
+        },
+        {
+          "syntax": "stosw",
+          "description": "Store AX to [RDI]",
+          "expected_encoding": "66 AB",
+          "encoding_length": 2,
+          "intel_reference": "66 AB (STOS m16)"
+        },
+        {
+          "syntax": "stosb",
+          "description": "Store AL to [RDI]",
+          "expected_encoding": "AA",
+          "encoding_length": 1,
+          "intel_reference": "AA (STOS m8)"
+        }
       ]
     },
     {
       "mnemonic": "REP",
       "description": "Repeat String Operation Prefix",
-      "operand_types": ["prefix"],
-      "sizes": ["none"],
+      "operand_types": [
+        "prefix"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "rep movsb", "description": "Repeat move string bytes"},
-        {"syntax": "rep stosq", "description": "Repeat store string quadwords"}
+        {
+          "syntax": "rep movsb",
+          "description": "Repeat move string bytes",
+          "expected_encoding": "F3 A4",
+          "encoding_length": 2,
+          "intel_reference": "F3 A4 (REP MOVS m8, m8)"
+        },
+        {
+          "syntax": "rep stosq",
+          "description": "Repeat store string quadwords",
+          "expected_encoding": "F3 48 AB",
+          "encoding_length": 3,
+          "intel_reference": "F3 REX.W + AB (REP STOS m64)"
+        }
       ]
     },
     {
       "mnemonic": "REPE",
       "description": "Repeat String Operation While Equal Prefix",
-      "operand_types": ["prefix"],
-      "sizes": ["none"],
+      "operand_types": [
+        "prefix"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "repe cmpsb", "description": "Repeat compare while equal"},
-        {"syntax": "repe scasb", "description": "Repeat scan while equal"}
+        {
+          "syntax": "repe cmpsb",
+          "description": "Repeat compare while equal",
+          "expected_encoding": "F3 A6",
+          "encoding_length": 2,
+          "intel_reference": "F3 A6 (REPE CMPS m8, m8)"
+        },
+        {
+          "syntax": "repe scasb",
+          "description": "Repeat scan while equal",
+          "expected_encoding": "F3 AE",
+          "encoding_length": 2,
+          "intel_reference": "F3 AE (REPE SCAS m8)"
+        }
       ]
     },
     {
       "mnemonic": "REPNE",
       "description": "Repeat String Operation While Not Equal Prefix",
-      "operand_types": ["prefix"],
-      "sizes": ["none"],
+      "operand_types": [
+        "prefix"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "repne scasb", "description": "Repeat scan while not equal"},
-        {"syntax": "repne cmpsb", "description": "Repeat compare while not equal"}
+        {
+          "syntax": "repne scasb",
+          "description": "Repeat scan while not equal",
+          "expected_encoding": "F2 AE",
+          "encoding_length": 2,
+          "intel_reference": "F2 AE (REPNE SCAS m8)"
+        },
+        {
+          "syntax": "repne cmpsb",
+          "description": "Repeat compare while not equal",
+          "expected_encoding": "F2 A6",
+          "encoding_length": 2,
+          "intel_reference": "F2 A6 (REPNE CMPS m8, m8)"
+        }
       ]
     },
     {
       "mnemonic": "LEA",
       "description": "Load Effective Address",
-      "operand_types": ["mem", "reg"],
-      "sizes": ["16", "32", "64"],
+      "operand_types": [
+        "mem",
+        "reg"
+      ],
+      "sizes": [
+        "16",
+        "32",
+        "64"
+      ],
       "test_cases": [
-        {"syntax": "leaq (%rax), %rbx", "description": "Load effective address"},
-        {"syntax": "leaq 16(%rax), %rbx", "description": "LEA with displacement"},
-        {"syntax": "leaq (%rax,%rbx,2), %rcx", "description": "LEA with SIB"},
-        {"syntax": "leaq 8(%rax,%rbx,4), %rcx", "description": "LEA with SIB and displacement"},
-        {"syntax": "leaq data(%rip), %rax", "description": "LEA with RIP-relative addressing"},
-        {"syntax": "leal (%eax), %ebx", "description": "32-bit LEA"},
-        {"syntax": "leaw (%ax), %bx", "description": "16-bit LEA"}
+        {
+          "syntax": "leaq (%rax), %rbx",
+          "description": "Load effective address",
+          "expected_encoding": "48 8D 18",
+          "encoding_length": 3,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)"
+        },
+        {
+          "syntax": "leaq 16(%rax), %rbx",
+          "description": "LEA with displacement",
+          "expected_encoding": "48 8D 58 10",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)"
+        },
+        {
+          "syntax": "leaq (%rax,%rbx,2), %rcx",
+          "description": "LEA with SIB",
+          "expected_encoding": "48 8D 0C 58",
+          "encoding_length": 4,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)"
+        },
+        {
+          "syntax": "leaq 8(%rax,%rbx,4), %rcx",
+          "description": "LEA with SIB and displacement",
+          "expected_encoding": "48 8D 4C 98 08",
+          "encoding_length": 5,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)"
+        },
+        {
+          "syntax": "leaq data(%rip), %rax",
+          "description": "LEA with RIP-relative addressing",
+          "expected_encoding": "48 8D 05 00 00 00 00",
+          "encoding_length": 7,
+          "intel_reference": "REX.W + 8D /r (LEA r64, m)"
+        },
+        {
+          "syntax": "leal (%eax), %ebx",
+          "description": "32-bit LEA",
+          "expected_encoding": "8D 18",
+          "encoding_length": 2,
+          "intel_reference": "8D /r (LEA r32, m)"
+        },
+        {
+          "syntax": "leaw (%ax), %bx",
+          "description": "16-bit LEA",
+          "expected_encoding": "66 8D 18",
+          "encoding_length": 3,
+          "intel_reference": "66 8D /r (LEA r16, m)"
+        }
       ]
     },
     {
       "mnemonic": "NOP",
       "description": "No Operation",
-      "operand_types": ["none"],
-      "sizes": ["none"],
+      "operand_types": [
+        "none"
+      ],
+      "sizes": [
+        "none"
+      ],
       "test_cases": [
-        {"syntax": "nop", "description": "Single-byte NOP"},
-        {"syntax": "nopw (%rax)", "description": "Multi-byte NOP"}
+        {
+          "syntax": "nop",
+          "description": "Single-byte NOP",
+          "expected_encoding": "90",
+          "encoding_length": 1,
+          "intel_reference": "90 (NOP)"
+        },
+        {
+          "syntax": "nopw (%rax)",
+          "description": "Multi-byte NOP",
+          "expected_encoding": "66 0F 1F 00",
+          "encoding_length": 4,
+          "intel_reference": "66 0F 1F /0 (NOP r/m16)"
+        }
       ]
     }
   ]
