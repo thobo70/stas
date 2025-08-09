@@ -4,8 +4,8 @@
  * CPU-accurate instruction encoding with AT&T syntax compliance
  */
 
-#ifndef X86_64_H
-#define X86_64_H
+#ifndef X86_64_UNIFIED_H
+#define X86_64_UNIFIED_H
 
 #include "arch_interface.h"
 #include <stdint.h>
@@ -186,4 +186,4 @@ const x86_64_register_info_t *x86_64_find_register_by_id(x86_64_register_id_t id
 // Architecture interface implementation
 const arch_ops_t *get_x86_64_ops(void);
 
-#endif // X86_64_H
+#endif // X86_64_UNIFIED_H

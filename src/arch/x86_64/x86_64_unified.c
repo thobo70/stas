@@ -116,9 +116,34 @@ static const x86_64_register_info_t cpu_register_database[] = {
 //=============================================================================
 
 static const x86_64_instruction_info_t instruction_database[] = {
+    // Generic MOV instruction for compatibility
+    {"mov",    X86_64_CAT_DATA_MOVEMENT, {0x89}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Generic move instruction"},
+    {"add",    X86_64_CAT_ARITHMETIC, {0x01}, 1, true,  false, false, 0, 2, 0x70, 0, "Generic add instruction"},
+    
     // Basic MOV instructions for initial code generation testing
     {"movq",   X86_64_CAT_DATA_MOVEMENT, {0x89}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Move r64 to r/m64"},
     {"movq",   X86_64_CAT_DATA_MOVEMENT, {0x8B}, 1, true,  true,  true,  0, 2, 0x70, 0x48, "Move r/m64 to r64"},
+    
+    // MOV immediate to register - CRITICAL missing instructions per Intel SDM
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xB8}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RAX"}, // MOV immediate to RAX
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xB9}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RCX"}, // MOV immediate to RCX  
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBA}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RDX"}, // MOV immediate to RDX
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBB}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RBX"}, // MOV immediate to RBX
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBC}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RSP"}, // MOV immediate to RSP
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBD}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RBP"}, // MOV immediate to RBP
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBE}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RSI"}, // MOV immediate to RSI
+    {"movq",   X86_64_CAT_DATA_MOVEMENT, {0xBF}, 1, false, true,  true,  0, 1, 0x70, 0x48, "Move imm64 to RDI"}, // MOV immediate to RDI
+    
+    // 32-bit immediate moves (zero-extend to 64-bit in 64-bit mode)
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xB8}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to EAX (zero-extend)"}, 
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xB9}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to ECX (zero-extend)"},
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xBA}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to EDX (zero-extend)"},
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xBB}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to EBX (zero-extend)"},
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xBC}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to ESP (zero-extend)"},
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xBD}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to EBP (zero-extend)"},
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xBE}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to ESI (zero-extend)"},
+    {"movl",   X86_64_CAT_DATA_MOVEMENT, {0xBF}, 1, false, false, false, 0, 1, 0x30, 0, "Move imm32 to EDI (zero-extend)"},
+    
     {"movl",   X86_64_CAT_DATA_MOVEMENT, {0x89}, 1, true,  false, false, 0, 2, 0x30, 0, "Move r32 to r/m32"},
     {"movl",   X86_64_CAT_DATA_MOVEMENT, {0x8B}, 1, true,  false, false, 0, 2, 0x30, 0, "Move r/m32 to r32"},
     
@@ -544,6 +569,22 @@ static const x86_64_instruction_info_t instruction_database[] = {
     {"lfs",     X86_64_CAT_SYSTEM, {0x0F, 0xB4}, 2, true,  false, false, 0, 2, 0xC0, 0, "Load pointer using FS"},
     {"lgs",     X86_64_CAT_SYSTEM, {0x0F, 0xB5}, 2, true,  false, false, 0, 2, 0xC0, 0, "Load pointer using GS"},
     {"lss",     X86_64_CAT_SYSTEM, {0x0F, 0xB2}, 2, true,  false, false, 0, 2, 0xC0, 0, "Load pointer using SS"},
+    
+    // I/O Instructions - Critical for system-level testing per manifest
+    {"inb",     X86_64_CAT_SYSTEM, {0xEC}, 1, false, false, false, 0, 0, 0, 0, "Input byte from DX to AL"},
+    {"inw",     X86_64_CAT_SYSTEM, {0x66, 0xED}, 2, false, false, false, 0, 0, 0, 0x66, "Input word from DX to AX"},
+    {"inl",     X86_64_CAT_SYSTEM, {0xED}, 1, false, false, false, 0, 0, 0, 0, "Input dword from DX to EAX"},
+    {"outb",    X86_64_CAT_SYSTEM, {0xEE}, 1, false, false, false, 0, 0, 0, 0, "Output AL to port DX"},
+    {"outw",    X86_64_CAT_SYSTEM, {0x66, 0xEF}, 2, false, false, false, 0, 0, 0, 0x66, "Output AX to port DX"},
+    {"outl",    X86_64_CAT_SYSTEM, {0xEF}, 1, false, false, false, 0, 0, 0, 0, "Output EAX to port DX"},
+    
+    // I/O with immediate port (single-byte port addresses)
+    {"inb",     X86_64_CAT_SYSTEM, {0xE4}, 1, false, false, false, 0, 1, 0, 0, "Input byte from imm8 port to AL"},
+    {"inw",     X86_64_CAT_SYSTEM, {0x66, 0xE5}, 2, false, false, false, 0, 1, 0, 0x66, "Input word from imm8 port to AX"},
+    {"inl",     X86_64_CAT_SYSTEM, {0xE5}, 1, false, false, false, 0, 1, 0, 0, "Input dword from imm8 port to EAX"},
+    {"outb",    X86_64_CAT_SYSTEM, {0xE6}, 1, false, false, false, 0, 1, 0, 0, "Output AL to imm8 port"},
+    {"outw",    X86_64_CAT_SYSTEM, {0x66, 0xE7}, 2, false, false, false, 0, 1, 0, 0x66, "Output AX to imm8 port"},
+    {"outl",    X86_64_CAT_SYSTEM, {0xE7}, 1, false, false, false, 0, 1, 0, 0, "Output EAX to imm8 port"},
     
     {NULL, X86_64_CAT_UNKNOWN, {0}, 0, false, false, false, 0, 0, 0, 0, NULL} // Terminator
 };

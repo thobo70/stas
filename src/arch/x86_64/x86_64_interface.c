@@ -6,6 +6,7 @@
 
 #define _GNU_SOURCE
 #include "x86_64.h"
+#include "x86_64_unified.h"
 #include "arch_interface.h"
 #include <stdio.h>
 #include <string.h>
@@ -53,8 +54,49 @@ static int x86_64_interface_parse_register(const char *reg_name, asm_register_t 
     if (x86_64_is_valid_register(reg_name)) {
         reg->id = 0; // Simplified - would need proper mapping
         reg->name = strdup(reg_name);
-        reg->size = 8; // Default to 64-bit
         reg->encoding = 0;
+        
+        // Determine register size based on register name
+        const char *name = reg_name;
+        // Skip % prefix if present
+        if (name[0] == '%') name++;
+        
+        size_t name_len = strlen(name);
+        
+        // 32-bit registers (e prefix) - check FIRST
+        if (name[0] == 'e' && name_len == 3) {
+            reg->size = 4;
+        }
+        // 32-bit extended registers (r*d)
+        else if (name[0] == 'r' && name_len >= 3 && name[name_len-1] == 'd') {
+            reg->size = 4;
+        }
+        // 8-bit registers
+        else if ((name_len == 2 && (
+                     strcmp(name, "al") == 0 || strcmp(name, "ah") == 0 ||
+                     strcmp(name, "bl") == 0 || strcmp(name, "bh") == 0 ||
+                     strcmp(name, "cl") == 0 || strcmp(name, "ch") == 0 ||
+                     strcmp(name, "dl") == 0 || strcmp(name, "dh") == 0)) ||
+                 (name_len == 3 && (
+                     strcmp(name, "spl") == 0 || strcmp(name, "bpl") == 0 ||
+                     strcmp(name, "sil") == 0 || strcmp(name, "dil") == 0)) ||
+                 (name[0] == 'r' && name_len >= 3 && name[name_len-1] == 'b')) {
+            reg->size = 1;
+        }
+        // 16-bit registers (ax, bx, cx, dx, sp, bp, si, di)
+        else if ((name_len == 2 && (
+                     strcmp(name, "ax") == 0 || strcmp(name, "bx") == 0 ||
+                     strcmp(name, "cx") == 0 || strcmp(name, "dx") == 0 ||
+                     strcmp(name, "sp") == 0 || strcmp(name, "bp") == 0 ||
+                     strcmp(name, "si") == 0 || strcmp(name, "di") == 0)) ||
+                 (name[0] == 'r' && name_len >= 3 && name[name_len-1] == 'w')) {
+            reg->size = 2;
+        }
+        // 64-bit registers (default)
+        else {
+            reg->size = 8;
+        }
+        
         return 0;
     }
     return -1;
@@ -124,6 +166,12 @@ static int x86_64_interface_parse_instruction(const char *mnemonic, operand_t *o
                                              size_t operand_count, instruction_t *inst) {
     if (!mnemonic || !inst) return -1;
     
+    // Validate that the mnemonic is a known x86_64 instruction
+    const x86_64_instruction_info_t *instr_info = x86_64_find_instruction(mnemonic);
+    if (!instr_info) {
+        return -1; // Invalid instruction
+    }
+    
     inst->mnemonic = strdup(mnemonic);
     inst->operands = operands;
     inst->operand_count = operand_count;
@@ -138,7 +186,7 @@ static int x86_64_interface_parse_instruction(const char *mnemonic, operand_t *o
 //=============================================================================
 
 static const arch_ops_t x86_64_ops = {
-    .name = "x86-64",
+    .name = "x86_64",
     .init = x86_64_interface_init,
     .cleanup = x86_64_interface_cleanup,
     .parse_instruction = x86_64_interface_parse_instruction,

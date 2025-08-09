@@ -6,11 +6,14 @@
 #include "../../src/core/output_format.h"
 #include "symbols.h"
 #include "arch_interface.h"
-#include "../../src/arch/x86_64/x86_64.h"
+// Note: Not including "x86_64.h" to avoid enum conflicts with unicorn_test_framework.h
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+// Forward declaration to avoid header conflicts
+extern arch_ops_t *x86_64_get_arch_ops(void);
 
 void setUp(void) {
     // Setup before each test
